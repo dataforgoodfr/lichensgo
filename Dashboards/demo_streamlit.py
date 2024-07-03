@@ -1,12 +1,13 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import datasets
 
 # Source : https://discuss.streamlit.io/t/develop-a-dashboard-app-with-streamlit-using-plotly/37148/4
-# run with : streamlit run Dashboard/demo_streamlit.py
+# run with : streamlit run Dashboards/demo_streamlit.py
 
 def load_data():
-    return pd.read_csv("https://people.sc.fsu.edu/~jburkardt/data/csv/airtravel.csv")
+    return pd.read_csv("Dashboards/airtravel.csv")
 
 # Load data
 df = load_data()
