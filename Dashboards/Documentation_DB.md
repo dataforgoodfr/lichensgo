@@ -2,11 +2,11 @@
 
 ## 1 - Logique
 
-Récupération des données depuis la base de données PostgreSQL sur le cloud. Pour info, le schéma se trouve dans le fichier [model.py](Dashboards/my_data/model.py). 
+Récupération des données depuis la base de données PostgreSQL sur le cloud. Pour info, le schéma se trouve dans le fichier [model.py](my_data/model.py). 
 
 > Sytème évolutif en fonction du projet
 L'ensemble des données sont récupérés et concerti au format `pd.DataFrame()` pour faciliter la création de graphique
-cf. [datasets.py](Dashboards/my_data/datasets.py)
+cf. [datasets.py](my_data/datasets.py)
 
 ## 2 - Utilisation du module
 Vous récupérez ensuite les données en important le module :
@@ -26,7 +26,7 @@ Ceci va renvoyer un `pandas.DataFrame` directement utilisable pour vos visualisa
 - get_lichen_ecology
 
 ## 3 - Exemple d'import et résultats 
-Le cas de ma visualisation du fichier [demo_streamlit.py](Dashboards/demo_streamlit.py). 
+Le cas de ma visualisation du fichier [demo_streamlit.py](demo_streamlit.py). 
 
 ```python
 import my_data.datasets as df
