@@ -8,6 +8,12 @@ Récupération des données depuis la base de données PostgreSQL sur le cloud. 
 L'ensemble des données sont récupérés et concerti au format `pd.DataFrame()` pour faciliter la création de graphique
 cf. [datasets.py](my_data/datasets.py)
 
+Prérequis 
+> À installer 
+```bash
+poetry add sqlalchemy psycopg2-binary python-dotenv
+```
+
 ## 2 - Utilisation du module
 Vous récupérez ensuite les données en important le module :
 ```python
