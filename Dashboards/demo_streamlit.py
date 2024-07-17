@@ -7,7 +7,9 @@ import numpy as np
 # Source : https://discuss.streamlit.io/t/develop-a-dashboard-app-with-streamlit-using-plotly/37148/4
 # run with : streamlit run Dashboards/demo_streamlit.py
 
+# Finalement > prendre les données issue de la vue
 lichen_ecology = df.get_lichen_ecology()
+lichen_frequency = df.get_lichen_frequency()
 
 # Debug data
 # st.dataframe(df)
@@ -24,10 +26,14 @@ fig1 = go.Figure(go.Indicator(
     gauge = {'axis': {'range': [0, 100], 'dtick': 25},
              'bar': {'color': "#000000"},
              'steps' : [
-                 {'range': [0, 25], 'color': "#E3D7FF"},
-                 {'range': [25, 50], 'color': "#AFA2FF"},
-                 {'range': [50, 75], 'color': "#7A89C2"},
-                 {'range': [75, 100], 'color': "#72788D"}
+                #  {'range': [0, 25], 'color': "#E3D7FF"},
+                #  {'range': [25, 50], 'color': "#AFA2FF"},
+                #  {'range': [50, 75], 'color': "#7A89C2"},
+                #  {'range': [75, 100], 'color': "#72788D"}
+                 {'range': [0, 25], 'color': "green"},
+                 {'range': [25, 50], 'color': "yellow"},
+                 {'range': [50, 75], 'color': "orange"},
+                 {'range': [75, 100], 'color': "red"}
                  ],
              'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': artificialisation_proportions["intermediate"]}
              }))
@@ -60,53 +66,9 @@ max_value = 50
 hand_length = np.sqrt(2) / 4
 hand_angle = np.pi * (1 - (max(min_value, min(max_value, current_value)) - min_value) / (max_value - min_value))
 
-## Version 3 non retenue du code python
-# fig3 = go.Figure(
-#     data=[
-#         go.Pie(
-#             values=[0.5] + (np.ones(n_quadrants) / 2 / n_quadrants).tolist(),
-#             rotation=90,
-#             hole=0.5,
-#             marker_colors=quadrant_colors,
-#             textinfo="text",
-#             hoverinfo="skip",
-#         ),
-#     ],
-#     layout=go.Layout(
-#         showlegend=False,
-#         margin=dict(b=0,t=10,l=10,r=10),
-#         width=450,
-#         height=450,
-#         paper_bgcolor=plot_bgcolor,
-#         annotations=[
-#             go.layout.Annotation(
-#                 text=f"<b>Degrés d'artificialisation:</b><br>{current_value} %",
-#                 x=0.5, xanchor="center", xref="paper",
-#                 y=0.25, yanchor="bottom", yref="paper",
-#                 showarrow=False,
-#             )
-#         ],
-#         shapes=[
-#             go.layout.Shape(
-#                 type="circle",
-#                 x0=0.48, x1=0.52,
-#                 y0=0.48, y1=0.52,
-#                 fillcolor="#333",
-#                 line_color="#333",
-#             ),
-#             go.layout.Shape(
-#                 type="line",
-#                 x0=0.5, x1=0.5 + hand_length * np.cos(hand_angle),
-#                 y0=0.5, y1=0.5 + hand_length * np.sin(hand_angle),
-#                 line=dict(color="#333", width=4)
-#             )
-#         ]
-#     )
-# )
-
 # Display streamlit
 st.title("Dataviz POC")
-tab1, tab2, tab3= st.tabs(["Gauge", "Histogram", "df debug"])
+tab1, tab2, tab3= st.tabs(["Gauge", "Histogram", "df Fréquences"])
 with tab1:
     st.write("**Mode de calcul**`df['poleotolerance'].value_counts(normalize=True) * 100`")
     st.plotly_chart(fig1)
@@ -115,6 +77,6 @@ with tab2:
     st.plotly_chart(fig2)
 
 with tab3:
-    st.write("Debug du dataset")
-    # st.dataframe(df)
+    st.write("les données de fréquences")
+    st.dataframe(lichen_frequency.groupby("id").sum())
     

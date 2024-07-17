@@ -1,5 +1,6 @@
-from sqlalchemy import Column, BigInteger, Integer, String, ForeignKey, ARRAY, Boolean, Date, Text, Float
+from sqlalchemy import Column, BigInteger, Integer, String, ForeignKey, ARRAY, Boolean, Date, Text, Float, text
 from sqlalchemy.orm import declarative_base, relationship
+from my_data.db_connect import engine
 
 Base = declarative_base()
 
@@ -97,4 +98,12 @@ class LichenEcology(Base):
     aridity = Column(String(255))
     eutrophication = Column(String(255))
     poleotolerance = Column(String(255))
-    
+
+# Table pour les fréquences
+class LichenFrequency(Base):
+    __tablename__ = 'lichen_frequency'
+    __table_args__ = {'autoload_with': engine} 
+
+    id_site = Column(BigInteger, primary_key=True)
+    main_lichenspecies = Column(String(255))
+    frequency = Column(BigInteger)

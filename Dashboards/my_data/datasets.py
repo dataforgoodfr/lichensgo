@@ -1,6 +1,6 @@
 import pandas as pd
 from my_data.db_connect import get_session
-from my_data.model import Tree, TreeSpecies, Observation, Lichen, LichenSpecies, Environment, Table, LichenEcology
+from my_data.model import Tree, TreeSpecies, Observation, Lichen, LichenSpecies, Environment, Table, LichenEcology, LichenFrequency
 
 session = get_session()
 
@@ -114,3 +114,15 @@ def get_lichen_ecology():
             "poleotolerance" : lichen_ecology.poleotolerance
         })
     return pd.DataFrame(lichen_ecology_data)
+
+# Nouvelles données table fréquence 
+def get_lichen_frequency():
+    data = session.query(LichenFrequency).all()
+    lichen_frequency_data = []
+    for lichen_frequency in data:
+        lichen_frequency_data.append({
+            "id": lichen_frequency.id_site,
+            "main_lichenspecies": lichen_frequency.main_lichenspecies,
+            "frequency": lichen_frequency.frequency
+        })
+    return pd.DataFrame(lichen_frequency_data)
