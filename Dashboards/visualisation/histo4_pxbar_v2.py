@@ -35,24 +35,27 @@ print(lichen_species_df.head())
 # Histogram 4 with Plotly express bar:
 # Espèces les plus observées par les observateurs Lichens GO
 
-df = lichen_df.loc[:,"id":"species_id"]
+# group by species' type and count occurence
+df_grouped=(
+    lichen_df
+    .groupby("species_id", as_index=False)
+    .agg(count_col=pd.NamedAgg(column="species_id", aggfunc="count"))
+    )
 
-# group by species' type
-df_grouped=df.groupby(["species_id"]).agg(
-    count_col=pd.NamedAgg(column="species_id", aggfunc="count")
-).reset_index()
+print("df_grouped:\n")
+print(df_grouped)
 
-# name of the species 
-df_species_name = lichen_species_df.loc[:,"id":"name"]
-
-# concatenate dataframe
-df_grouped_species=pd.concat([df_grouped, df_species_name["name"]], axis=1)
+# concatenate dataframe with lichen species' name
+df_grouped_species=pd.concat([df_grouped, lichen_species_df.loc[:,"name"]], axis=1)
 
 # sort based on occurence 
 # (note): update_xaxes(categoryorder="total descending") does not work
-df_grouped_species=df_grouped_species.sort_values(by="count_col", ascending=False, ignore_index=True)
+df_grouped_species=(
+    df_grouped_species
+    .sort_values(by="count_col", ascending=False, ignore_index=True)
+)
 
-print("df_grouped:\n")
+print("df_grouped_species:\n")
 print(df_grouped_species)
 
 # design bar plot
