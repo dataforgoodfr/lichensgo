@@ -40,7 +40,7 @@ df_grouped=(
     lichen_df
     .groupby("species_id", as_index=False)
     .agg(count_col=pd.NamedAgg(column="species_id", aggfunc="count"))
-    )
+)
 
 print("df_grouped:\n")
 print(df_grouped)
