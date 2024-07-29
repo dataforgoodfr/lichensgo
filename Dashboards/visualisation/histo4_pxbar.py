@@ -68,9 +68,6 @@ hist4=px.bar(
     df_grouped_species, 
     x="count_col", 
     y="name",
-    labels={
-            "count_col": "count",
-            "name": "species name"},
     orientation="h",
     color="name",
     color_discrete_sequence=color_discrete_sequence,
@@ -81,5 +78,15 @@ hist4=px.bar(
 
 # remove the legend
 hist4.update(layout_showlegend=False)
+
+# update the title 
+hist4.update_layout(
+    title_font=dict(color="grey",size=24),
+    title={"x": .5,"y": .9,"xanchor": "center"},
+)
+
+# update axes 
+hist4.update_xaxes(title="Count",showgrid=False)
+hist4.update_yaxes(title="")
 
 hist4.show()
