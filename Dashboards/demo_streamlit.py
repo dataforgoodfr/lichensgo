@@ -11,8 +11,19 @@ import numpy as np
 lichen_ecology = df.get_lichen_ecology()
 lichen_frequency = df.get_lichen_frequency()
 
-# Debug data
-# st.dataframe(df)
+st.write(lichen_ecology)
+
+# Calcul
+def calc_frequences(df):
+    df_agg = df.groupby("main_lichenspecies").agg({
+        "id": "first",
+        "frequency": "sum"
+    }).reset_index()
+
+    return df_agg
+
+calc_freq = calc_frequences(lichen_frequency)
+
 
 # Calculer les proportions des espèces selon leur tolérance à l'anthropisation
 artificialisation_proportions = lichen_ecology['poleotolerance'].value_counts(normalize=True) * 100
@@ -78,5 +89,4 @@ with tab2:
 
 with tab3:
     st.write("les données de fréquences")
-    st.dataframe(lichen_frequency.groupby("id").sum())
-    
+    st.write(calc_freq)
