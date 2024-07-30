@@ -82,11 +82,23 @@ hist4.update(layout_showlegend=False)
 # update the title 
 hist4.update_layout(
     title_font=dict(color="grey",size=24),
-    title={"x": .5,"y": .9,"xanchor": "center"},
+    title={"x": .5,"y": .95,"xanchor": "center"},
+    plot_bgcolor='white',
+    paper_bgcolor="white"
 )
 
 # update axes 
-hist4.update_xaxes(title="Count",showgrid=False)
-hist4.update_yaxes(title="")
+hist4.update_xaxes(
+    title="Count",
+    showline=True,
+    linecolor='black',
+    gridcolor="black",
+)
+
+hist4.update_yaxes(
+    title="",
+    showline=True,
+    linecolor='black',
+)
 
 hist4.show()
