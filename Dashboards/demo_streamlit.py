@@ -8,41 +8,40 @@ import numpy as np
 # run with : streamlit run Dashboards/demo_streamlit.py
 
 # Finalement > prendre les données issue de la vue
-lichen_ecology = df.get_lichen_ecology()
 lichen_frequency = df.get_lichen_frequency()
 
-# Calcul somme des fréquences
-def calc_frequences(df):
-    df_agg = df.groupby("main_lichenspecies").agg({
-        "id": "first",
+# Préalable au calcul 
+def calc_frequences_glob(df):
+    # Récupération de toutes les espèce dans un id_site
+    df_agg = df.groupby("id").agg({
         "frequency": "sum"
     }).reset_index()
 
     return df_agg
 
-calc_freq = calc_frequences(lichen_frequency)
-calc_freq = calc_freq[["main_lichenspecies", "frequency"]]
+def deg_artif(id_site: int, species_name: str):
+    # Calcul filtre id & espèces
+    calc_glob = calc_frequences_glob(lichen_frequency)
+    base = lichen_frequency[(lichen_frequency["id"] == id_site) & (lichen_frequency["main_lichenspecies"] == species_name)]["frequency"].values[0]
+    glob = calc_glob[calc_glob["id"] == id_site]["frequency"].sum()
 
-def deg_artif(id_site: int, species_name : str):
-    # Calcul filtrable
-    freq = lichen_frequency[lichen_frequency["id"] == id_site]["frequency"].values[0]
-    freq_g = calc_freq[calc_freq["main_lichenspecies"] == species_name]["frequency"].values[0] 
-
-    return round(freq / freq_g * 100, 2)
-
+    return round((base / glob) * 100, 2)
 
 # Sélection du site 
 id_site = st.selectbox(
     "Sur quel site voulez-vous ?",
-    lichen_frequency["id"],
+    lichen_frequency["id"].unique(),
     index=None,
     placeholder="site n°",
 )
 
+filtered_id = lichen_frequency[lichen_frequency["id"] == id_site]
+# Faire un if pour annuler l'erreur quand on sélectionne 
+
 # Sélection des espèces 
 species_name = st.selectbox(
     "Sur quel espèce voulez-vous ?",
-    calc_freq["main_lichenspecies"],
+    filtered_id["main_lichenspecies"],
     index=None,
     placeholder="Je sélectionne l'espèce...",
 )
@@ -53,10 +52,12 @@ if id_site and species_name != None:
 else:
     id_site = 460
     species_name = "Physcia aipolia/stellaris"
+
 # le calcul
 artificialisation_proportions = deg_artif(id_site, species_name)
 
 # # Dataviz charts
+st.write("# Gauge bar")
 fig1 = go.Figure(go.Indicator(
     domain = {'x': [0, 1], 'y': [0, 1]},
     value = artificialisation_proportions,
@@ -106,15 +107,16 @@ hand_length = np.sqrt(2) / 4
 hand_angle = np.pi * (1 - (max(min_value, min(max_value, current_value)) - min_value) / (max_value - min_value))
 
 # Display streamlit
-st.title("Dataviz POC")
-tab1, tab2, tab3= st.tabs(["Gauge", "Histogram", "df Fréquences"])
-with tab1:
-    st.write(f"Degrés d'artificialisation sur le site n°**{id_site}** pour l'espèce **{species_name}**")
-    st.plotly_chart(fig1)
+# st.title("Dataviz POC")
+# tab1, tab2, tab3= st.tabs(["Gauge", "Histogram", "df Fréquences"])
+# tab1= st.tabs(["Gauge"])
+# with tab1:
+st.write(f"Degrés d'artificialisation sur le site n°**{id_site}** pour l'espèce **{species_name}**")
+st.plotly_chart(fig1)
 
-with tab2:
-    st.plotly_chart(fig2)
+# with tab2:
+#     st.plotly_chart(fig2)
 
-with tab3:
-    st.write("les données de fréquences")
-    st.write(calc_freq)
+# with tab3:
+#     st.write("les données de fréquences")
+#     # st.write(calc_freq)

@@ -46,4 +46,5 @@ lichen_frequency_df = get_lichen_frequency()
 # print("\nLichen Ecology Data")
 # print(lichen_ecology_df)
 
-# Correction de l'appel de méthode
+# print("\n Lichen Frequency")
+# print(lichen_frequency_df.head())
