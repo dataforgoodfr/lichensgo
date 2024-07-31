@@ -36,3 +36,23 @@ ORDER BY
 
 -- Pour la commandline PSQL
 CREATE VIEW lichen_frequency AS SELECT o.id AS id_site, ls.name AS main_lichenspecies, COUNT(l.id) AS frequency FROM main_observation o JOIN main_tree t ON o.id = t.observation_id JOIN main_lichen l ON o.id = l.observation_id JOIN main_lichenspecies ls ON l.species_id = ls.id GROUP BY o.id, ls.name ORDER BY o.id, frequency DESC;
+
+
+-- Update SQL command
+CREATE VIEW lichen_frequency AS
+SELECT 
+    ROW_NUMBER() OVER (ORDER BY o.id, ls.name) AS id,
+    o.id AS id_site, 
+    ls.name AS main_lichenspecies, 
+    COUNT(l.id) AS frequency 
+FROM 
+    main_observation o 
+    JOIN main_tree t ON o.id = t.observation_id 
+    JOIN main_lichen l ON o.id = l.observation_id 
+    JOIN main_lichenspecies ls ON l.species_id = ls.id 
+GROUP BY 
+    o.id, ls.name 
+ORDER BY 
+    o.id, frequency DESC;
+
+CREATE VIEW lichen_frequency AS SELECT ROW_NUMBER() OVER (ORDER BY o.id, ls.name) AS id, o.id AS id_site, ls.name AS main_lichenspecies, COUNT(l.id) AS frequency FROM main_observation o JOIN main_tree t ON o.id = t.observation_id JOIN main_lichen l ON o.id = l.observation_id JOIN main_lichenspecies ls ON l.species_id = ls.id GROUP BY o.id, ls.name ORDER BY o.id, frequency DESC;

@@ -104,6 +104,7 @@ class LichenFrequency(Base):
     __tablename__ = 'lichen_frequency'
     __table_args__ = {'autoload_with': engine} 
 
-    id_site = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id_site = Column(BigInteger)
     main_lichenspecies = Column(String(255))
     frequency = Column(BigInteger)

@@ -1,4 +1,5 @@
 import pandas as pd
+from sqlalchemy import text
 from my_data.db_connect import get_session
 from my_data.model import Tree, TreeSpecies, Observation, Lichen, LichenSpecies, Environment, Table, LichenEcology, LichenFrequency
 
@@ -100,7 +101,6 @@ def get_tree_species():
         })
     return pd.DataFrame(tree_species_data)
 
-# Nouvelles données
 def get_lichen_ecology():
     data = session.query(LichenEcology).all()
     lichen_ecology_data = []
@@ -111,11 +111,10 @@ def get_lichen_ecology():
             "pH": lichen_ecology.pH,
             "aridity": lichen_ecology.aridity,
             "eutrophication": lichen_ecology.eutrophication,
-            "poleotolerance" : lichen_ecology.poleotolerance
+            "poleotolerance": lichen_ecology.poleotolerance
         })
     return pd.DataFrame(lichen_ecology_data)
 
-# Nouvelles données table fréquence 
 def get_lichen_frequency():
     data = session.query(LichenFrequency).all()
     lichen_frequency_data = []
