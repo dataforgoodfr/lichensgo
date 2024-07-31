@@ -7,29 +7,74 @@ import numpy as np
 # Source : https://discuss.streamlit.io/t/develop-a-dashboard-app-with-streamlit-using-plotly/37148/4
 # run with : streamlit run Dashboards/demo_streamlit.py
 
+# Finalement > prendre les données issue de la vue
 lichen_ecology = df.get_lichen_ecology()
+lichen_frequency = df.get_lichen_frequency()
 
-# Debug data
-# st.dataframe(df)
+# Calcul somme des fréquences
+def calc_frequences(df):
+    df_agg = df.groupby("main_lichenspecies").agg({
+        "id": "first",
+        "frequency": "sum"
+    }).reset_index()
 
-# Calculer les proportions des espèces selon leur tolérance à l'anthropisation
-artificialisation_proportions = lichen_ecology['poleotolerance'].value_counts(normalize=True) * 100
+    return df_agg
+
+calc_freq = calc_frequences(lichen_frequency)
+calc_freq = calc_freq[["main_lichenspecies", "frequency"]]
+
+def deg_artif(id_site: int, species_name : str):
+    # Calcul filtrable
+    freq = lichen_frequency[lichen_frequency["id"] == id_site]["frequency"].values[0]
+    freq_g = calc_freq[calc_freq["main_lichenspecies"] == species_name]["frequency"].values[0] 
+
+    return round(freq / freq_g * 100, 2)
+
+
+# Sélection du site 
+id_site = st.selectbox(
+    "Sur quel site voulez-vous ?",
+    lichen_frequency["id"],
+    index=None,
+    placeholder="site n°",
+)
+
+# Sélection des espèces 
+species_name = st.selectbox(
+    "Sur quel espèce voulez-vous ?",
+    calc_freq["main_lichenspecies"],
+    index=None,
+    placeholder="Je sélectionne l'espèce...",
+)
+
+# Affichage des éléments
+if id_site and species_name != None:
+    pass
+else:
+    id_site = 460
+    species_name = "Physcia aipolia/stellaris"
+# le calcul
+artificialisation_proportions = deg_artif(id_site, species_name)
 
 # # Dataviz charts
 fig1 = go.Figure(go.Indicator(
     domain = {'x': [0, 1], 'y': [0, 1]},
-    value = artificialisation_proportions["intermediate"],
+    value = artificialisation_proportions,
     mode = "gauge+number",
     title = {'text': "Degré d'artificialisation"},
     gauge = {'axis': {'range': [0, 100], 'dtick': 25},
              'bar': {'color': "#000000"},
              'steps' : [
-                 {'range': [0, 25], 'color': "#E3D7FF"},
-                 {'range': [25, 50], 'color': "#AFA2FF"},
-                 {'range': [50, 75], 'color': "#7A89C2"},
-                 {'range': [75, 100], 'color': "#72788D"}
+                #  {'range': [0, 25], 'color': "#E3D7FF"},
+                #  {'range': [25, 50], 'color': "#AFA2FF"},
+                #  {'range': [50, 75], 'color': "#7A89C2"},
+                #  {'range': [75, 100], 'color': "#72788D"}
+                 {'range': [0, 25], 'color': "green"},
+                 {'range': [25, 50], 'color': "yellow"},
+                 {'range': [50, 75], 'color': "orange"},
+                 {'range': [75, 100], 'color': "red"}
                  ],
-             'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': artificialisation_proportions["intermediate"]}
+             'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': artificialisation_proportions}
              }))
 
 x_values = [10, 8, 6, 5, 4, 3, 2, 1]
@@ -60,61 +105,16 @@ max_value = 50
 hand_length = np.sqrt(2) / 4
 hand_angle = np.pi * (1 - (max(min_value, min(max_value, current_value)) - min_value) / (max_value - min_value))
 
-## Version 3 non retenue du code python
-# fig3 = go.Figure(
-#     data=[
-#         go.Pie(
-#             values=[0.5] + (np.ones(n_quadrants) / 2 / n_quadrants).tolist(),
-#             rotation=90,
-#             hole=0.5,
-#             marker_colors=quadrant_colors,
-#             textinfo="text",
-#             hoverinfo="skip",
-#         ),
-#     ],
-#     layout=go.Layout(
-#         showlegend=False,
-#         margin=dict(b=0,t=10,l=10,r=10),
-#         width=450,
-#         height=450,
-#         paper_bgcolor=plot_bgcolor,
-#         annotations=[
-#             go.layout.Annotation(
-#                 text=f"<b>Degrés d'artificialisation:</b><br>{current_value} %",
-#                 x=0.5, xanchor="center", xref="paper",
-#                 y=0.25, yanchor="bottom", yref="paper",
-#                 showarrow=False,
-#             )
-#         ],
-#         shapes=[
-#             go.layout.Shape(
-#                 type="circle",
-#                 x0=0.48, x1=0.52,
-#                 y0=0.48, y1=0.52,
-#                 fillcolor="#333",
-#                 line_color="#333",
-#             ),
-#             go.layout.Shape(
-#                 type="line",
-#                 x0=0.5, x1=0.5 + hand_length * np.cos(hand_angle),
-#                 y0=0.5, y1=0.5 + hand_length * np.sin(hand_angle),
-#                 line=dict(color="#333", width=4)
-#             )
-#         ]
-#     )
-# )
-
 # Display streamlit
 st.title("Dataviz POC")
-tab1, tab2, tab3= st.tabs(["Gauge", "Histogram", "df debug"])
+tab1, tab2, tab3= st.tabs(["Gauge", "Histogram", "df Fréquences"])
 with tab1:
-    st.write("**Mode de calcul**`df['poleotolerance'].value_counts(normalize=True) * 100`")
+    st.write(f"Degrés d'artificialisation sur le site n°**{id_site}** pour l'espèce **{species_name}**")
     st.plotly_chart(fig1)
 
 with tab2:
     st.plotly_chart(fig2)
 
 with tab3:
-    st.write("Debug du dataset")
-    # st.dataframe(df)
-    
+    st.write("les données de fréquences")
+    st.write(calc_freq)
