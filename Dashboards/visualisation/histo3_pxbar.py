@@ -8,7 +8,7 @@ import plotly.express as px
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
 from my_data.db_connect import get_session
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data
+from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 
 session = get_session()
 
@@ -16,77 +16,125 @@ session = get_session()
 environment_df = get_environment_data()
 lichen_df = get_lichen_data()
 lichen_species_df = get_lichen_species_data()
+observation_df = get_observation_data()
+table_df = get_table_data()
+tree_df = get_tree_data()
 
-# Affichage des datasets > test dataset
-print("\nEnvironment Data")
-print(environment_df.head())
+# Affichage des datasets
+# print("\nEnvironment Data")
+# print(environment_df.head())
 
-print("\nLichen Data")
-print(lichen_df.head())
+# print("\nLichen Data")
+# print(lichen_df.head())
 
-print("\nLichen Species Data")
-print(lichen_species_df.head())
+# print("\nLichen Species Data")
+# print(lichen_species_df.head())
 
-### Histogram 4 with Plotly express bar: ###
-# Espèces les plus observées par les observateurs Lichens GO
+# print("\nObservation Data")
+# print(observation_df.head())
 
-# group by species' type + add a column with the count occurence
-df_grouped=(
-    lichen_df
-    .groupby("species_id", as_index=False)
-    .agg(count_col=pd.NamedAgg(column="species_id", aggfunc="count"))
-)
+print("\nTable Data")
+print(table_df.head())
 
-# concatenate dataframe "df_grouped" with the lichen species' names
-df_grouped_species=pd.concat([df_grouped, lichen_species_df.loc[:,"name"]], axis=1)
+# print("\nTree Data")
+# print(tree_df.head())
+
+# Select one site based on latitude, longitude, date et user id 
+# Filtering with query method
+site = observation_df.query("user_id == 2"
+                          and "date_obs == 2022-01-20"
+                          and "localisation_lat == 45.822677"
+                          and "localisation_long == 1.242670")
+
+# Tree data of the selected site 
+site_tree = tree_df.query("observation_id == 475")
+
+print("\nTree Data of the selected site")
+print(site_tree)
+
+# Lichen data of the selected site 
+site_lichen = lichen_df.query("observation_id == 475")
+
+print("\nLichen Data of the selected site")
+print(site_lichen)
+
+# Table data of the selected site
+lichen_species = site_lichen["id"].unique()
+
+# For each lichen observed per site, count the total number of quadrat
+quadrat = []
+
+for i in lichen_species:
+    site_lichen_table = table_df[table_df["lichen_id"] == i]
+
+    # Sum of the non-empty quadrat
+    sum_sq1 = site_lichen_table['sq1'].sum()
+    sum_sq2 = site_lichen_table['sq2'].sum()
+    sum_sq3 = site_lichen_table['sq3'].sum()
+    sum_sq4 = site_lichen_table['sq4'].sum()
+    sum_sq5 = site_lichen_table['sq5'].sum()
+
+    sum_quadrat = len(sum_sq1 + sum_sq2 + sum_sq3 + sum_sq4 + sum_sq5)
+
+    print("\nTable Data lichen of the selected site")
+    print(site_lichen_table)
+
+    print("\nNon-empty quadrat")
+    print(sum_quadrat)
+
+    # Append the results to the site_lichen DataFrame 
+    quadrat.append({"id": i, "sum_quadrat":sum_quadrat})
+
+# Convert the quadrat list to a DataFrame
+quadrat_df = pd.DataFrame(quadrat)
+
+print("\nLichen Data of the selected site new")
+print(quadrat_df)
+
+# Merge the DataFrame 
+site_lichen_quadrat = pd.merge(site_lichen, quadrat_df)
+
+print(site_lichen_quadrat)
+
+### Histogram 3 with Plotly express bar: ###
+# Espèces observées sur le site sélectionné
+
+# concatenate dataframe "data_lichen_grouped" with the lichen species' names
+# site_lichen_quadrat_species=pd.concat([site_lichen_quadrat, lichen_species_df.loc[:,"name"]], axis=1)
 
 # sort based on occurence 
 # (note): update_xaxes(categoryorder="total descending") does not work
-df_grouped_species=(
-    df_grouped_species
-    .sort_values(by="count_col", ascending=False, ignore_index=True)
+site_lichen_quadrat=(
+    site_lichen_quadrat
+    .sort_values(by="sum_quadrat", ascending=False, ignore_index=True)
 )
 
-print("df_grouped_species:\n")
-print(df_grouped_species)
+print("\n new order")
+print(site_lichen_quadrat)
 
 ### Design bar plot ###
 
-# TODO: the user's selection should be interactive -> to modify in the final Dash
-user_selection_species=lichen_species_df.loc[30,"name"] 
-print("Species selected by the user:",user_selection_species)
-
-# index in "df_grouped_species" corresponding to the selected species
-idx=df_grouped_species["name"].loc[lambda x: x==user_selection_species].index
-#print("idx is:",idx)
-
-# adjust the color based on the selected species
-color_discrete_sequence=['#ec7c34']*len(df_grouped_species)
-color_discrete_sequence[int(idx[0])]='#609cd4'
-
-hist4=px.bar(
-    df_grouped_species, 
-    x="count_col", 
-    y="name",
+hist3=px.bar(
+    site_lichen_quadrat, 
+    x="sum_quadrat", 
+    y="species_id",
     orientation="h",
-    color="name",
-    color_discrete_sequence=color_discrete_sequence,
     # width=1500,
     # height=800,
-    title="Espèces les plus observées par les observateurs Lichens GO"
+    title="Espèces observées sur le site sélectionné"
 )
 
 # remove the legend
-hist4.update(layout_showlegend=False)
+hist3.update(layout_showlegend=False)
 
 # update the title 
-hist4.update_layout(
+hist3.update_layout(
     title_font=dict(color="grey",size=24),
     title={"x": .5,"y": .9,"xanchor": "center"},
 )
 
 # update axes 
-hist4.update_xaxes(title="Count",showgrid=False)
-hist4.update_yaxes(title="")
+hist3.update_xaxes(title="Count",showgrid=False)
+hist3.update_yaxes(title="")
 
-hist4.show()
+hist3.show()
