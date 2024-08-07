@@ -39,21 +39,27 @@ print(table_df.head())
 # print("\nTree Data")
 # print(tree_df.head())
 
-# Select one site based on latitude, longitude, date et user id 
+# Select one site based on latitude, longitude, date et user id
 # Filtering with query method
-site = observation_df.query("user_id == 2"
-                          and "date_obs == 2022-01-20"
-                          and "localisation_lat == 45.822677"
-                          and "localisation_long == 1.242670")
+user = 2
+date = "2022-01-20"
+lat = 45.822677
+long = 1.242670
+obs = 500
 
-# Tree data of the selected site 
-site_tree = tree_df.query("observation_id == 475")
+site = observation_df.query("user_id == @user"
+                          and "date_obs == @date"
+                          and "localisation_lat == @lat"
+                          and "localisation_long == @long")
+
+# Tree data of the selected site
+site_tree = tree_df.query("observation_id == @obs")
 
 print("\nTree Data of the selected site")
 print(site_tree)
 
-# Lichen data of the selected site 
-site_lichen = lichen_df.query("observation_id == 475")
+# Lichen data of the selected site
+site_lichen = lichen_df.query("observation_id == @obs")
 
 print("\nLichen Data of the selected site")
 print(site_lichen)
@@ -67,6 +73,9 @@ quadrat = []
 for i in lichen_species:
     site_lichen_table = table_df[table_df["lichen_id"] == i]
 
+    print("\nTable Data lichen")
+    print(site_lichen_table)
+
     # Sum of the non-empty quadrat
     sum_sq1 = site_lichen_table['sq1'].sum()
     sum_sq2 = site_lichen_table['sq2'].sum()
@@ -77,17 +86,17 @@ for i in lichen_species:
     sum_quadrat = sum_sq1 + sum_sq2 + sum_sq3 + sum_sq4 + sum_sq5
 
     # Letters to check
-    letters_to_check = ['E', 'S', 'N', 'O']
+    letters_to_check = ['N', 'E', 'S', 'O']
 
-    # Method 1: Using a dictionary
+    # Count based on the orientation
     count_dict = {}
     for letter in sum_quadrat:
-        if letter in letters_to_check:
-            if letter in count_dict:
-                count_dict[letter] += 1
-            else:
-                count_dict[letter] = 1
+        if letter in count_dict:
+            count_dict[letter] += 1
+        else:
+            count_dict[letter] = 1
 
+    # Complete with 0 for any missing orientation
     result_dict = []
     for letter in letters_to_check:
         if letter not in count_dict:
@@ -95,30 +104,25 @@ for i in lichen_species:
         else:
             result_dict.append(count_dict[letter])
 
-    print("\nTable Data lichen of the selected site")
-    print(site_lichen_table)
+    # print("\nNon-empty quadrat")
+    # print(sum_quadrat)
 
-    print("\nNon-empty quadrat")
-    print(sum_quadrat)
-
-    # Append the results to the site_lichen DataFrame 
-    quadrat.append({"id": i, 
-                    "sum_quadrat":len(sum_quadrat), 
-                    "E":result_dict[0],
-                    "S":result_dict[1],
-                    "N":result_dict[2],
+    # Append the results to the quadrat output
+    quadrat.append({"id": i,
+                    "sum_quadrat":len(sum_quadrat),
+                    "N":result_dict[0],
+                    "E":result_dict[1],
+                    "S":result_dict[2],
                     "O":result_dict[3]})
 
 # Convert the quadrat list to a DataFrame
 quadrat_df = pd.DataFrame(quadrat)
 
-print("\nLichen Data of the selected site new")
+print("\nLichen Data of the selected site with orientation")
 print(quadrat_df)
 
-# Merge the DataFrame 
+# Merge the DataFrame
 site_lichen_quadrat = pd.merge(site_lichen, quadrat_df)
-
-print(site_lichen_quadrat)
 
 ### Histogram 3 with Plotly express bar: ###
 # Espèces observées sur le site sélectionné
@@ -129,21 +133,21 @@ df = lichen_species_df.loc[idx-1,"name"].reset_index(drop=True)
 
 site_lichen_quadrat_species=pd.concat([site_lichen_quadrat, df], axis=1)
 
-# sort based on occurence 
+# sort based on occurence
 # (note): update_xaxes(categoryorder="total descending") does not work
 site_lichen_quadrat_species=(
     site_lichen_quadrat_species
     .sort_values(by="sum_quadrat", ignore_index=True)
 )
 
-print("\n new order")
+print("\n Final table for histogram")
 print(site_lichen_quadrat_species)
 
 ### Design bar plot ###
 
 hist3=px.bar(
-    site_lichen_quadrat_species, 
-    x=["E", "S", "N", "O"], 
+    site_lichen_quadrat_species,
+    x=["N", "E", "S", "O"],
     y="name",
     orientation="h",
     # width=1500,
@@ -154,13 +158,13 @@ hist3=px.bar(
 # remove the legend
 #hist3.update(layout_showlegend=False)
 
-# update the title 
+# update the title
 hist3.update_layout(
-    title_font=dict(color="grey",size=24),
+    title_font=dict(color="grey",size=20),
     title={"x": .5,"y": .9,"xanchor": "center"},
 )
 
-# update axes 
+# update axes
 hist3.update_xaxes(title="Count",showgrid=False)
 hist3.update_yaxes(title="")
 
