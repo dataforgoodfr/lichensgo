@@ -74,7 +74,26 @@ for i in lichen_species:
     sum_sq4 = site_lichen_table['sq4'].sum()
     sum_sq5 = site_lichen_table['sq5'].sum()
 
-    sum_quadrat = len(sum_sq1 + sum_sq2 + sum_sq3 + sum_sq4 + sum_sq5)
+    sum_quadrat = sum_sq1 + sum_sq2 + sum_sq3 + sum_sq4 + sum_sq5
+
+    # Letters to check
+    letters_to_check = ['E', 'S', 'N', 'O']
+
+    # Method 1: Using a dictionary
+    count_dict = {}
+    for letter in sum_quadrat:
+        if letter in letters_to_check:
+            if letter in count_dict:
+                count_dict[letter] += 1
+            else:
+                count_dict[letter] = 1
+
+    result_dict = []
+    for letter in letters_to_check:
+        if letter not in count_dict:
+            result_dict.append(0)
+        else:
+            result_dict.append(count_dict[letter])
 
     print("\nTable Data lichen of the selected site")
     print(site_lichen_table)
@@ -83,7 +102,12 @@ for i in lichen_species:
     print(sum_quadrat)
 
     # Append the results to the site_lichen DataFrame 
-    quadrat.append({"id": i, "sum_quadrat":sum_quadrat})
+    quadrat.append({"id": i, 
+                    "sum_quadrat":len(sum_quadrat), 
+                    "E":result_dict[0],
+                    "S":result_dict[1],
+                    "N":result_dict[2],
+                    "O":result_dict[3]})
 
 # Convert the quadrat list to a DataFrame
 quadrat_df = pd.DataFrame(quadrat)
@@ -99,25 +123,28 @@ print(site_lichen_quadrat)
 ### Histogram 3 with Plotly express bar: ###
 # Espèces observées sur le site sélectionné
 
-# concatenate dataframe "data_lichen_grouped" with the lichen species' names
-# site_lichen_quadrat_species=pd.concat([site_lichen_quadrat, lichen_species_df.loc[:,"name"]], axis=1)
+# concatenate dataframe "site_lichen_quadrat" with the lichen species' names
+idx = site_lichen_quadrat["species_id"]
+df = lichen_species_df.loc[idx-1,"name"].reset_index(drop=True)
+
+site_lichen_quadrat_species=pd.concat([site_lichen_quadrat, df], axis=1)
 
 # sort based on occurence 
 # (note): update_xaxes(categoryorder="total descending") does not work
-site_lichen_quadrat=(
-    site_lichen_quadrat
-    .sort_values(by="sum_quadrat", ascending=False, ignore_index=True)
+site_lichen_quadrat_species=(
+    site_lichen_quadrat_species
+    .sort_values(by="sum_quadrat", ignore_index=True)
 )
 
 print("\n new order")
-print(site_lichen_quadrat)
+print(site_lichen_quadrat_species)
 
 ### Design bar plot ###
 
 hist3=px.bar(
-    site_lichen_quadrat, 
-    x="sum_quadrat", 
-    y="species_id",
+    site_lichen_quadrat_species, 
+    x=["E", "S", "N", "O"], 
+    y="name",
     orientation="h",
     # width=1500,
     # height=800,
@@ -125,7 +152,7 @@ hist3=px.bar(
 )
 
 # remove the legend
-hist3.update(layout_showlegend=False)
+#hist3.update(layout_showlegend=False)
 
 # update the title 
 hist3.update_layout(
