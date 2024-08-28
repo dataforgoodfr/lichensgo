@@ -13,7 +13,7 @@ from dash.dependencies import Output, Input
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
 from my_data.db_connect import get_session
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data
+from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_lichen_ecology
 
 
 # Initialize Dash app
@@ -23,6 +23,13 @@ app = Dash(__name__)
 environment_df = get_environment_data()
 lichen_df = get_lichen_data()
 lichen_species_df = get_lichen_species_data()
+lichen_ecology_df = get_lichen_ecology()
+
+print("\n Lichen ecology info:")
+print(lichen_ecology_df.head())
+
+print("\n Taxon")
+print(lichen_ecology_df.loc[20,"taxon"])
 
 # group by species' type + add a column with the count occurence
 df_grouped=(
@@ -46,13 +53,20 @@ app.layout = html.Div([
     html.H1("Select the Lichen's species"),
     dcc.Dropdown(id="dropdown_Lichen",
                  options=lichen_species_df["name"].unique(),
-                 value=["Xanthoria parietina"]
+                 value="Xanthoria parietina"
                  ),
+    html.H2("Ecology information of the selected lichen:"),
+    html.H4(id="info_taxon"),
+    html.H4(id="info_pH"),
+    html.H4(id="info_aridity"),
     dcc.Graph(id="hist4")
 ])
 
 # Define callback to update graph
 @app.callback(
+    Output("info_taxon", "children"),
+    Output("info_pH", "children"),
+    Output("info_aridity", "children"),
     Output("hist4", "figure"),
     Input("dropdown_Lichen", "value")
 )
@@ -72,20 +86,20 @@ def hist4_interactive(Lichen_selected):
         orientation="h",
         color="name",
         color_discrete_sequence=color_discrete_sequence,
-        # width=1500,
-        # height=800,
         title="Espèces les plus observées par les observateurs Lichens GO"
     )
 
     # remove the legend
     hist4.update(layout_showlegend=False)
 
-    # update the title 
+    # update the layout 
     hist4.update_layout(
         title_font=dict(color="grey",size=24),
         title={"x": .5,"y": .95,"xanchor": "center"},
         plot_bgcolor='white',
-        paper_bgcolor="white"
+        paper_bgcolor="white",
+        width=1100,
+        height=800, 
     )
 
     # update axes 
@@ -101,9 +115,14 @@ def hist4_interactive(Lichen_selected):
         showline=True,
         linecolor='black',
     )
-    return hist4
+
+    info_taxon =f" Taxon : {lichen_ecology_df.loc[int(idx[0]),"taxon"]}"
+    info_pH =f" pH : {lichen_ecology_df.loc[int(idx[0]),"pH"]}"
+    info_aridity =f" Aridity : {lichen_ecology_df.loc[int(idx[0]),"aridity"]}"
+
+    return info_taxon, info_pH, info_aridity, hist4
 
 # Run the app
-if __name__ == "main":
-    app.run(debug=True, host="127.0.0.1" ,port=8050)
+if __name__ == "__main__":
+    app.run(debug=True,host="127.0.0.1",port=8050)
     #app.run()
