@@ -111,7 +111,8 @@ def get_lichen_ecology():
             "pH": lichen_ecology.pH,
             "aridity": lichen_ecology.aridity,
             "eutrophication": lichen_ecology.eutrophication,
-            "poleotolerance": lichen_ecology.poleotolerance
+            "poleotolerance": lichen_ecology.poleotolerance,
+            "cleaned_taxon": lichen_ecology.cleaned_taxon
         })
     return pd.DataFrame(lichen_ecology_data)
 
@@ -120,8 +121,12 @@ def get_lichen_frequency():
     lichen_frequency_data = []
     for lichen_frequency in data:
         lichen_frequency_data.append({
-            "id": lichen_frequency.id_site,
-            "main_lichenspecies": lichen_frequency.main_lichenspecies,
-            "frequency": lichen_frequency.frequency
+            "id": lichen_frequency.id,
+            "id_site": lichen_frequency.id_site,
+            "lichen": lichen_frequency.lichen,
+            "freq": lichen_frequency.freq,
+            "ph": lichen_frequency.ph,
+            "eutrophication": lichen_frequency.eutrophication,
+            "poleotolerance": lichen_frequency.poleotolerance
         })
     return pd.DataFrame(lichen_frequency_data)

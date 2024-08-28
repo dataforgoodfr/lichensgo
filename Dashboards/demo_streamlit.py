@@ -3,45 +3,84 @@ import pandas as pd
 import my_data.datasets as df
 import plotly.graph_objects as go
 import numpy as np
+from pathlib import Path
+import sys
+
+chemin_dossier_parent = Path(__file__).parent.parent
+sys.path.append(str(chemin_dossier_parent))
+from my_data.db_connect import get_session
+from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_observation_data, get_table_data, get_tree_data, get_tree_species, get_lichen_ecology
 
 # Source : https://discuss.streamlit.io/t/develop-a-dashboard-app-with-streamlit-using-plotly/37148/4
 # run with : streamlit run Dashboards/demo_streamlit.py
 
-# Finalement > prendre les données issue de la vue
-lichen_frequency = df.get_lichen_frequency()
+# Récupération des datasets
+environment_df = get_environment_data()
+lichen_df = get_lichen_data()
+lichen_species_df = get_lichen_species_data()
+observation_df = get_observation_data()
+table_df = get_table_data()
+tree_df = get_tree_data()
+tree_species_df = get_tree_species()
+ecology_df = get_lichen_ecology()
 
-# Préalable au calcul 
-def calc_frequences_glob(df):
-    # Récupération de toutes les espèce dans un id_site
-    df_agg = df.groupby("id").agg({
-        "frequency": "sum"
-    }).reset_index()
+# Fonction pour calculer la fréquence des valeurs E, N, O, S
+def calculate_frequency(column):
+    return column.apply(lambda x: sum(1 for char in x if char in ['E', 'N', 'O', 'S']))
 
-    return df_agg
+# Calculer la fréquence
+table_df['freq'] = (
+    table_df['sq1'].apply(lambda x: len(x) if pd.notnull(x).any() else 0)  +
+    table_df['sq2'].apply(lambda x: len(x) if pd.notnull(x).any() else 0) +
+    table_df['sq3'].apply(lambda x: len(x) if pd.notnull(x).any() else 0) +
+    table_df['sq4'].apply(lambda x: len(x) if pd.notnull(x).any() else 0) +
+    table_df['sq5'].apply(lambda x: len(x) if pd.notnull(x).any() else 0)
+)
 
-def deg_artif(id_site: int, species_name: str):
-    # Calcul filtre id & espèces
-    calc_glob = calc_frequences_glob(lichen_frequency)
-    base = lichen_frequency[(lichen_frequency["id"] == id_site) & (lichen_frequency["main_lichenspecies"] == species_name)]["frequency"].values[0]
-    glob = calc_glob[calc_glob["id"] == id_site]["frequency"].sum()
+# Joindre table avec lichen et observation
+merged_df = table_df.merge(lichen_df, left_on='lichen_id', right_on='id', suffixes=('', '_l'))
+merged_df = merged_df.merge(lichen_species_df, left_on='species_id', right_on='id', suffixes=('', '_ls'))
+merged_df = merged_df.merge(observation_df, left_on='observation_id', right_on='id', suffixes=('', '_o'))
 
-    return round((base / glob) * 100, 2)
+# Grouper par 'species' et 'observation_id' et additionner les fréquences
+grouped_df = merged_df.groupby(['name', 'observation_id'])['freq'].sum().reset_index()
+
+# Regrouper les deux tables afficher les données écologiques
+grouped_df = grouped_df.merge(ecology_df, left_on='name', right_on='cleaned_taxon', suffixes=('', '_e'))
+
+# ajustement des noms finaux
+grouped_df = grouped_df[['observation_id', 'name', 'freq','pH','eutrophication', 'poleotolerance']]
+grouped_df = grouped_df.rename(
+    columns={
+        'observation_id': 'id', 
+        'name': 'lichen', 
+        'freq': 'freq',
+        'pH': 'ph',
+        'eutrophication': 'eutrophication', 
+        'poleotolerance': 'poleotolerance'
+        })
+
+# Calcul du degrés d'artificialisation
+def deg_artif(my_input: int, species: str):
+    global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
+    base_freq = grouped_df[(grouped_df['id']== my_input) & (grouped_df['lichen'] == species)]['freq'].sum()
+
+    return round((base_freq / global_freq) * 100, 2)
+
+
 
 # Sélection du site 
 id_site = st.selectbox(
     "Sur quel site voulez-vous ?",
-    lichen_frequency["id"].unique(),
+    grouped_df["id"].unique(),
     index=None,
     placeholder="site n°",
 )
 
-filtered_id = lichen_frequency[lichen_frequency["id"] == id_site]
-# Faire un if pour annuler l'erreur quand on sélectionne 
-
 # Sélection des espèces 
 species_name = st.selectbox(
     "Sur quel espèce voulez-vous ?",
-    filtered_id["main_lichenspecies"],
+    grouped_df["lichen"].unique(),
     index=None,
     placeholder="Je sélectionne l'espèce...",
 )
@@ -50,10 +89,9 @@ species_name = st.selectbox(
 if id_site and species_name != None:
     pass
 else:
-    id_site = 460
-    species_name = "Physcia aipolia/stellaris"
+    id_site = 465
+    species_name = 'Amandinea punctata/Lecidella elaeochroma'
 
-# le calcul
 artificialisation_proportions = deg_artif(id_site, species_name)
 
 # # Dataviz charts
@@ -77,46 +115,4 @@ fig1 = go.Figure(go.Indicator(
                  ],
              'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': artificialisation_proportions}
              }))
-
-x_values = [10, 8, 6, 5, 4, 3, 2, 1]
-y_values = ["Punctelia", "Physcia tenella", "Flavoparmelia", "Espèce 4", "Espèce 5", "Espèce 6", "Espèce 7", "Espèce 8"]
-x_values.reverse()
-y_values.reverse()
-
-fig2 = go.Figure(go.Bar(
-            x=x_values,
-            y=y_values,
-            orientation='h'))
-
-fig2.update_layout(
-    title="Espèces observées sur le site sélectionné",
-    xaxis_title="Nombre de quadrat",
-    yaxis_title="",
-    yaxis=dict(tickmode='array', tickvals=[0, 1, 2, 3, 4, 5, 6, 7],
-               ticktext=["Punctelia", "Physcia tenella", "Flavoparmelia", "Espèce 4", "Espèce 5", "Espèce 6", "Espèce 7", "Etc."])
-)
-
-plot_bgcolor = "#def"
-quadrant_colors = [plot_bgcolor, "#f25829", "#f2a529", "#eff229", "#2bad4e"] 
-n_quadrants = len(quadrant_colors) - 1
-
-current_value = 19
-min_value = 0
-max_value = 50
-hand_length = np.sqrt(2) / 4
-hand_angle = np.pi * (1 - (max(min_value, min(max_value, current_value)) - min_value) / (max_value - min_value))
-
-# Display streamlit
-# st.title("Dataviz POC")
-# tab1, tab2, tab3= st.tabs(["Gauge", "Histogram", "df Fréquences"])
-# tab1= st.tabs(["Gauge"])
-# with tab1:
-st.write(f"Degrés d'artificialisation sur le site n°**{id_site}** pour l'espèce **{species_name}**")
 st.plotly_chart(fig1)
-
-# with tab2:
-#     st.plotly_chart(fig2)
-
-# with tab3:
-#     st.write("les données de fréquences")
-#     # st.write(calc_freq)

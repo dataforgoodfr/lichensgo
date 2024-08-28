@@ -98,13 +98,19 @@ class LichenEcology(Base):
     aridity = Column(String(255))
     eutrophication = Column(String(255))
     poleotolerance = Column(String(255))
+    cleaned_taxon = Column(String(255))
 
-# Table pour les fréquences
+# Vue pour les fréquences
 class LichenFrequency(Base):
     __tablename__ = 'lichen_frequency'
     __table_args__ = {'autoload_with': engine} 
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     id_site = Column(BigInteger)
-    main_lichenspecies = Column(String(255))
-    frequency = Column(BigInteger)
+    lichen = Column(String(255))
+    ph = Column(String(255))
+    freq = Column(Integer)
+    eutrophication = Column(String(255))
+    poleotolerance = Column(String(255))
+    
+    
