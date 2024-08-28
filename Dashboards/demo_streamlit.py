@@ -61,13 +61,24 @@ grouped_df = grouped_df.rename(
         })
 
 # Calcul du degrés d'artificialisation
-def deg_artif(my_input: int, species: str):
+def deg_artif(my_input: int):
     global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
-    base_freq = grouped_df[(grouped_df['id']== my_input) & (grouped_df['lichen'] == species)]['freq'].sum()
+    base_freq = grouped_df[(grouped_df['id'] == my_input) & (grouped_df['poleotolerance'] == 'resistant')]['freq'].sum()
 
     return round((base_freq / global_freq) * 100, 2)
 
+# Calcul de la pollution acidé 
+def pollution_acide(my_input: int):
+    global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
+    acid_freq = grouped_df[(grouped_df['id'] == my_input) & (grouped_df['ph'] == 'acidophilous')]['freq'].sum()
 
+    return round((acid_freq / global_freq) * 100, 2)
+
+def pollution_azote(my_input: int):
+    global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
+    azote_freq = grouped_df[(grouped_df['id'] == my_input) & (grouped_df['eutrophication'] == 'eutrophic')]['freq'].sum()
+
+    return round((azote_freq / global_freq) * 100, 2)
 
 # Sélection du site 
 id_site = st.selectbox(
@@ -77,42 +88,51 @@ id_site = st.selectbox(
     placeholder="site n°",
 )
 
-# Sélection des espèces 
-species_name = st.selectbox(
-    "Sur quel espèce voulez-vous ?",
-    grouped_df["lichen"].unique(),
+# Sélection metrique
+metrics = st.selectbox(
+    "Quelle métrique voulez-vous ?",
+    ("Degré d'artificialisation", "Pollution acide", "Pollution azote"),
     index=None,
-    placeholder="Je sélectionne l'espèce...",
+    placeholder="Je sélectionne la métrique...",
 )
 
 # Affichage des éléments
-if id_site and species_name != None:
-    pass
+if id_site:
+    if metrics == "Degré d'artificialisation":
+        artificialisation_proportions = deg_artif(id_site)
+    elif metrics == "Pollution acide":
+        artificialisation_proportions = pollution_acide(id_site)
+    elif metrics == "Pollution azote":
+        artificialisation_proportions = pollution_azote(id_site)
+
+# Dataviz charts
+if id_site and metrics:
+    ##########################
+    # Affichage du graphique #
+    ##########################
+    st.write("# Gauge bar")
+    st.write(f"Site : {id_site}")
+    st.write(f"Lichen : {metrics}")
+    fig1 = go.Figure(go.Indicator(
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        value = artificialisation_proportions,
+        mode = "gauge+number",
+        title = {'text': "Degré d'artificialisation"},
+        gauge = {'axis': {'range': [0, 100], 'dtick': 25},
+                'bar': {'color': "#000000"},
+                'steps' : [
+                    #  {'range': [0, 25], 'color': "#E3D7FF"},
+                    #  {'range': [25, 50], 'color': "#AFA2FF"},
+                    #  {'range': [50, 75], 'color': "#7A89C2"},
+                    #  {'range': [75, 100], 'color': "#72788D"}
+                    {'range': [0, 25], 'color': "green"},
+                    {'range': [25, 50], 'color': "yellow"},
+                    {'range': [50, 75], 'color': "orange"},
+                    {'range': [75, 100], 'color': "red"}
+                    ],
+                'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': artificialisation_proportions}
+                }))
+    # Afficher les donnée dans streamlit
+    st.plotly_chart(fig1)
 else:
-    id_site = 465
-    species_name = 'Amandinea punctata/Lecidella elaeochroma'
-
-artificialisation_proportions = deg_artif(id_site, species_name)
-
-# # Dataviz charts
-st.write("# Gauge bar")
-fig1 = go.Figure(go.Indicator(
-    domain = {'x': [0, 1], 'y': [0, 1]},
-    value = artificialisation_proportions,
-    mode = "gauge+number",
-    title = {'text': "Degré d'artificialisation"},
-    gauge = {'axis': {'range': [0, 100], 'dtick': 25},
-             'bar': {'color': "#000000"},
-             'steps' : [
-                #  {'range': [0, 25], 'color': "#E3D7FF"},
-                #  {'range': [25, 50], 'color': "#AFA2FF"},
-                #  {'range': [50, 75], 'color': "#7A89C2"},
-                #  {'range': [75, 100], 'color': "#72788D"}
-                 {'range': [0, 25], 'color': "green"},
-                 {'range': [25, 50], 'color': "yellow"},
-                 {'range': [50, 75], 'color': "orange"},
-                 {'range': [75, 100], 'color': "red"}
-                 ],
-             'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': artificialisation_proportions}
-             }))
-st.plotly_chart(fig1)
+    st.write("Veuillez sélectionner un site et une métrique")

@@ -57,17 +57,32 @@ grouped_df = grouped_df.rename(
         'poleotolerance': 'poleotolerance'
         })
 
+# print(grouped_df["ph"].unique())
+
 # entrée id
 my_input = 410
-species = 'Amandinea punctata/Lecidella elaeochroma'
-global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
-base_freq = grouped_df[(grouped_df['id']== my_input) & (grouped_df['lichen'] == species)]['freq'].sum()
-
-def deg_artif(my_input: int, species: str):
+# Calcul du degrés d'artificialisation
+def deg_artif(my_input: int):
     global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
-    base_freq = grouped_df[(grouped_df['id']== my_input) & (grouped_df['lichen'] == species)]['freq'].sum()
+    base_freq = grouped_df[(grouped_df['id'] == my_input) & (grouped_df['poleotolerance'] == 'resistant')]['freq'].sum()
 
     return round((base_freq / global_freq) * 100, 2)
 
-print(deg_artif(410, 'Amandinea punctata/Lecidella elaeochroma'))
+# Calcul de la pollution acidé 
+def pollution_acide(my_input: int):
+    global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
+    acid_freq = grouped_df[(grouped_df['id'] == my_input) & (grouped_df['ph'] == 'acidophilous')]['freq'].sum()
 
+    return round((acid_freq / global_freq) * 100, 2)
+
+def pollution_azote(my_input: int):
+    global_freq = grouped_df[grouped_df['id']== my_input]['freq'].sum()
+    azote_freq = grouped_df[(grouped_df['id'] == my_input) & (grouped_df['eutrophication'] == 'eutrophic')]['freq'].sum()
+
+    return round((azote_freq / global_freq) * 100, 2)
+
+# print(deg_artif(410))
+# print(pollution_acide(410))
+# print(pollution_azote(410))
+
+print(grouped_df[grouped_df['id']== 414])
