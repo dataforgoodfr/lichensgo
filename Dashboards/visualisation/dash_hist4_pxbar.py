@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import base64
 
 import sys
 from pathlib import Path
@@ -15,6 +16,9 @@ sys.path.append(str(chemin_dossier_parent))
 from my_data.db_connect import get_session
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_lichen_ecology
 
+# image file path
+image_path = 'C:/Users/Galinette/Documents/GitHub/lichensgo/Dashboards/visualisation/xanthoria parietina.jpg'
+encoded_image = base64.b64encode(open(image_path, 'rb').read())
 
 # Initialize Dash app
 app = Dash(__name__)
@@ -59,6 +63,11 @@ app.layout = html.Div([
     html.H4(id="info_taxon"),
     html.H4(id="info_pH"),
     html.H4(id="info_aridity"),
+    html.Img(src='data:image/png;base64,{}'.format(encoded_image.decode()),
+            style={
+            'width': '10%',
+            'height': '10%',
+        }),
     dcc.Graph(id="hist4")
 ])
 
@@ -67,6 +76,7 @@ app.layout = html.Div([
     Output("info_taxon", "children"),
     Output("info_pH", "children"),
     Output("info_aridity", "children"),
+    #Output("image", "src"),
     Output("hist4", "figure"),
     Input("dropdown_Lichen", "value")
 )
