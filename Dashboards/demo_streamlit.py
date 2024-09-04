@@ -3,9 +3,9 @@ import pandas as pd
 import my_data.datasets as df
 import plotly.graph_objects as go
 import numpy as np
+
 from pathlib import Path
 import sys
-
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
 from my_data.db_connect import get_session
@@ -121,10 +121,6 @@ if id_site and metrics:
         gauge = {'axis': {'range': [0, 100], 'dtick': 25},
                 'bar': {'color': "#000000"},
                 'steps' : [
-                    #  {'range': [0, 25], 'color': "#E3D7FF"},
-                    #  {'range': [25, 50], 'color': "#AFA2FF"},
-                    #  {'range': [50, 75], 'color': "#7A89C2"},
-                    #  {'range': [75, 100], 'color': "#72788D"}
                     {'range': [0, 25], 'color': "green"},
                     {'range': [25, 50], 'color': "yellow"},
                     {'range': [50, 75], 'color': "orange"},

@@ -81,8 +81,5 @@ def pollution_azote(my_input: int):
 
     return round((azote_freq / global_freq) * 100, 2)
 
-# print(deg_artif(410))
-# print(pollution_acide(410))
-# print(pollution_azote(410))
 
 print(grouped_df[grouped_df['id']== 414])
