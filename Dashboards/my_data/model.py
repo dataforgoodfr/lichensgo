@@ -112,5 +112,3 @@ class LichenFrequency(Base):
     freq = Column(Integer)
     eutrophication = Column(String(255))
     poleotolerance = Column(String(255))
-    
-    
