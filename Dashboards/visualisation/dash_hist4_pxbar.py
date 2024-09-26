@@ -29,26 +29,27 @@ lichen_df = get_lichen_data()
 lichen_species_df = get_lichen_species_data()
 lichen_ecology_df = get_lichen_ecology()
 
-print("\n Lichen ecology info:")
-print(lichen_ecology_df.head())
+print("\n Lichen species info:")
+print(lichen_species_df)
 
-print("\n Taxon")
-print(lichen_ecology_df.loc[20,"taxon"])
+print("\n Lichen ecology info:")
+print(lichen_ecology_df)
 
 # group by species' type + add a column with the count occurence
-df_grouped=(
+species_grouped_df=(
     lichen_df
     .groupby("species_id", as_index=False)
     .agg(count_col=pd.NamedAgg(column="species_id", aggfunc="count"))
 )
 
-# concatenate dataframe "df_grouped" with the lichen species' names
-df_grouped_species=pd.concat([df_grouped, lichen_species_df.loc[:,"name"]], axis=1)
+print(species_grouped_df)
+
+# concatenate dataframe "species_grouped_df" with the lichen species' names
+species_grouped_df=pd.concat([species_grouped_df, lichen_species_df.loc[:,"name"]], axis=1)
 
 # sort based on occurence 
-# (note): update_xaxes(categoryorder="total descending") does not work
-df_grouped_species=(
-    df_grouped_species
+species_grouped_df=(
+    species_grouped_df
     .sort_values(by="count_col", ascending=False, ignore_index=True)
 )
 
@@ -83,14 +84,14 @@ app.layout = html.Div([
 def hist4_interactive(Lichen_selected):
 
     # index in "df_grouped_species" corresponding to the selected species
-    idx=df_grouped_species["name"].loc[lambda x: x==Lichen_selected].index
+    idx=species_grouped_df["name"].loc[lambda x: x==Lichen_selected].index
 
     # adjust the color based on the selected species
-    color_discrete_sequence=['#ec7c34']*len(df_grouped_species)
+    color_discrete_sequence=['#ec7c34']*len(species_grouped_df)
     color_discrete_sequence[int(idx[0])]='#609cd4'
 
     hist4=px.bar(
-        df_grouped_species, 
+        species_grouped_df, 
         x="count_col", 
         y="name",
         orientation="h",
@@ -126,9 +127,13 @@ def hist4_interactive(Lichen_selected):
         linecolor='black',
     )
 
-    info_taxon =f" Taxon : {lichen_ecology_df.loc[int(idx[0]),"taxon"]}"
-    info_pH =f" pH : {lichen_ecology_df.loc[int(idx[0]),"pH"]}"
-    info_aridity =f" Aridity : {lichen_ecology_df.loc[int(idx[0]),"aridity"]}"
+    # General info from  lichen_ecology_df dataframe 
+    # index in "lichen_ecology_df" corresponding to the selected species (connection key: Taxon)
+    idx_lichen_ecology=lichen_ecology_df["taxon"].loc[lambda x: x==Lichen_selected].index
+    
+    info_taxon =f" Taxon : {lichen_ecology_df.loc[idx_lichen_ecology[0],"taxon"]}"
+    info_pH =f" pH : {lichen_ecology_df.loc[idx_lichen_ecology[0],"pH"]}"
+    info_aridity =f" Aridity : {lichen_ecology_df.loc[idx_lichen_ecology[0],"aridity"]}"
 
     return info_taxon, info_pH, info_aridity, hist4
 
