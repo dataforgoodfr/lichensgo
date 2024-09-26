@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import base64
 
-import sys
 from pathlib import Path
 
 import plotly.express as px
@@ -29,20 +28,12 @@ lichen_df = get_lichen_data()
 lichen_species_df = get_lichen_species_data()
 lichen_ecology_df = get_lichen_ecology()
 
-print("\n Lichen species info:")
-print(lichen_species_df)
-
-print("\n Lichen ecology info:")
-print(lichen_ecology_df)
-
 # group by species' type + add a column with the count occurence
 species_grouped_df=(
     lichen_df
     .groupby("species_id", as_index=False)
     .agg(count_col=pd.NamedAgg(column="species_id", aggfunc="count"))
 )
-
-print(species_grouped_df)
 
 # concatenate dataframe "species_grouped_df" with the lichen species' names
 species_grouped_df=pd.concat([species_grouped_df, lichen_species_df.loc[:,"name"]], axis=1)
@@ -87,8 +78,10 @@ def hist4_interactive(Lichen_selected):
     idx=species_grouped_df["name"].loc[lambda x: x==Lichen_selected].index
 
     # adjust the color based on the selected species
-    color_discrete_sequence=['#ec7c34']*len(species_grouped_df)
-    color_discrete_sequence[int(idx[0])]='#609cd4'
+    color1 = '#ec7c34'
+    color2 = '#609cd4'
+    color_discrete_sequence=[color1]*len(species_grouped_df)
+    color_discrete_sequence[int(idx[0])]=color2
 
     hist4=px.bar(
         species_grouped_df, 
@@ -129,9 +122,9 @@ def hist4_interactive(Lichen_selected):
 
     # General info from  lichen_ecology_df dataframe 
     # index in "lichen_ecology_df" corresponding to the selected species (connection key: Taxon)
-    idx_lichen_ecology=lichen_ecology_df["taxon"].loc[lambda x: x==Lichen_selected].index
+    idx_lichen_ecology=lichen_ecology_df["cleaned_taxon"].loc[lambda x: x==Lichen_selected].index
     
-    info_taxon =f" Taxon : {lichen_ecology_df.loc[idx_lichen_ecology[0],"taxon"]}"
+    info_taxon =f" Taxon : {lichen_ecology_df.loc[idx_lichen_ecology[0],"cleaned_taxon"]}"
     info_pH =f" pH : {lichen_ecology_df.loc[idx_lichen_ecology[0],"pH"]}"
     info_aridity =f" Aridity : {lichen_ecology_df.loc[idx_lichen_ecology[0],"aridity"]}"
 
