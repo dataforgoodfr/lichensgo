@@ -18,6 +18,18 @@ session = get_session()
 square_columns = ['sq1', 'sq2', 'sq3', 'sq4', 'sq5']
 orientations = ['N', 'E', 'S', 'O']
 
+# Create a mapping dictionary for legend items (orientations)
+orientations_mapping = {
+    "N": "Nord",
+    "E": "Est",
+    "S": "Sud",
+    "O": "Ouest"
+}
+
+# Color palette (other options here: https://plotly.com/python/discrete-color/)
+base_color_palette = px.colors.qualitative.Set2
+pastel_color_palette = px.colors.qualitative.Pastel2
+
 def load_table():
 
     # Get the datasets
@@ -83,22 +95,23 @@ site_table_per_lichen = filter_and_aggregate_table_per_lichen(table, initial_obs
 # Create the bar plot
 def create_hist3(site_table_per_lichen):
 
+    # Create the bar plot
     hist3 = px.bar(
         site_table_per_lichen,
         x=orientations,
         y="name",
         orientation="h",
-        color_discrete_sequence=px.colors.qualitative.T10 # color palette (other options here: https://plotly.com/python/discrete-color/)
+        color_discrete_sequence=base_color_palette
     )
 
     # Update layout
     hist3.update_layout(
         title_text="Espèces observées sur le site sélectionné",
-        title_font=dict(size=24),
         title={"x": 0.5, "y": 0.95, "xanchor": "center"},
         margin=dict(l=20, r=20, t=40, b=20),
         legend_title_text="Orientation",
-        template="plotly_white"
+        template="plotly_white",
+        barcornerradius="30%"
     )
 
     # Update axes
@@ -118,6 +131,9 @@ def create_hist3(site_table_per_lichen):
         <b>Espèce:</b> %{y}<br>
         <b>Nombre:</b> %{x}<extra></extra>
     """)
+
+    # Update the legend labels based on the mapping
+    hist3.for_each_trace(lambda t: t.update(name=orientations_mapping.get(t.name, t.name)))
 
     return hist3
 
