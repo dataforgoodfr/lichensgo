@@ -144,11 +144,8 @@ def create_hist4(count_lichen_merged, user_selection_species_id):
         # tickfont=dict(size=10)  # Adjust tick font size
     )
 
-    # Customize hover information
-    hist4.update_traces(hovertemplate="""
-        <b>Espèce:</b> %{y}<br>
-        <b>Nombre:</b> %{x}<extra></extra>
-    """)
+    # Update hover template
+    hist4.update_traces(hovertemplate="<b>%{y}</b><br><b>Nombre:</b> %{x}<extra></extra>")
 
     return hist4
 
@@ -185,104 +182,112 @@ hist4 = update_hist4(initial_user_selection_species_id)
 app = Dash(external_stylesheets=dmc.styles.ALL)
 
 app.layout = dmc.MantineProvider(
-    dmc.Grid(
-        children=[
-            dmc.GridCol(
-                [
-                    html.H3(
-                        "Carte des observations",
-                        style={
-                            "text-align": "left",
-                            "margin-left": "20px",
-                        },
-                    ),
-                    html.Img(
-                        src="/assets/sample_map.png",
-                        style={
-                            "width": "60%",  # Set the image width to 100% to fit the column
-                            "margin-left": "20px",  # Space between image and text
-                        },
-                    ),
-                ],
-                span=7
-            ),
-            dmc.GridCol(
-                [
-                    html.H3(
-                        "Espèces observées sur le site sélectionné",
-                        style={
-                            "text-align": "left",
-                            "margin-left": "20px",
-                        },
-                    ),
-                    html.Div(
-                        [
-                            html.Label(
-                                "Sélectionner un id d'observation:",
-                                style={
-                                    "margin-right": "10px",
-                                    # "font-weight": "bold",
-                                },
-                            ),
-                            dcc.Dropdown(
-                                id="obs-dropdown",
-                                options=observation_ids,
-                                value=initial_user_selection_obs_id,  # Default value
-                                clearable=False,
-                                style={"width": "50%"},
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "align-items": "center",
-                            "justify-content": "center",
-                            "margin": "20px",
-                        },
-                    ),
-                    dcc.Graph(id="hist3", figure=hist3),
-                ],
-                span=5,
-            ),
-            dmc.GridCol(
-                [
-                    html.H3(
-                        "Espèces les plus observées par les observateurs Lichens GO",
-                        style={
-                            "text-align": "left",
-                            "margin": "20px",
-                        },
-                    ),
-                    html.Div(
-                        [
-                            html.Label(
-                                "Sélectionner une espèce:",
-                                style={
-                                    "margin-right": "10px",
-                                    # "font-weight": "bold",
-                                },
-                            ),
-                            dcc.Dropdown(
-                                id="species-dropdown",
-                                options=user_species_options,
-                                value=initial_user_selection_species_id,  # Default value
-                                clearable=False,
-                                style={"width": "400px"},
-                            ),
-                        ],
-                        style={
-                            "display": "flex",
-                            "align-items": "center",
-                            "justify-content": "left",
-                            "margin-left": "20px",
-                        },
-                    ),
-                    dcc.Graph(id="hist4", figure=hist4),
-                ],
-                span=8,
-            ),
-            dmc.GridCol([dcc.Graph(figure={}, id="graph-placeholder")], span=4),
-        ]
-    )
+    [
+        dmc.Grid(
+            children=[
+                dmc.GridCol(
+                    [
+                        html.H3(
+                            "Carte des observations",
+                            style={
+                                "text-align": "left",
+                                "margin-left": "20px",
+                            },
+                        ),
+                        html.Img(
+                            src="/assets/sample_map.png",
+                            style={
+                                "width": "60%",  # Set the image width to 100% to fit the column
+                                "margin-left": "20px",  # Space between image and text
+                            },
+                        ),
+                    ],
+                    span=7,
+                ),
+                dmc.GridCol(
+                    [
+                        html.H3(
+                            "Espèces observées sur le site sélectionné",
+                            style={
+                                "text-align": "left",
+                                "margin-left": "20px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Label(
+                                    "Sélectionner un id d'observation:",
+                                    style={
+                                        "margin-right": "10px",
+                                        # "font-weight": "bold",
+                                    },
+                                ),
+                                dcc.Dropdown(
+                                    id="obs-dropdown",
+                                    options=observation_ids,
+                                    value=initial_user_selection_obs_id,  # Default value
+                                    clearable=False,
+                                    style={"width": "50%"},
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "align-items": "center",
+                                "justify-content": "center",
+                                "margin": "20px",
+                            },
+                        ),
+                        dcc.Graph(id="hist3", figure=hist3),
+                    ],
+                    span=5,
+                ),
+            ]
+        ),
+        dmc.Divider(size="md"), # Horizontal divider line
+
+        dmc.Grid(
+            children=[
+                dmc.GridCol(
+                    [
+                        html.H3(
+                            "Espèces les plus observées par les observateurs Lichens GO",
+                            style={
+                                "text-align": "left",
+                                "margin": "20px",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                html.Label(
+                                    "Sélectionner une espèce:",
+                                    style={
+                                        "margin-right": "10px",
+                                        # "font-weight": "bold",
+                                    },
+                                ),
+                                dcc.Dropdown(
+                                    id="species-dropdown",
+                                    options=user_species_options,
+                                    value=initial_user_selection_species_id,  # Default value
+                                    clearable=False,
+                                    style={"width": "400px"},
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "align-items": "center",
+                                "justify-content": "left",
+                                "margin-left": "20px",
+                            },
+                        ),
+                        dcc.Graph(id="hist4", figure=hist4),
+                    ],
+                    span=8,
+                ),
+                dmc.GridCol([dcc.Graph(figure={}, id="graph-placeholder")], span=4),
+            ]
+        ),
+    ]
 )
 
 
