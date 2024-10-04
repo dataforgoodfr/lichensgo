@@ -181,8 +181,9 @@ hist4 = update_hist4(initial_user_selection_species_id)
 # Initialize the Dash app
 app = Dash(external_stylesheets=dmc.styles.ALL)
 
-app.layout = dmc.MantineProvider(
-    [
+# Layout for the "Sites" tab
+sites_tab = dmc.TabsPanel(
+    children=[
         dmc.Grid(
             children=[
                 dmc.GridCol(
@@ -197,8 +198,8 @@ app.layout = dmc.MantineProvider(
                         html.Img(
                             src="/assets/sample_map.png",
                             style={
-                                "width": "60%",  # Set the image width to 100% to fit the column
-                                "margin-left": "20px",  # Space between image and text
+                                "width": "60%",
+                                "margin-left": "20px",
                             },
                         ),
                     ],
@@ -219,13 +220,12 @@ app.layout = dmc.MantineProvider(
                                     "Sélectionner un id d'observation:",
                                     style={
                                         "margin-right": "10px",
-                                        # "font-weight": "bold",
                                     },
                                 ),
                                 dcc.Dropdown(
                                     id="obs-dropdown",
                                     options=observation_ids,
-                                    value=initial_user_selection_obs_id,  # Default value
+                                    value=initial_user_selection_obs_id,
                                     clearable=False,
                                     style={"width": "50%"},
                                 ),
@@ -242,9 +242,14 @@ app.layout = dmc.MantineProvider(
                     span=5,
                 ),
             ]
-        ),
-        dmc.Divider(size="md"), # Horizontal divider line
+        )
+    ],
+    value="1",
+)
 
+# Layout for the "Espèces" tab
+species_tab = dmc.TabsPanel(
+    children=[
         dmc.Grid(
             children=[
                 dmc.GridCol(
@@ -262,13 +267,12 @@ app.layout = dmc.MantineProvider(
                                     "Sélectionner une espèce:",
                                     style={
                                         "margin-right": "10px",
-                                        # "font-weight": "bold",
                                     },
                                 ),
                                 dcc.Dropdown(
                                     id="species-dropdown",
                                     options=user_species_options,
-                                    value=initial_user_selection_species_id,  # Default value
+                                    value=initial_user_selection_species_id,
                                     clearable=False,
                                     style={"width": "400px"},
                                 ),
@@ -284,10 +288,31 @@ app.layout = dmc.MantineProvider(
                     ],
                     span=8,
                 ),
-                dmc.GridCol([dcc.Graph(figure={}, id="graph-placeholder")], span=4),
+                dmc.GridCol(
+                    [dcc.Graph(figure={}, id="graph-placeholder")],
+                    span=4,
+                ),
             ]
         ),
-    ]
+    ],
+    value="2",
+)
+
+# Define the main layout with tabs
+app.layout = dmc.MantineProvider(
+    dmc.Tabs(
+        [
+            dmc.TabsList(
+                [
+                    dmc.TabsTab("Sites", value="1"),
+                    dmc.TabsTab("Espèces", value="2"),
+                ]
+            ),
+            sites_tab,
+            species_tab,
+        ],
+        value="1",  # Default to the first tab
+    )
 )
 
 
