@@ -1,19 +1,19 @@
-from dash import Dash, html, dcc, Output, Input
+from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 # import pandas as pd
 import sys
 from pathlib import Path
 import plotly.express as px
-import os
+import dash_mantine_components as dmc
 
-# Ajoute le dossier parent à sys.path
-chemin_dossier_parent = Path(__file__).parent.parent
-sys.path.append(str(chemin_dossier_parent))
+_dash_renderer._set_react_version("18.2.0")
+
+# # Ajoute le dossier parent à sys.path
+# chemin_dossier_parent = Path(__file__).parent.parent
+# sys.path.append(str(chemin_dossier_parent))
 from my_data.db_connect import get_session
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 
 # run with : python Dashboards/dashboard.py
-
-session = get_session()
 
 square_columns = ['sq1', 'sq2', 'sq3', 'sq4', 'sq5']
 orientations = ['N', 'E', 'S', 'O']
@@ -30,22 +30,24 @@ orientations_mapping = {
 base_color_palette = px.colors.qualitative.Set2
 pastel_color_palette = px.colors.qualitative.Pastel2
 
-def load_table():
+session = get_session()
 
-    # Get the datasets
-    # environment_df = get_environment_data()
-    lichen_df = get_lichen_data()
-    lichen_species_df = get_lichen_species_data()
-    observation_df = get_observation_data()
-    table_df = get_table_data()
-    tree_df = get_tree_data()
+# Get the datasets
+# environment_df = get_environment_data()
+lichen_df = get_lichen_data()
+lichen_species_df = get_lichen_species_data()
+observation_df = get_observation_data()
+table_df = get_table_data()
+tree_df = get_tree_data()
 
-    # Rename columns ids for easyer merge
-    lichen_df.rename(columns={'id':'lichen_id'}, inplace=True)
-    lichen_species_df.rename(columns={'id':'species_id'}, inplace=True)
-    observation_df.rename(columns={'id':'observation_id'}, inplace=True)
-    tree_df.rename(columns={'id':'tree_id'}, inplace=True)
+# Rename columns ids for easier merge
+lichen_df.rename(columns={'id':'lichen_id'}, inplace=True)
+lichen_species_df.rename(columns={'id':'species_id'}, inplace=True)
+observation_df.rename(columns={'id':'observation_id'}, inplace=True)
+tree_df.rename(columns={'id':'tree_id'}, inplace=True)
 
+# Merge table_df with lichen_df and lichen_species_df
+def merge_table():
     # Calculate the number of lichens per orientation for each lichen in the table
     for orientation in orientations:
         table_df[orientation] = table_df[square_columns].apply(
@@ -61,8 +63,9 @@ def load_table():
     return merged_table
 
 
-def filter_and_aggregate_table_per_lichen(merged_table, obs):
-    # Filter the table for the observation
+# Function used to filter the table based on the selected observation ID (for hist 3)
+def filter_table_on_observation_and_aggregate_per_lichen(merged_table, obs):
+    # Filter the table for the selected observation
     site_table = merged_table.query("observation_id == @obs")
 
     # Group by lichen_id
@@ -78,24 +81,27 @@ def filter_and_aggregate_table_per_lichen(merged_table, obs):
 
     return site_table_per_lichen
 
+def group_by_lichen_species(lichen_df):
+        # Group by species' type and count them
+    df_grouped = (
+        lichen_df
+        .groupby("species_id", as_index=False)
+        .size()
+        .rename(columns={'size': 'count'})
+    )
 
-# Initialize the Dash app
-app = Dash(__name__)
+    # Merge with species names
+    df_grouped_species = df_grouped.merge(lichen_species_df[['species_id', 'name']], on='species_id', how='left')
 
-# Load the data
-table = load_table()
+    # Sort based on occurrences in descending order
+    df_grouped_species = df_grouped_species.sort_values(by='count', ascending=False).reset_index(drop=True)
 
-# Get unique observation IDs for the dropdown
-observation_ids = table['observation_id'].unique()
+    return df_grouped_species
 
-# Create initial filtered table for the first observation ID
-initial_obs = observation_ids[0]  # Default to the first observation ID
-site_table_per_lichen = filter_and_aggregate_table_per_lichen(table, initial_obs)
-
-# Create the bar plot
+# Create the hist3 bar plot
 def create_hist3(site_table_per_lichen):
 
-    # Create the bar plot
+   # Create the bar plot
     hist3 = px.bar(
         site_table_per_lichen,
         x=orientations,
@@ -106,8 +112,9 @@ def create_hist3(site_table_per_lichen):
 
     # Update layout
     hist3.update_layout(
-        title_text="Espèces observées sur le site sélectionné",
-        title={"x": 0.5, "y": 0.95, "xanchor": "center"},
+        # title_text="Espèces observées sur le site sélectionné",
+        # title_font=dict(size=24),
+        # title={"x": 0.5, "y": 0.95, "xanchor": "center"},
         margin=dict(l=20, r=20, t=40, b=20),
         legend_title_text="Orientation",
         template="plotly_white",
@@ -118,57 +125,89 @@ def create_hist3(site_table_per_lichen):
     hist3.update_xaxes(
         title_text="Nombre",
         showgrid=True,
-        gridcolor='rgba(200, 200, 200, 0.5)',
-        tickfont=dict(size=14)
+        # gridcolor='rgba(200, 200, 200, 0.5)',
+        # tickfont=dict(size=14)
     )
     hist3.update_yaxes(
         title_text="",
-        tickfont=dict(size=14)  # Adjust tick font size
+        # tickfont=dict(size=14)
     )
 
-    # Customize hover information
-    hist3.update_traces(hovertemplate="""
-        <b>Espèce:</b> %{y}<br>
-        <b>Nombre:</b> %{x}<extra></extra>
-    """)
+    # Update hover template
+    hist3.update_traces(hovertemplate="<b>%{y}</b><br><b>Nombre:</b> %{x}<extra></extra>")
 
     # Update the legend labels based on the mapping
     hist3.for_each_trace(lambda t: t.update(name=orientations_mapping.get(t.name, t.name)))
 
     return hist3
 
+# Initialize the Dash app
+app = Dash(external_stylesheets=dmc.styles.ALL)
+# app = Dash(__name__)
 
-hist3 = create_hist3(site_table_per_lichen)
+# Load the data
+merged_table = merge_table()
 
-
-# Define the layout of the Dash app
-app.layout = html.Div([
-    html.H1("Observations de Lichens", style={'text-align': 'center'}),
-    html.Div([
-        html.Label("Sélectionner un id d'observation:", style={'margin-right': '10px', 'font-weight': 'bold'}),
-        dcc.Dropdown(
-            id='obs-dropdown',
-            options=observation_ids,
-            value=initial_obs,  # Default value
-            clearable=False,
-            style={'width': '50%'}
-        )
-    ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'center', 'margin': '20px'}),
-    dcc.Graph(
-        id='lichens-bar-chart',
-        figure=hist3
-    )
-])
-
+# Get unique observation IDs for the dropdown
+observation_ids = merged_table['observation_id'].unique()
 
 # Define callback to update the bar chart based on selected observation ID
-@app.callback(
-    Output('lichens-bar-chart', 'figure'),
-    Input('obs-dropdown', 'value')
+@callback(
+    Output(component_id='hist3', component_property='figure'),
+    Input(component_id='obs-dropdown', component_property='value')
 )
-def update_bar_chart(selected_obs):
-    site_table_per_lichen = filter_and_aggregate_table_per_lichen(table, selected_obs)
+def update_hist3(selected_obs):
+    site_table_per_lichen = filter_table_on_observation_and_aggregate_per_lichen(merged_table, selected_obs)
     return create_hist3(site_table_per_lichen)
+
+# Create initial filtered table for the first observation ID
+initial_obs = observation_ids[0]  # Default to the first observation ID
+hist3 = update_hist3(initial_obs)
+
+app.layout = dmc.MantineProvider(
+    dmc.Grid(
+        [
+            dmc.GridCol(
+                [
+                    html.H2(
+                        "Espèces observées sur le site sélectionné",
+                        style={"text-align": "center"},
+                    ),
+                    html.Div(
+                        [
+                            html.Label(
+                                "Sélectionner un id d'observation:",
+                                style={
+                                    "margin-right": "10px",
+                                    # "font-weight": "bold",
+                                },
+                            ),
+                            dcc.Dropdown(
+                                id="obs-dropdown",
+                                options=observation_ids,
+                                value=initial_obs,  # Default value
+                                clearable=False,
+                                style={"width": "50%"},
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "align-items": "center",
+                            "justify-content": "center",
+                            "margin": "20px",
+                        },
+                    ),
+                    dcc.Graph(id="hist3", figure=hist3),
+                ],
+                span=8,
+            ),
+            dmc.GridCol([dcc.Graph(figure={}, id="graph-placeholder")], span=4),
+        ]
+    )
+)
+
+
+
 
 # Run the app
 if __name__ == '__main__':
