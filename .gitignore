@@ -79,6 +79,9 @@ docs/_build/
 target/
 
 # Jupyter Notebook
+.pytest_cache
+__pycache__
+*checkpoint.ipynb
 .ipynb_checkpoints
 
 # IPython
@@ -161,3 +164,9 @@ cython_debug/
 
 # Precommit hooks: ruff cache
 .ruff_cache
+
+# OS generated files #
+######################
+.DS_Store
+__MACOSX
+Zone.Identifier
