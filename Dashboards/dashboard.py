@@ -1,6 +1,7 @@
 from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 # import pandas as pd
 import sys
+import os
 from pathlib import Path
 import plotly.express as px
 import dash_mantine_components as dmc
@@ -81,9 +82,10 @@ def filter_table_on_observation_and_aggregate_per_lichen(merged_table, obs):
 
     return site_table_per_lichen
 
-def group_by_lichen_species(lichen_df):
-        # Group by species' type and count them
-    df_grouped = (
+# Group by species' type and count them
+def count_lichen_per_species():
+
+    count_lichen = (
         lichen_df
         .groupby("species_id", as_index=False)
         .size()
@@ -91,16 +93,15 @@ def group_by_lichen_species(lichen_df):
     )
 
     # Merge with species names
-    df_grouped_species = df_grouped.merge(lichen_species_df[['species_id', 'name']], on='species_id', how='left')
+    count_lichen_merged = count_lichen.merge(lichen_species_df[['species_id', 'name']], on='species_id', how='left')
 
     # Sort based on occurrences in descending order
-    df_grouped_species = df_grouped_species.sort_values(by='count', ascending=False).reset_index(drop=True)
+    count_lichen_merged = count_lichen_merged.sort_values(by='count', ascending=False).reset_index(drop=True)
 
-    return df_grouped_species
+    return count_lichen_merged
 
 # Create the hist3 bar plot
 def create_hist3(site_table_per_lichen):
-
    # Create the bar plot
     hist3 = px.bar(
         site_table_per_lichen,
@@ -141,37 +142,141 @@ def create_hist3(site_table_per_lichen):
 
     return hist3
 
-# Initialize the Dash app
-app = Dash(external_stylesheets=dmc.styles.ALL)
-# app = Dash(__name__)
-
-# Load the data
-merged_table = merge_table()
-
-# Get unique observation IDs for the dropdown
-observation_ids = merged_table['observation_id'].unique()
 
 # Define callback to update the bar chart based on selected observation ID
 @callback(
     Output(component_id='hist3', component_property='figure'),
     Input(component_id='obs-dropdown', component_property='value')
 )
-def update_hist3(selected_obs):
-    site_table_per_lichen = filter_table_on_observation_and_aggregate_per_lichen(merged_table, selected_obs)
+def update_hist3(user_selection_obs_id):
+    site_table_per_lichen = filter_table_on_observation_and_aggregate_per_lichen(merged_table, user_selection_obs_id)
     return create_hist3(site_table_per_lichen)
 
+
+def create_hist4(count_lichen_merged, user_selection_species_id):
+    # Find the index of the selected species ID in the merged table
+    user_selection_idx = count_lichen_merged[count_lichen_merged["species_id"] == user_selection_species_id].index
+
+    # Adjust the color of the selected specie to be darker
+    pastel_color = pastel_color_palette[0]
+    selected_color = base_color_palette[0]
+    color_hist4 = [pastel_color] * len(count_lichen_merged)
+    color_hist4[int(user_selection_idx[0])] = selected_color
+
+    # Bar plot
+    hist4 = px.bar(
+        count_lichen_merged,
+        x="count",
+        y="name",
+        orientation="h",
+        color="name",
+        color_discrete_sequence=color_hist4,
+        # title="Espèces les plus observées par les observateurs Lichens GO",
+    )
+
+    # Update layout
+    hist4.update_layout(
+        # title={"x": 0.5, "y": 0.95, "xanchor": "center"},
+        margin=dict(l=10, r=10, t=30, b=10),
+        template="plotly_white",
+        barcornerradius="30%"
+)
+
+    # Remove the legend
+    hist4.update(layout_showlegend=False)
+
+    # Update axes
+    hist4.update_xaxes(
+        title_text="Nombre",
+        showgrid=True,
+        # gridcolor='rgba(200, 200, 200, 0.5)',
+    )
+    hist4.update_yaxes(
+        title="",
+        # tickfont=dict(size=10)  # Adjust tick font size
+    )
+
+    # Customize hover information
+    hist4.update_traces(hovertemplate="""
+        <b>Espèce:</b> %{y}<br>
+        <b>Nombre:</b> %{x}<extra></extra>
+    """)
+
+    return hist4
+
+# Define callback to update the bar chart based on selected observation ID
+@callback(
+    Output(component_id='hist4', component_property='figure'),
+    Input(component_id='species-dropdown', component_property='value')
+)
+def update_hist4(user_selection_species_id):
+
+    # Find the lichen species name based on the selected species ID
+    user_selection_species_name = lichen_species_df[lichen_species_df["species_id"] == user_selection_species_id]["name"]
+
+    return create_hist4(count_lichen_merged, user_selection_species_id)
+
+
+# Initialize the Dash app
+app = Dash(external_stylesheets=dmc.styles.ALL)
+
+# Merge the tables
+merged_table = merge_table()
+
+count_lichen_merged = count_lichen_per_species()
+
 # Create initial filtered table for the first observation ID
-initial_obs = observation_ids[0]  # Default to the first observation ID
-hist3 = update_hist3(initial_obs)
+observation_ids = merged_table['observation_id'].unique() # Get unique observation IDs for the dropdown
+initial_user_selection_obs_id = observation_ids[0]  # Default to the first observation ID
+
+hist3 = update_hist3(initial_user_selection_obs_id)
+
+
+# Create options for the user species dropdown
+user_species_options = [
+    {"label": row["name"], "value": row["species_id"]}
+    for _, row in count_lichen_merged.sort_values(by="name").iterrows()
+]
+
+initial_user_selection_species_id = user_species_options[0]['value'] # Default to the first species ID
+hist4 = update_hist4(initial_user_selection_species_id)
+
+
+style = {
+    "border": f"1px solid {dmc.DEFAULT_THEME['colors']['indigo'][4]}",
+    "textAlign": "center",
+}
 
 app.layout = dmc.MantineProvider(
     dmc.Grid(
-        [
+        children=[
             dmc.GridCol(
                 [
-                    html.H2(
+                    html.H3(
+                        "Carte des observations",
+                        style={
+                            "text-align": "left",
+                            "margin-left": "20px",
+                        },
+                    ),
+                    html.Img(
+                        src="/assets/sample_map.png",
+                        style={
+                            "width": "60%",  # Set the image width to 100% to fit the column
+                            "margin-left": "20px",  # Space between image and text
+                        },
+                    ),
+                ],
+                span=7
+            ),
+            dmc.GridCol(
+                [
+                    html.H3(
                         "Espèces observées sur le site sélectionné",
-                        style={"text-align": "center"},
+                        style={
+                            "text-align": "left",
+                            "margin-left": "20px",
+                        },
                     ),
                     html.Div(
                         [
@@ -185,7 +290,7 @@ app.layout = dmc.MantineProvider(
                             dcc.Dropdown(
                                 id="obs-dropdown",
                                 options=observation_ids,
-                                value=initial_obs,  # Default value
+                                value=initial_user_selection_obs_id,  # Default value
                                 clearable=False,
                                 style={"width": "50%"},
                             ),
@@ -199,14 +304,49 @@ app.layout = dmc.MantineProvider(
                     ),
                     dcc.Graph(id="hist3", figure=hist3),
                 ],
+                span=5,
+            ),
+            dmc.GridCol(
+                [
+                    html.H3(
+                        "Espèces les plus observées par les observateurs Lichens GO",
+                        style={
+                            "text-align": "left",
+                            "margin": "20px",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Label(
+                                "Sélectionner une espèce:",
+                                style={
+                                    "margin-right": "10px",
+                                    # "font-weight": "bold",
+                                },
+                            ),
+                            dcc.Dropdown(
+                                id="species-dropdown",
+                                options=user_species_options,
+                                value=initial_user_selection_species_id,  # Default value
+                                clearable=False,
+                                style={"width": "400px"},
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "align-items": "center",
+                            "justify-content": "left",
+                            "margin-left": "20px",
+                        },
+                    ),
+                    dcc.Graph(id="hist4", figure=hist4),
+                ],
                 span=8,
             ),
             dmc.GridCol([dcc.Graph(figure={}, id="graph-placeholder")], span=4),
         ]
     )
 )
-
-
 
 
 # Run the app
