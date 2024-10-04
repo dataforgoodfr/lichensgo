@@ -3,9 +3,74 @@ from pathlib import Path
 import pandas as pd
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
-from my_data.db_connect import get_session
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_observation_data, get_table_data, get_tree_data, get_tree_species, get_lichen_ecology
 
+square_columns = ['sq1', 'sq2', 'sq3', 'sq4', 'sq5']
+orientations = ['N', 'E', 'S', 'O']
+
+# Merge table_df with lichen_df, lichen_species_df and observation_df
+def merge_table_df(table_df, lichen_df, lichen_species_df, observation_df):
+
+    merged_df = table_df.merge(lichen_df, left_on='lichen_id', right_on='id', suffixes=('', '_l'), how='left')
+    merged_df = merged_df.merge(lichen_species_df, left_on='species_id', right_on='id', suffixes=('', '_ls'), how='left')
+    merged_df = merged_df.merge(observation_df, left_on='observation_id', right_on='id', suffixes=('', '_o'), how ='left')
+
+    return merged_df
+
+def table_df_frequency(lichen_df, lichen_species_df, observation_df, table_df):
+
+    # Merge table_df with lichen_df, lichen_species_df and observation_df
+    merged_df = merge_table_df(table_df, lichen_df, lichen_species_df, observation_df)
+
+    # Concatenate all square_columns into a single list per row
+    merged_df['concatenated_squares'] = merged_df[square_columns].sum(axis=1)
+
+    # Calculate frequency per orientation
+    for orientation in orientations:
+        merged_df[orientation] = merged_df['concatenated_squares'].apply(lambda x: x.count(orientation))
+
+    # Calculate total frequency by summing all orientation frequencies
+    merged_df["freq"] = merged_df[orientations].sum(axis=1)
+
+    # Drop concatenated_squares column
+    merged_df.drop(columns=['concatenated_squares'], inplace=True)
+
+    return merged_df
+
+# Sum frequency per lichen id
+def sum_frequency_per_lichen(merged_df):
+
+    df_sum_per_lichen = merged_df.groupby(by='lichen_id', as_index=False).agg(
+        {
+            'name': 'first',
+            'N': 'sum',
+            'O': 'sum',
+            'S': 'sum',
+            'E': 'sum',
+            'freq': 'sum'
+        }).sort_values(by='freq', ascending=True, ignore_index=True)
+
+    return df_sum_per_lichen
+
+
+# Group by species' type and count them
+def count_lichen_per_species(lichen_df, lichen_species_df):
+
+    # Group by species' type and count them
+    df_grouped_species = (
+        lichen_df
+        .groupby("species_id", as_index=False)
+        .size()
+        .rename(columns={'size': 'count'})
+    )
+
+    # Merge with species names
+    df_grouped_species = df_grouped_species.merge(lichen_species_df[['id', 'name']], left_on='species_id', right_on='id').drop(columns='id')
+
+    # Sort based on occurrences in descending order
+    df_grouped_species = df_grouped_species.sort_values(by='count', ascending=False).reset_index(drop=True)
+
+    return df_grouped_species
 
 def calculate_frequency(column):
     return column.apply(lambda x: sum(1 for char in x if char in ['E', 'N', 'O', 'S']))
@@ -43,12 +108,12 @@ def df_frequency():
     grouped_df = grouped_df[['observation_id', 'name', 'freq','pH','eutrophication', 'poleotolerance']]
     grouped_df = grouped_df.rename(
         columns={
-            'observation_id': 'id', 
-            'name': 'lichen', 
+            'observation_id': 'id',
+            'name': 'lichen',
             'freq': 'freq',
             'pH': 'ph',
-            'eutrophication': 'eutrophication', 
+            'eutrophication': 'eutrophication',
             'poleotolerance': 'poleotolerance'
             })
-    
+
     return grouped_df

@@ -13,6 +13,7 @@ _dash_renderer._set_react_version("18.2.0")
 # sys.path.append(str(chemin_dossier_parent))
 from my_data.db_connect import get_session
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
+from my_data.computed_datasets import table_df_frequency, sum_frequency_per_lichen, count_lichen_per_species
 
 # run with : python Dashboards/dashboard.py
 
@@ -31,8 +32,6 @@ orientations_mapping = {
 base_color_palette = px.colors.qualitative.Set2
 pastel_color_palette = px.colors.qualitative.Pastel2
 
-session = get_session()
-
 # Get the datasets
 # environment_df = get_environment_data()
 lichen_df = get_lichen_data()
@@ -41,64 +40,8 @@ observation_df = get_observation_data()
 table_df = get_table_data()
 tree_df = get_tree_data()
 
-# Rename columns ids for easier merge
-lichen_df.rename(columns={'id':'lichen_id'}, inplace=True)
-lichen_species_df.rename(columns={'id':'species_id'}, inplace=True)
-observation_df.rename(columns={'id':'observation_id'}, inplace=True)
-tree_df.rename(columns={'id':'tree_id'}, inplace=True)
-
-# Merge table_df with lichen_df and lichen_species_df
-def merge_table():
-    # Calculate the number of lichens per orientation for each lichen in the table
-    for orientation in orientations:
-        table_df[orientation] = table_df[square_columns].apply(
-            lambda row: sum(orientation in sq for sq in row), axis=1
-        )
-
-    # Sum of N + E + S + O for each lichen
-    table_df['sum_quadrat'] = table_df[orientations].sum(axis=1)
-
-    # Merge tables
-    merged_table = table_df.merge(right=lichen_df, how='left').merge(right=lichen_species_df, how='left')
-
-    return merged_table
-
-
-# Function used to filter the table based on the selected observation ID (for hist 3)
-def filter_table_on_observation_and_aggregate_per_lichen(merged_table, obs):
-    # Filter the table for the selected observation
-    site_table = merged_table.query("observation_id == @obs")
-
-    # Group by lichen_id
-    site_table_per_lichen = site_table.groupby(by='lichen_id', as_index=False).agg(
-        {
-            'name': 'first',
-            'N': 'sum',
-            'O': 'sum',
-            'S': 'sum',
-            'E': 'sum',
-            'sum_quadrat': 'sum'
-        }).sort_values(by='sum_quadrat', ascending=True, ignore_index=True)
-
-    return site_table_per_lichen
-
-# Group by species' type and count them
-def count_lichen_per_species():
-
-    count_lichen = (
-        lichen_df
-        .groupby("species_id", as_index=False)
-        .size()
-        .rename(columns={'size': 'count'})
-    )
-
-    # Merge with species names
-    count_lichen_merged = count_lichen.merge(lichen_species_df[['species_id', 'name']], on='species_id', how='left')
-
-    # Sort based on occurrences in descending order
-    count_lichen_merged = count_lichen_merged.sort_values(by='count', ascending=False).reset_index(drop=True)
-
-    return count_lichen_merged
+merged_table = table_df_frequency(lichen_df, lichen_species_df, observation_df, table_df)
+count_lichen_merged = count_lichen_per_species(lichen_df, lichen_species_df)
 
 # Create the hist3 bar plot
 def create_hist3(site_table_per_lichen):
@@ -149,8 +92,13 @@ def create_hist3(site_table_per_lichen):
     Input(component_id='obs-dropdown', component_property='value')
 )
 def update_hist3(user_selection_obs_id):
-    site_table_per_lichen = filter_table_on_observation_and_aggregate_per_lichen(merged_table, user_selection_obs_id)
-    return create_hist3(site_table_per_lichen)
+    # Filter the table for the selected observation (also called site)
+    site_df = merged_table.query("observation_id == @user_selection_obs_id")
+
+    # Sum by lichen_id
+    site_sum_per_lichen = sum_frequency_per_lichen(site_df)
+
+    return create_hist3(site_sum_per_lichen)
 
 
 def create_hist4(count_lichen_merged, user_selection_species_id):
@@ -212,25 +160,16 @@ def create_hist4(count_lichen_merged, user_selection_species_id):
 def update_hist4(user_selection_species_id):
 
     # Find the lichen species name based on the selected species ID
-    user_selection_species_name = lichen_species_df[lichen_species_df["species_id"] == user_selection_species_id]["name"]
+    user_selection_species_name = lichen_species_df[lichen_species_df["id"] == user_selection_species_id]["name"]
 
     return create_hist4(count_lichen_merged, user_selection_species_id)
 
-
-# Initialize the Dash app
-app = Dash(external_stylesheets=dmc.styles.ALL)
-
-# Merge the tables
-merged_table = merge_table()
-
-count_lichen_merged = count_lichen_per_species()
 
 # Create initial filtered table for the first observation ID
 observation_ids = merged_table['observation_id'].unique() # Get unique observation IDs for the dropdown
 initial_user_selection_obs_id = observation_ids[0]  # Default to the first observation ID
 
 hist3 = update_hist3(initial_user_selection_obs_id)
-
 
 # Create options for the user species dropdown
 user_species_options = [
@@ -242,10 +181,8 @@ initial_user_selection_species_id = user_species_options[0]['value'] # Default t
 hist4 = update_hist4(initial_user_selection_species_id)
 
 
-style = {
-    "border": f"1px solid {dmc.DEFAULT_THEME['colors']['indigo'][4]}",
-    "textAlign": "center",
-}
+# Initialize the Dash app
+app = Dash(external_stylesheets=dmc.styles.ALL)
 
 app.layout = dmc.MantineProvider(
     dmc.Grid(
