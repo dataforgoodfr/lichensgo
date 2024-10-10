@@ -2,54 +2,17 @@ from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 import plotly.express as px
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-from my_data.db_connect import get_session
+# from my_data.db_connect import get_session
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 from my_data.computed_datasets import table_df_frequency, sum_frequency_per_lichen, count_lichen_per_species
-from utils.css_reader import get_css_properties, css_properties_to_inline_style
+from utils.css_reader import get_css_properties
 
+from constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, ORIENTATIONS, ORIENTATIONS_MAPPING, SQUARE_COLUMNS
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
 
-square_columns = ['sq1', 'sq2', 'sq3', 'sq4', 'sq5']
-orientations = ['N', 'E', 'S', 'O']
-
-# Create a mapping dictionary for legend items (orientations)
-orientations_mapping = {
-    "N": "Nord",
-    "E": "Est",
-    "S": "Sud",
-    "O": "Ouest"
-}
-
-# Color palette (other options here: https://plotly.com/python/discrete-color/)
-# base_color_palette = [
-#     "#1D6792",
-#     "#C4E7D4",
-#     "#C4DACF",
-#     "#B9C0DA",
-#     "#998DA0"
-# ]
-
-base_color_palette = [
-    "#387CA6",  # palette-color1
-    "#1C6C8C",  # palette-color2
-    "#3887A6",  # palette-color3
-    "#ADCCD9",  # palette-color4
-    "#F2F2F2"   # palette-color5
-]
-
-pastel_color_palette = [
-    '#c3d7e4',
-    '#bad2dc',
-    '#c3dbe4',
-    '#e6eff3',
-    '#fbfbfb'
-]
-
 # Extract the font family from the CSS file for plotly (doesn't support CSS)
 body_style = get_css_properties("body")
-hover_style = css_properties_to_inline_style(body_style)
-
 
 # Get the datasets
 # environment_df = get_environment_data()
@@ -85,16 +48,16 @@ def create_hist3(site_table_per_lichen):
    # Create the bar plot
     hist3 = px.bar(
         site_table_per_lichen,
-        x=orientations,
+        x=ORIENTATIONS,
         y="name",
         orientation="h",
-        color_discrete_sequence=base_color_palette,
+        color_discrete_sequence=BASE_COLOR_PALETTE,
     )
 
     # Update layout
     hist3.update_layout(
-        **plotly_layout,
-        hoverlabel=plotly_hover_style,
+        # plotly_layout,
+        # hoverlabel=plotly_hover_style,
         legend_title_text="Orientation",
     )
 
@@ -114,7 +77,7 @@ def create_hist3(site_table_per_lichen):
     hist3.update_traces(hovertemplate="<b>%{y}</b><br><b>Nombre:</b> %{x}<extra></extra>")
 
     # Update the legend labels based on the mapping
-    hist3.for_each_trace(lambda t: t.update(name=orientations_mapping.get(t.name, t.name)))
+    hist3.for_each_trace(lambda t: t.update(name=ORIENTATIONS_MAPPING.get(t.name, t.name)))
 
     return hist3
 
@@ -139,8 +102,8 @@ def create_hist4(count_lichen_merged, user_selection_species_id):
     user_selection_idx = count_lichen_merged[count_lichen_merged["species_id"] == user_selection_species_id].index
 
     # Adjust the color of the selected specie to be darker
-    pastel_color = pastel_color_palette[0]
-    selected_color = base_color_palette[0]
+    pastel_color = PASTEL_COLOR_PALETTE[0]
+    selected_color = BASE_COLOR_PALETTE[0]
     color_hist4 = [pastel_color] * len(count_lichen_merged)
     color_hist4[int(user_selection_idx[0])] = selected_color
 
@@ -157,10 +120,10 @@ def create_hist4(count_lichen_merged, user_selection_species_id):
 
     # Update layout
     hist4.update_layout(
-        **plotly_layout,
+        # plotly_layout,
         # margin=dict(l=10, r=10, t=30, b=10),
         showlegend=False,
-        hoverlabel=plotly_hover_style
+        # hoverlabel=plotly_hover_style
     )
 
     # Update axes
