@@ -1,6 +1,7 @@
 /* Set default text styling */
 body {
-  color: #495057 /* #c35a25*/;
+  color: #495057;
+  /* color: #c35a25; */
   font-family: "Source Sans Pro", sans-serif;
   text-align: left;
   letter-spacing: normal;
@@ -14,4 +15,10 @@ body {
 .info-icon {
   font-size: 15px;
   margin-left: 5px;
+}
+
+/* Text color of the selected value in the dropdown */
+.Select-value-label {
+  color: #495057!important;
+  /* color: #c35a25!important; */
 }
