@@ -9,7 +9,7 @@ square_columns = ['sq1', 'sq2', 'sq3', 'sq4', 'sq5']
 orientations = ['N', 'E', 'S', 'O']
 
 # Merge table_df with lichen_df, lichen_species_df and observation_df
-def merge_table_df(table_df, lichen_df, lichen_species_df, observation_df):
+def merge_tables(table_df, lichen_df, lichen_species_df, observation_df):
 
     merged_df = table_df.merge(lichen_df, left_on='lichen_id', right_on='id', suffixes=('', '_l'), how='left')
     merged_df = merged_df.merge(lichen_species_df, left_on='species_id', right_on='id', suffixes=('', '_ls'), how='left')
@@ -17,10 +17,10 @@ def merge_table_df(table_df, lichen_df, lichen_species_df, observation_df):
 
     return merged_df
 
-def table_df_frequency(lichen_df, lichen_species_df, observation_df, table_df):
+def frequency_table(lichen_df, lichen_species_df, observation_df, table_df):
 
     # Merge table_df with lichen_df, lichen_species_df and observation_df
-    merged_df = merge_table_df(table_df, lichen_df, lichen_species_df, observation_df)
+    merged_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
 
     # Concatenate all square_columns into a single list per row
     merged_df['concatenated_squares'] = merged_df[square_columns].sum(axis=1)
@@ -38,9 +38,9 @@ def table_df_frequency(lichen_df, lichen_species_df, observation_df, table_df):
     return merged_df
 
 # Sum frequency per lichen id
-def sum_frequency_per_lichen(merged_df):
+def lichen_frequency(frequency_table_df):
 
-    df_sum_per_lichen = merged_df.groupby(by='lichen_id', as_index=False).agg(
+    lichen_frequency_df = frequency_table_df.groupby(by='lichen_id', as_index=False).agg(
         {
             'name': 'first',
             'N': 'sum',
@@ -50,14 +50,14 @@ def sum_frequency_per_lichen(merged_df):
             'freq': 'sum'
         }).sort_values(by='freq', ascending=True, ignore_index=True)
 
-    return df_sum_per_lichen
+    return lichen_frequency_df
 
 
 # Group by species' type and count them
 def count_lichen_per_species(lichen_df, lichen_species_df):
 
     # Group by species' type and count them
-    df_grouped_species = (
+    count_lichen_per_species_df = (
         lichen_df
         .groupby("species_id", as_index=False)
         .size()
@@ -65,12 +65,12 @@ def count_lichen_per_species(lichen_df, lichen_species_df):
     )
 
     # Merge with species names
-    df_grouped_species = df_grouped_species.merge(lichen_species_df[['id', 'name']], left_on='species_id', right_on='id').drop(columns='id')
+    count_lichen_per_species_df = count_lichen_per_species_df.merge(lichen_species_df[['id', 'name']], left_on='species_id', right_on='id').drop(columns='id')
 
     # Sort based on occurrences in descending order
-    df_grouped_species = df_grouped_species.sort_values(by='count', ascending=False).reset_index(drop=True)
+    count_lichen_per_species_df = count_lichen_per_species_df.sort_values(by='count', ascending=False).reset_index(drop=True)
 
-    return df_grouped_species
+    return count_lichen_per_species_df
 
 def calculate_frequency(column):
     return column.apply(lambda x: sum(1 for char in x if char in ['E', 'N', 'O', 'S']))

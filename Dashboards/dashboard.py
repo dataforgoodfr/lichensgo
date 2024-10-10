@@ -4,15 +4,13 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 # from my_data.db_connect import get_session
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
-from my_data.computed_datasets import table_df_frequency, sum_frequency_per_lichen, count_lichen_per_species
+from my_data.computed_datasets import frequency_table, lichen_frequency, count_lichen_per_species
 from utils.css_reader import get_css_properties
 
 from constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, ORIENTATIONS, ORIENTATIONS_MAPPING, SQUARE_COLUMNS
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
 
-# Extract the font family from the CSS file for plotly (doesn't support CSS)
-body_style = get_css_properties("body")
 
 # Get the datasets
 # environment_df = get_environment_data()
@@ -22,9 +20,11 @@ observation_df = get_observation_data()
 table_df = get_table_data()
 tree_df = get_tree_data()
 
-merged_table = table_df_frequency(lichen_df, lichen_species_df, observation_df, table_df)
-count_lichen_merged = count_lichen_per_species(lichen_df, lichen_species_df)
+frequency_table_df = frequency_table(lichen_df, lichen_species_df, observation_df, table_df)
+count_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df)
 
+# Extract the font family from the CSS file for plotly (doesn't support CSS)
+body_style = get_css_properties("body")
 
 # Define the plotly layout for all plots
 plotly_layout = {
@@ -44,10 +44,10 @@ plotly_hover_style = {
         )
 }
 # Create the hist3 bar plot
-def create_hist3(site_table_per_lichen):
+def create_hist3(lichen_frequency_df):
    # Create the bar plot
     hist3 = px.bar(
-        site_table_per_lichen,
+        lichen_frequency_df,
         x=ORIENTATIONS,
         y="name",
         orientation="h",
@@ -89,27 +89,27 @@ def create_hist3(site_table_per_lichen):
 )
 def update_hist3(user_selection_obs_id):
     # Filter the table for the selected observation (also called site)
-    site_df = merged_table.query("observation_id == @user_selection_obs_id")
+    filtered_frequency_table_df = frequency_table_df.query("observation_id == @user_selection_obs_id")
 
     # Sum by lichen_id
-    site_sum_per_lichen = sum_frequency_per_lichen(site_df)
+    lichen_frequency_df = lichen_frequency(filtered_frequency_table_df)
 
-    return create_hist3(site_sum_per_lichen)
+    return create_hist3(lichen_frequency_df)
 
 
-def create_hist4(count_lichen_merged, user_selection_species_id):
+def create_hist4(count_lichen_per_species_df, user_selection_species_id):
     # Find the index of the selected species ID in the merged table
-    user_selection_idx = count_lichen_merged[count_lichen_merged["species_id"] == user_selection_species_id].index
+    user_selection_idx = count_lichen_per_species_df[count_lichen_per_species_df["species_id"] == user_selection_species_id].index
 
     # Adjust the color of the selected specie to be darker
     pastel_color = PASTEL_COLOR_PALETTE[0]
     selected_color = BASE_COLOR_PALETTE[0]
-    color_hist4 = [pastel_color] * len(count_lichen_merged)
+    color_hist4 = [pastel_color] * len(count_lichen_per_species_df)
     color_hist4[int(user_selection_idx[0])] = selected_color
 
     # Bar plot
     hist4 = px.bar(
-        count_lichen_merged,
+        count_lichen_per_species_df,
         x="count",
         y="name",
         orientation="h",
@@ -147,15 +147,11 @@ def create_hist4(count_lichen_merged, user_selection_species_id):
     Input(component_id='species-dropdown', component_property='value')
 )
 def update_hist4(user_selection_species_id):
-
-    # Find the lichen species name based on the selected species ID
-    user_selection_species_name = lichen_species_df[lichen_species_df["id"] == user_selection_species_id]["name"]
-
-    return create_hist4(count_lichen_merged, user_selection_species_id)
+    return create_hist4(count_lichen_per_species_df, user_selection_species_id)
 
 
 # Create initial filtered table for the first observation ID
-observation_ids = merged_table['observation_id'].unique() # Get unique observation IDs for the dropdown
+observation_ids = frequency_table_df['observation_id'].unique() # Get unique observation IDs for the dropdown
 initial_user_selection_obs_id = observation_ids[0]  # Default to the first observation ID
 
 hist3 = update_hist3(initial_user_selection_obs_id)
@@ -163,7 +159,7 @@ hist3 = update_hist3(initial_user_selection_obs_id)
 # Create options for the user species dropdown
 user_species_options = [
     {"label": row["name"], "value": row["species_id"]}
-    for _, row in count_lichen_merged.sort_values(by="name").iterrows()
+    for _, row in count_lichen_per_species_df.sort_values(by="name").iterrows()
 ]
 
 initial_user_selection_species_id = user_species_options[0]['value'] # Default to the first species ID
