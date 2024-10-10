@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import plotly.express as px
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
+
 
 _dash_renderer._set_react_version("18.2.0")
 
@@ -179,7 +181,62 @@ hist4 = update_hist4(initial_user_selection_species_id)
 
 
 # Initialize the Dash app
-app = Dash(external_stylesheets=dmc.styles.ALL)
+app = Dash(__name__, external_stylesheets=dmc.styles.ALL)
+
+hist3_layout = dmc.GridCol(
+    [
+        html.Div(
+            [
+                html.H3(
+                    "Espèces observées sur le site sélectionné",
+                    style={
+                        "text-align": "left",
+                        "margin-right": "10px",
+                    },
+                ),
+                dmc.Tooltip(
+                    label="Distribution des espèces observées, sur le site sélectionné",
+                    position="top",
+                    withArrow=True,
+                    children=DashIconify(
+                        icon="material-symbols:info-outline",
+                        height=15,
+                    ),
+                ),
+            ],
+            style={
+                "display": "flex",
+                "align-items": "center",
+                "margin": "20px",
+            },
+        ),
+        html.Div(
+            [
+                html.Label(
+                    "Sélectionner un id d'observation:",
+                    style={
+                        "margin-right": "10px",
+                    },
+                ),
+                dcc.Dropdown(
+                    id="obs-dropdown",
+                    options=observation_ids,
+                    value=initial_user_selection_obs_id,
+                    clearable=False,
+                    style={"width": "50%"},
+                ),
+            ],
+            style={
+                "display": "flex",
+                "align-items": "center",
+                "justify-content": "center",
+                "margin": "20px",
+            },
+        ),
+        dcc.Graph(id="hist3", figure=hist3),
+    ],
+    span=5,
+)
 
 # Layout for the "Sites" tab
 sites_tab = dmc.TabsPanel(
@@ -205,89 +262,75 @@ sites_tab = dmc.TabsPanel(
                     ],
                     span=7,
                 ),
-                dmc.GridCol(
-                    [
-                        html.H3(
-                            "Espèces observées sur le site sélectionné",
-                            style={
-                                "text-align": "left",
-                                "margin-left": "20px",
-                            },
-                        ),
-                        html.Div(
-                            [
-                                html.Label(
-                                    "Sélectionner un id d'observation:",
-                                    style={
-                                        "margin-right": "10px",
-                                    },
-                                ),
-                                dcc.Dropdown(
-                                    id="obs-dropdown",
-                                    options=observation_ids,
-                                    value=initial_user_selection_obs_id,
-                                    clearable=False,
-                                    style={"width": "50%"},
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "align-items": "center",
-                                "justify-content": "center",
-                                "margin": "20px",
-                            },
-                        ),
-                        dcc.Graph(id="hist3", figure=hist3),
-                    ],
-                    span=5,
-                ),
+                hist3_layout
             ]
         )
     ],
     value="1",
 )
 
+hist4_layout = dmc.GridCol(
+    [
+        html.Div(
+            [
+                html.H3(
+                    "Espèces les plus observées par les observateurs Lichens GO",
+                    style={
+                        "text-align": "left",
+                        "margin-right": "10px",
+                    },
+                ),
+                dmc.Tooltip(
+                    label="Distribution des espèces observées, sur l'ensemble des sites",
+                    position="top",
+                    withArrow=True,
+                    children=DashIconify(
+                        icon="material-symbols:info-outline",
+                        height=15,
+                    ),
+                ),
+            ],
+            style={
+                "display": "flex",
+                "align-items": "center",
+                "margin": "20px",
+            },
+        ),
+        html.Div(
+            [
+                html.Label(
+                    "Sélectionner une espèce:",
+                    style={
+                        "margin-right": "10px",
+                    },
+                ),
+                dcc.Dropdown(
+                    id="species-dropdown",
+                    options=user_species_options,
+                    value=initial_user_selection_species_id,
+                    clearable=False,
+                    style={"width": "400px"},
+                ),
+            ],
+            style={
+                "display": "flex",
+                "align-items": "center",
+                "justify-content": "left",
+                "margin-left": "20px",
+            },
+        ),
+        dcc.Graph(id="hist4", figure=hist4),
+    ],
+    span=8,
+)
+
+
 # Layout for the "Espèces" tab
 species_tab = dmc.TabsPanel(
     children=[
         dmc.Grid(
             children=[
-                dmc.GridCol(
-                    [
-                        html.H3(
-                            "Espèces les plus observées par les observateurs Lichens GO",
-                            style={
-                                "text-align": "left",
-                                "margin": "20px",
-                            },
-                        ),
-                        html.Div(
-                            [
-                                html.Label(
-                                    "Sélectionner une espèce:",
-                                    style={
-                                        "margin-right": "10px",
-                                    },
-                                ),
-                                dcc.Dropdown(
-                                    id="species-dropdown",
-                                    options=user_species_options,
-                                    value=initial_user_selection_species_id,
-                                    clearable=False,
-                                    style={"width": "400px"},
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "align-items": "center",
-                                "justify-content": "left",
-                                "margin-left": "20px",
-                            },
-                        ),
-                        dcc.Graph(id="hist4", figure=hist4),
-                    ],
-                    span=8,
-                ),
+                hist4_layout,
                 dmc.GridCol(
                     [dcc.Graph(figure={}, id="graph-placeholder")],
                     span=4,
