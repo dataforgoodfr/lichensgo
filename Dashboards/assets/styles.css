@@ -1,0 +1,17 @@
+/* Set default text styling */
+body {
+  color: #495057 /* #c35a25*/;
+  font-family: "Source Sans Pro", sans-serif;
+  text-align: left;
+  letter-spacing: normal;
+}
+
+.graph-title {
+  text-align: left;
+  margin-left: 10px;
+}
+
+.info-icon {
+  font-size: 15px;
+  margin-left: 5px;
+}
