@@ -5,7 +5,7 @@ from dash_iconify import DashIconify
 from my_data.db_connect import get_session
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 from my_data.computed_datasets import table_df_frequency, sum_frequency_per_lichen, count_lichen_per_species
-from utils.css_reader import get_css_properties
+from utils.css_reader import get_css_properties, css_properties_to_inline_style
 
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
@@ -48,6 +48,8 @@ pastel_color_palette = [
 
 # Extract the font family from the CSS file for plotly (doesn't support CSS)
 body_style = get_css_properties("body")
+hover_style = css_properties_to_inline_style(body_style)
+
 
 # Get the datasets
 # environment_df = get_environment_data()
@@ -70,7 +72,13 @@ plotly_layout = {
     "template": "plotly_white",
     "margin": dict(l=20, r=20, t=40, b=20),
     "barcornerradius":"30%",
+}
 
+
+plotly_hover_style = {
+        "font": dict(
+            family=body_style.get("font-family", "Arial")
+        )
 }
 # Create the hist3 bar plot
 def create_hist3(site_table_per_lichen):
@@ -80,15 +88,14 @@ def create_hist3(site_table_per_lichen):
         x=orientations,
         y="name",
         orientation="h",
-        color_discrete_sequence=base_color_palette
+        color_discrete_sequence=base_color_palette,
     )
 
     # Update layout
     hist3.update_layout(
-        plotly_layout,
-        margin=dict(l=20, r=20, t=40, b=20),
+        **plotly_layout,
+        hoverlabel=plotly_hover_style,
         legend_title_text="Orientation",
-        barcornerradius="30%"
     )
 
     # Update axes
@@ -150,24 +157,24 @@ def create_hist4(count_lichen_merged, user_selection_species_id):
 
     # Update layout
     hist4.update_layout(
-        plotly_layout,
-        margin=dict(l=10, r=10, t=30, b=10),
-        showlegend=False
-        )
+        **plotly_layout,
+        # margin=dict(l=10, r=10, t=30, b=10),
+        showlegend=False,
+        hoverlabel=plotly_hover_style
+    )
 
     # Update axes
     hist4.update_xaxes(
         title_text="Nombre",
         showgrid=True,
-        # gridcolor='rgba(200, 200, 200, 0.5)',
     )
     hist4.update_yaxes(
         title="",
         # tickfont=dict(size=10)  # Adjust tick font size
     )
-
-    # Update hover template
-    hist4.update_traces(hovertemplate="<b>%{y}</b><br><b>Nombre:</b> %{x}<extra></extra>")
+    hist4.update_traces(
+        hovertemplate="<b>%{y}</b><br><b>Nombre:</b> %{x}<extra></extra>"
+    )
 
     return hist4
 
