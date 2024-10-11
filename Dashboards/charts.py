@@ -1,8 +1,70 @@
 import plotly.express as px
 from constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, ORIENTATIONS, ORIENTATIONS_MAPPING, SQUARE_COLUMNS, BODY_STYLE, BODY_FONT_FAMILY, BODY_FONT_COLOR, PLOTLY_LAYOUT, PLOTLY_HOVER_STYLE
+import plotly.graph_objects as go
+
+
+def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
+    hist1 = px.histogram(
+        observation_with_vdl_df,
+        x='nb_species',
+        color_discrete_sequence=BASE_COLOR_PALETTE
+        )
+
+    hist1.update_layout(
+        **PLOTLY_LAYOUT,
+        xaxis_title="Nombre d'espèces",
+        yaxis_title="Nombre de sites",
+        yaxis_showgrid=True,
+        bargap=0.1,
+    )
+
+    # Add vertical line for the clicked number of species
+    if nb_species_clicked:
+        hist1.add_shape(
+            go.layout.Shape(
+                type="line",
+                x0=nb_species_clicked, x1=nb_species_clicked,
+                y0=0, y1=1,
+                xref='x', yref='paper',
+                line=dict(color='red', width=2, dash="dot")
+            )
+        )
+
+    return hist1
+
+
+def create_hist2_vdl(observation_with_vdl_df, vdl_clicked):
+    hist2 = px.histogram(
+        observation_with_vdl_df,
+        x='VDL',
+        color_discrete_sequence=BASE_COLOR_PALETTE
+    )
+
+    hist2.update_layout(
+        **PLOTLY_LAYOUT,
+        xaxis_title="Valeur de Diversité Lichénique (VDL)",
+        yaxis_title="Nombre de sites",
+        yaxis_showgrid=True,
+        bargap=0.1,
+    )
+
+    # Add vertical line for the clicked VDL value
+    if vdl_clicked:
+        hist2.add_shape(
+            go.layout.Shape(
+                type="line",
+                x0=vdl_clicked, x1=vdl_clicked,
+                y0=0, y1=1,
+                xref='x', yref='paper',
+                line=dict(color='red', width=2, dash="dot")
+            )
+        )
+
+    return hist2
+
 
 def create_hist3(lichen_frequency_df):
-   # Create the bar plot
+
     hist3 = px.bar(
         lichen_frequency_df,
         x="nb_lichen",
@@ -11,21 +73,11 @@ def create_hist3(lichen_frequency_df):
         color_discrete_sequence=BASE_COLOR_PALETTE,
     )
 
-    # Update layout
     hist3.update_layout(
         **PLOTLY_LAYOUT,
-        legend_title_text="Orientation",
-    )
-
-    # Update axes
-    hist3.update_xaxes(
-        title_text="Nombre",
-        showgrid=True,
-        # tickfont=dict(size=14)
-    )
-    hist3.update_yaxes(
-        title_text="",
-        # tickfont=dict(size=14)
+        xaxis_title="Nombre",
+        yaxis_title="",
+        xaxis_showgrid=True,
     )
 
    # Update hover template
@@ -63,8 +115,7 @@ def create_hist4(count_lichen_per_species_df, user_selection_species_id):
         orientation="h",
         color="name",
         color_discrete_sequence=color_hist4,
-        # title="Espèces les plus observées par les observateurs Lichens GO"
-    )
+        )
 
     # Update layout
     hist4.update_layout(
