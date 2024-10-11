@@ -1,25 +1,43 @@
-from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 import dash_mantine_components as dmc
+
+from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash_iconify import DashIconify
+
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
-from my_data.computed_datasets import frequency_table, lichen_frequency, count_lichen_per_species
+from my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id
 from charts import create_hist3, create_hist4
 
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
 
+# Initialize the Dash app
+app = Dash(__name__,
+           external_stylesheets=[
+               dmc.styles.ALL,
+               "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap"
+           ],
+           title="Lichens GO"
+    )
 
 # Get the datasets
 # environment_df = get_environment_data()
+print("Fetching data...")
 lichen_df = get_lichen_data()
 lichen_species_df = get_lichen_species_data()
 observation_df = get_observation_data()
 table_df = get_table_data()
 tree_df = get_tree_data()
 
-frequency_table_df = frequency_table(lichen_df, lichen_species_df, observation_df, table_df)
-count_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df)
+## For tab on observations
+merged_table_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
+merged_table_with_nb_lichen_df = count_lichen(merged_table_df)
+nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(merged_table_with_nb_lichen_df , lichen_df, lichen_species_df)
 
+observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
+observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_table_with_nb_lichen_df)
+
+# For tab on species
+nb_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df)
 
 ## Histogram 3
 # Define callback to update the bar chart based on selected observation ID
@@ -29,15 +47,14 @@ count_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species
 )
 def update_hist3(user_selection_obs_id):
     # Filter the table for the selected observation (also called site)
-    filtered_frequency_table_df = frequency_table_df[frequency_table_df['observation_id'] == user_selection_obs_id]
 
-    # Sum by lichen_id
-    lichen_frequency_df = lichen_frequency(filtered_frequency_table_df)
+    filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[nb_lichen_per_lichen_id_df['observation_id'] == user_selection_obs_id]
+    # lichen_frequency_df = count_lichen_per_orientation(filtered_count_lichen_per_orientation_df)
 
-    return create_hist3(lichen_frequency_df)
+    return create_hist3(filtered_nb_lichen_per_lichen_id_df )
 
 # Create initial filtered table for the first observation ID
-observation_ids = frequency_table_df['observation_id'].unique() # Get unique observation IDs for the dropdown
+observation_ids = observation_df['id'].sort_values().unique() # Get unique observation IDs for the dropdown
 initial_user_selection_obs_id = observation_ids[0]  # Default to the first observation ID
 hist3 = update_hist3(initial_user_selection_obs_id)
 
@@ -49,24 +66,16 @@ hist3 = update_hist3(initial_user_selection_obs_id)
     Input(component_id='species-dropdown', component_property='value')
 )
 def update_hist4(user_selection_species_id):
-    return create_hist4(count_lichen_per_species_df, user_selection_species_id)
+    return create_hist4(nb_lichen_per_species_df, user_selection_species_id)
 
 # Create options for the user species dropdown
 user_species_options = [
     {"label": row["name"], "value": row["species_id"]}
-    for _, row in count_lichen_per_species_df.sort_values(by="name").iterrows()
+    for _, row in nb_lichen_per_species_df.sort_values(by="name").iterrows()
 ]
 initial_user_selection_species_id = user_species_options[0]['value'] # Default to the first species ID
 hist4 = update_hist4(initial_user_selection_species_id)
 
-
-# Initialize the Dash app
-app = Dash(__name__,
-           external_stylesheets=[
-               dmc.styles.ALL,
-               "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap"
-           ]
-    )
 
 hist3_layout = dmc.GridCol(
     [
