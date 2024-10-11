@@ -10,7 +10,6 @@ from dash_iconify import DashIconify
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 from my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id
 from charts import create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4
-from constants import BASE_COLOR_PALETTE
 
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
@@ -78,7 +77,6 @@ map_columns = list(map_color_palettes.keys())
 def update_map(start_date, end_date, selected_column, clickData, relayoutData):
     start_date = pd.to_datetime(start_date).date()
     end_date = pd.to_datetime(end_date).date()
-    print(selected_column)
 
     # Filtrer le dataframe pour correspondre aux dates sélectionnées
     filtered_df = observation_with_vdl_df[(observation_with_vdl_df['date_obs'] >= start_date) & (observation_with_vdl_df['date_obs'] <= end_date)]
@@ -214,7 +212,7 @@ sites_layout = dmc.TabsPanel(
                     ],
                     span=7,
                 ),
-                dmc.GridCol(
+                                dmc.GridCol(
                     [
                         html.Div(
                             [
@@ -223,7 +221,35 @@ sites_layout = dmc.TabsPanel(
                                     className="graph-title",
                                 ),
                                 dmc.Tooltip(
-                                    label="TODO",
+                                    label="Distribution des espèces observées sur le site sélectionné",
+                                    position="top",
+                                    withArrow=True,
+                                    children=DashIconify(
+                                        icon="material-symbols:info-outline",
+                                        className="info-icon",
+                                    ),
+                                ),
+                            ],
+                            style={
+                                "display": "flex",
+                                "align-items": "center",
+                                "margin": "20px",
+                            },
+                        ),
+                        dcc.Graph(id="hist3", figure={}),
+                    ],
+                    span=5,
+                ),
+                dmc.GridCol(
+                    [
+                        html.Div(
+                            [
+                                html.H3(
+                                    "Distribution du nombre d'espèces",
+                                    className="graph-title",
+                                ),
+                                dmc.Tooltip(
+                                    label="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge.",
                                     position="top",
                                     withArrow=True,
                                     children=DashIconify(
@@ -246,12 +272,11 @@ sites_layout = dmc.TabsPanel(
                     [
                         html.Div(
                             [
-                                html.H3(
-                                    "VDL sur le site sélectionné",
+                                html.H3("Distribution de VDL",
                                     className="graph-title",
                                 ),
                                 dmc.Tooltip(
-                                    label="TODO",
+                                    label="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge.",
                                     position="top",
                                     withArrow=True,
                                     children=DashIconify(
@@ -267,34 +292,6 @@ sites_layout = dmc.TabsPanel(
                             },
                         ),
                         dcc.Graph(id="vdl-hist2", figure={}),
-                    ],
-                    span=5,
-                ),
-                dmc.GridCol(
-                    [
-                        html.Div(
-                            [
-                                html.H3(
-                                    "Espèces observées sur le site sélectionné",
-                                    className="graph-title",
-                                ),
-                                dmc.Tooltip(
-                                    label="Distribution des espèces observées, sur le site sélectionné",
-                                    position="top",
-                                    withArrow=True,
-                                    children=DashIconify(
-                                        icon="material-symbols:info-outline",
-                                        className="info-icon",
-                                    ),
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "align-items": "center",
-                                "margin": "20px",
-                            },
-                        ),
-                        dcc.Graph(id="hist3", figure={}),
                     ],
                     span=5,
                 ),
