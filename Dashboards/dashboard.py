@@ -6,6 +6,7 @@ import pandas as pd
 from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash.dependencies import State
 from dash_iconify import DashIconify
+from datetime import datetime, timedelta, date
 
 from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 from my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id
@@ -18,7 +19,8 @@ _dash_renderer._set_react_version("18.2.0")
 app = Dash(__name__,
            external_stylesheets=[
                dmc.styles.ALL,
-               "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap"
+               dmc.styles.DATES,
+              "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap"
            ],
            title="Lichens GO"
     )
@@ -133,7 +135,6 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
 
     return fig_map, hist1_nb_species, hist2_vdl, hist3
 
-
 ## Histogram 4
 # Define callback to update the bar chart based on selected observation ID
 @callback(
@@ -157,21 +158,29 @@ sites_layout = dmc.TabsPanel(
     children=[
         html.Div(
             [
-                html.Div(
-                    "Sélectionnez un site sur la carte pour comprendre ce qu'il s'y passe.",
-                    style={"textAlign": "left"},
-                ),
-                # Widget pour sélectionner la période de dates à afficher
+                # dmc.DatePicker(
+                #     id="date-picker-range",
+                #     minDate=observation_with_vdl_df["date_obs"].min(),
+                #     maxDate=datetime.now().date(),
+                #     type="range",
+                #     debounce=1000,
+                #     value=[
+                #         observation_with_vdl_df["date_obs"].min(),
+                #         datetime.now().date(),
+                #     ],
+                #     valueFormat="DD/MM/YYYY",
+                #     w=200,
+                #     style={"margin": "5px"},
+                # ),
                 dcc.DatePickerRange(
                     id="date-picker-range",
                     min_date_allowed=observation_with_vdl_df["date_obs"].min(),
-                    max_date_allowed=observation_with_vdl_df["date_obs"].max(),
+                    max_date_allowed=datetime.now().date(),
                     initial_visible_month=observation_with_vdl_df["date_obs"].max(),
                     start_date=observation_with_vdl_df["date_obs"].min(),
-                    end_date=observation_with_vdl_df["date_obs"].max(),
+                    end_date=datetime.now().date(),
                     display_format="DD/MM/YYYY",
                     clearable=False,
-                    style={"margin": "10px auto", "display": "block"},
                 ),
             ]
         ),
@@ -184,9 +193,7 @@ sites_layout = dmc.TabsPanel(
                                 html.H3(
                                     "Carte des observations",
                                     className="graph-title",
-                                    style={
-                                        "margin-right": "10px"
-                                    },
+                                    style={"margin-right": "10px"},
                                 ),
                                 dcc.Dropdown(
                                     id="column-dropdown",
@@ -204,96 +211,119 @@ sites_layout = dmc.TabsPanel(
                         dcc.Graph(
                             id="species-map",
                             style={
-                                'width': '100%',
-                                'display': 'inline-block',
-                                'margin': '5px auto'
-                                }
+                                "width": "100%",
+                                "display": "inline-block",
+                                "margin": "5px auto",
+                            },
                         ),
                     ],
-                    span=7,
+                    span=6,
                 ),
+                dmc.GridCol(
+                    [
+                        dmc.Grid(
+                            children=[
                                 dmc.GridCol(
-                    [
-                        html.Div(
-                            [
-                                html.H3(
-                                    "Espèces observées sur le site sélectionné",
-                                    className="graph-title",
+                                    [
+                                        html.Div(
+                                            [
+                                                html.H3(
+                                                    "Distribution du nombre d'espèces",
+                                                    className="graph-title",
+                                                ),
+                                                dmc.Tooltip(
+                                                    label="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge.",
+                                                    position="top",
+                                                    withArrow=True,
+                                                    children=DashIconify(
+                                                        icon="material-symbols:info-outline",
+                                                        className="info-icon",
+                                                    ),
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "align-items": "center",
+                                                "margin": "20px",
+                                            },
+                                        ),
+                                        dcc.Graph(
+                                            id="species-hist1",
+                                            figure={},
+                                            style={"height": "300px"},
+                                        ),
+                                    ],
+                                    span=6,
                                 ),
-                                dmc.Tooltip(
-                                    label="Distribution des espèces observées sur le site sélectionné",
-                                    position="top",
-                                    withArrow=True,
-                                    children=DashIconify(
-                                        icon="material-symbols:info-outline",
-                                        className="info-icon",
-                                    ),
+                                dmc.GridCol(
+                                    [
+                                        html.Div(
+                                            [
+                                                html.H3(
+                                                    "Distribution de VDL",
+                                                    className="graph-title",
+                                                ),
+                                                dmc.Tooltip(
+                                                    label="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge.",
+                                                    position="top",
+                                                    withArrow=True,
+                                                    children=DashIconify(
+                                                        icon="material-symbols:info-outline",
+                                                        className="info-icon",
+                                                    ),
+                                                ),
+                                            ],
+                                            style={
+                                                "display": "flex",
+                                                "align-items": "center",
+                                                "margin": "20px",
+                                            },
+                                        ),
+                                        dcc.Graph(
+                                            id="vdl-hist2",
+                                            figure={},
+                                            style={"height": "300px"},
+                                        ),
+                                    ],
+                                    span=6,
+                                ),
+                            ]
+                        ),
+                        dmc.GridCol(
+                            [
+                                html.Div(
+                                    [
+                                        html.H3(
+                                            "Espèces observées sur le site sélectionné",
+                                            className="graph-title",
+                                        ),
+                                        dmc.Tooltip(
+                                            label="Distribution des espèces observées sur le site sélectionné",
+                                            position="top",
+                                            withArrow=True,
+                                            children=DashIconify(
+                                                icon="material-symbols:info-outline",
+                                                className="info-icon",
+                                            ),
+                                        ),
+                                    ],
+                                    style={
+                                        "display": "flex",
+                                        "align-items": "center",
+                                        #  "margin": "",
+                                        "height": "50px",
+                                    },
+                                ),
+                                dcc.Graph(
+                                    id="hist3",
+                                    figure={},
+                                    style={"height": "300px", "margin": "0px"},
                                 ),
                             ],
-                            style={
-                                "display": "flex",
-                                "align-items": "center",
-                                "margin": "20px",
-                            },
+                            span=12,
                         ),
-                        dcc.Graph(id="hist3", figure={}),
                     ],
-                    span=5,
-                ),
-                dmc.GridCol(
-                    [
-                        html.Div(
-                            [
-                                html.H3(
-                                    "Distribution du nombre d'espèces",
-                                    className="graph-title",
-                                ),
-                                dmc.Tooltip(
-                                    label="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge.",
-                                    position="top",
-                                    withArrow=True,
-                                    children=DashIconify(
-                                        icon="material-symbols:info-outline",
-                                        className="info-icon",
-                                    ),
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "align-items": "center",
-                                "margin": "20px",
-                            },
-                        ),
-                        dcc.Graph(id="species-hist1", figure={}),
-                    ],
-                    span=5,
-                ),
-                dmc.GridCol(
-                    [
-                        html.Div(
-                            [
-                                html.H3("Distribution de VDL",
-                                    className="graph-title",
-                                ),
-                                dmc.Tooltip(
-                                    label="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge.",
-                                    position="top",
-                                    withArrow=True,
-                                    children=DashIconify(
-                                        icon="material-symbols:info-outline",
-                                        className="info-icon",
-                                    ),
-                                ),
-                            ],
-                            style={
-                                "display": "flex",
-                                "align-items": "center",
-                                "margin": "20px",
-                            },
-                        ),
-                        dcc.Graph(id="vdl-hist2", figure={}),
-                    ],
-                    span=5,
+                    span=6,
                 ),
             ]
         ),
@@ -307,7 +337,7 @@ hist4_layout = dmc.GridCol(
             [
                 html.H3(
                     "Espèces les plus observées par les observateurs Lichens GO",
-                    className="graph-title"
+                    className="graph-title",
                 ),
                 dmc.Tooltip(
                     label="Distribution des espèces observées, sur l'ensemble des sites",
