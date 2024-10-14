@@ -1,20 +1,15 @@
 import pandas as pd
-import numpy as np
 import base64
-
 import sys
-from pathlib import Path
-
 import plotly.express as px
-
+from pathlib import Path
 from dash import Dash, dcc, html
 from dash.dependencies import Output, Input
+from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_lichen_ecology
 
 # Ajoute le dossier parent à sys.path
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
-from my_data.db_connect import get_session
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_lichen_ecology
 
 # image file path
 image_path = 'C:/Users/Galinette/Documents/GitHub/lichensgo/Dashboards/visualisation/xanthoria parietina.jpg'
@@ -47,13 +42,13 @@ print(species_grouped_df)
 # concatenate dataframe "species_grouped_df" with the lichen species' names
 species_grouped_df=pd.concat([species_grouped_df, lichen_species_df.loc[:,"name"]], axis=1)
 
-# sort based on occurence 
+# sort based on occurence
 species_grouped_df=(
     species_grouped_df
     .sort_values(by="count_col", ascending=False, ignore_index=True)
 )
 
-# Define app layout 
+# Define app layout
 app.layout = html.Div([
     html.H1("Select the Lichen's species"),
     dcc.Dropdown(id="dropdown_Lichen",
@@ -91,8 +86,8 @@ def hist4_interactive(Lichen_selected):
     color_discrete_sequence[int(idx[0])]='#609cd4'
 
     hist4=px.bar(
-        species_grouped_df, 
-        x="count_col", 
+        species_grouped_df,
+        x="count_col",
         y="name",
         orientation="h",
         color="name",
@@ -103,17 +98,17 @@ def hist4_interactive(Lichen_selected):
     # remove the legend
     hist4.update(layout_showlegend=False)
 
-    # update the layout 
+    # update the layout
     hist4.update_layout(
         title_font=dict(color="grey",size=24),
         title={"x": .5,"y": .95,"xanchor": "center"},
         plot_bgcolor='white',
         paper_bgcolor="white",
         width=1100,
-        height=800, 
+        height=800,
     )
 
-    # update axes 
+    # update axes
     hist4.update_xaxes(
         title="Count",
         showline=True,
@@ -127,10 +122,10 @@ def hist4_interactive(Lichen_selected):
         linecolor='black',
     )
 
-    # General info from  lichen_ecology_df dataframe 
+    # General info from  lichen_ecology_df dataframe
     # index in "lichen_ecology_df" corresponding to the selected species (connection key: Taxon)
     idx_lichen_ecology=lichen_ecology_df["taxon"].loc[lambda x: x==Lichen_selected].index
-    
+
     info_taxon =f" Taxon : {lichen_ecology_df.loc[idx_lichen_ecology[0],"taxon"]}"
     info_pH =f" pH : {lichen_ecology_df.loc[idx_lichen_ecology[0],"pH"]}"
     info_aridity =f" Aridity : {lichen_ecology_df.loc[idx_lichen_ecology[0],"aridity"]}"

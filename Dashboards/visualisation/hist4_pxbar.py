@@ -1,14 +1,13 @@
 import pandas as pd
 import sys
-from pathlib import Path
-import plotly
 import plotly.express as px
+from pathlib import Path
+from my_data.db_connect import get_session
+from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data
 
 # Ajoute le dossier parent à sys.path
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
-from my_data.db_connect import get_session
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data
 
 session = get_session()
 
@@ -40,7 +39,7 @@ df_grouped=(
 # concatenate dataframe "df_grouped" with the lichen species' names
 df_grouped_species=pd.concat([df_grouped, lichen_species_df.loc[:,"name"]], axis=1)
 
-# sort based on occurence 
+# sort based on occurence
 # (note): update_xaxes(categoryorder="total descending") does not work
 df_grouped_species=(
     df_grouped_species
@@ -53,7 +52,7 @@ print(df_grouped_species)
 ### Design bar plot ###
 
 # TODO: the user's selection should be interactive -> to modify in the final Dash
-user_selection_species=lichen_species_df.loc[30,"name"] 
+user_selection_species=lichen_species_df.loc[30,"name"]
 print("Species selected by the user:",user_selection_species)
 
 # index in "df_grouped_species" corresponding to the selected species
@@ -65,8 +64,8 @@ color_discrete_sequence=['#ec7c34']*len(df_grouped_species)
 color_discrete_sequence[int(idx[0])]='#609cd4'
 
 hist4=px.bar(
-    df_grouped_species, 
-    x="count_col", 
+    df_grouped_species,
+    x="count_col",
     y="name",
     orientation="h",
     color="name",
@@ -79,7 +78,7 @@ hist4=px.bar(
 # remove the legend
 hist4.update(layout_showlegend=False)
 
-# update the title 
+# update the title
 hist4.update_layout(
     title_font=dict(color="grey",size=24),
     title={"x": .5,"y": .95,"xanchor": "center"},
@@ -87,7 +86,7 @@ hist4.update_layout(
     paper_bgcolor="white"
 )
 
-# update axes 
+# update axes
 hist4.update_xaxes(
     title="Count",
     showline=True,
