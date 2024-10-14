@@ -1,7 +1,6 @@
 import plotly.express as px
-from constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, ORIENTATIONS, ORIENTATIONS_MAPPING, SQUARE_COLUMNS, BODY_STYLE, BODY_FONT_FAMILY, BODY_FONT_COLOR, PLOTLY_LAYOUT, PLOTLY_HOVER_STYLE
 import plotly.graph_objects as go
-
+from constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, ORIENTATIONS, ORIENTATIONS_MAPPING, SQUARE_COLUMNS, BODY_STYLE, BODY_FONT_FAMILY, BODY_FONT_COLOR, PLOTLY_LAYOUT, PLOTLY_HOVER_STYLE
 
 def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
     hist1 = px.histogram(

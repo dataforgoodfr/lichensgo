@@ -48,12 +48,12 @@ nb_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df
 ## Map
 
 # Colors for the map
-color_dict = {'<7': 'red', '7-10': 'orange', '11-14': 'yellow', '>14': 'green'} # number of species
+color_dict_nb_species = {'<7': 'red', '7-10': 'orange', '11-14': 'yellow', '>14': 'green'} # number of species
 color_dict_vdl = {'<5': 'red', '5-10': 'orange', '10-15': 'yellow', '>15': 'green'} # VDL
 
 # Dictionnaire de couleurs à utiliser pour chaque variable
 map_color_palettes = {
-    'nb_species_cat': color_dict,
+    'nb_species_cat': color_dict_nb_species,
     'VDL_cat': color_dict_vdl,
 }
 
@@ -97,9 +97,13 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
                                 color=selected_column,
                                 hover_name='date_obs', hover_data=['localisation_lat', 'localisation_long'],
                                 mapbox_style="open-street-map",
-                                color_discrete_map=map_color_palettes[selected_column],)
+                                color_discrete_map=map_color_palettes[selected_column]
+                                )
 
-    fig_map.update_layout(mapbox_zoom=current_zoom, mapbox_center=current_center)
+    fig_map.update_layout(mapbox_zoom=current_zoom,
+                          mapbox_center=current_center,
+                          margin=dict(l=10, r=10, t=0, b=0),
+                          )
 
     # Initialize variables
     nb_species_clicked = None
@@ -154,268 +158,258 @@ hist4 = update_hist4(initial_user_selection_species_id)
 
 
 # Layout for the "Sites" tab
-sites_layout = dmc.TabsPanel(
-    children=[
-        html.Div(
-            [
-                # dmc.DatePicker(
-                #     id="date-picker-range",
-                #     minDate=observation_with_vdl_df["date_obs"].min(),
-                #     maxDate=datetime.now().date(),
-                #     type="range",
-                #     debounce=1000,
-                #     value=[
-                #         observation_with_vdl_df["date_obs"].min(),
-                #         datetime.now().date(),
-                #     ],
-                #     valueFormat="DD/MM/YYYY",
-                #     w=200,
-                #     style={"margin": "5px"},
-                # ),
-                dcc.DatePickerRange(
-                    id="date-picker-range",
-                    min_date_allowed=observation_with_vdl_df["date_obs"].min(),
-                    max_date_allowed=datetime.now().date(),
-                    initial_visible_month=observation_with_vdl_df["date_obs"].max(),
-                    start_date=observation_with_vdl_df["date_obs"].min(),
-                    end_date=datetime.now().date(),
-                    display_format="DD/MM/YYYY",
-                    clearable=False,
-                ),
-            ]
-        ),
-        dmc.Grid(
-            children=[
-                dmc.GridCol(
-                    [
-                        html.Div(
-                            [
-                                html.H3(
-                                    "Carte des observations",
-                                    className="graph-title",
-                                    style={"margin-right": "10px"},
-                                ),
-                                dcc.Dropdown(
-                                    id="column-dropdown",
-                                    options=[
-                                        {"label": col, "value": col}
-                                        for col in map_columns
-                                    ],
-                                    value="nb_species_cat",  # Default value
-                                    style={"width": "50%", "margin": "10px auto"},
-                                    clearable=False,
-                                ),
-                            ],
-                            style={"display": "flex", "align-items": "center"},
-                        ),
-                        dcc.Graph(
-                            id="species-map",
-                            style={
-                                "width": "100%",
-                                "display": "inline-block",
-                                "margin": "5px auto",
-                            },
-                        ),
-                    ],
-                    span=6,
-                ),
-                dmc.GridCol(
-                    [
-                        dmc.Grid(
-                            children=[
-                                dmc.GridCol(
-                                    [
-                                        html.Div(
-                                            [
-                                                html.H3(
-                                                    "Distribution du nombre d'espèces",
-                                                    className="graph-title",
-                                                ),
-                                                dmc.Tooltip(
-                                                    label="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge.",
-                                                    position="top",
-                                                    withArrow=True,
-                                                    children=DashIconify(
-                                                        icon="material-symbols:info-outline",
-                                                        className="info-icon",
-                                                    ),
-                                                ),
-                                            ],
-                                            style={
-                                                "display": "flex",
-                                                "align-items": "center",
-                                                "margin": "20px",
-                                            },
-                                        ),
-                                        dcc.Graph(
-                                            id="species-hist1",
-                                            figure={},
-                                            style={"height": "300px"},
-                                        ),
-                                    ],
-                                    span=6,
-                                ),
-                                dmc.GridCol(
-                                    [
-                                        html.Div(
-                                            [
-                                                html.H3(
-                                                    "Distribution de VDL",
-                                                    className="graph-title",
-                                                ),
-                                                dmc.Tooltip(
-                                                    label="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge.",
-                                                    position="top",
-                                                    withArrow=True,
-                                                    children=DashIconify(
-                                                        icon="material-symbols:info-outline",
-                                                        className="info-icon",
-                                                    ),
-                                                ),
-                                            ],
-                                            style={
-                                                "display": "flex",
-                                                "align-items": "center",
-                                                "margin": "20px",
-                                            },
-                                        ),
-                                        dcc.Graph(
-                                            id="vdl-hist2",
-                                            figure={},
-                                            style={"height": "300px"},
-                                        ),
-                                    ],
-                                    span=6,
-                                ),
-                            ]
-                        ),
-                        dmc.GridCol(
-                            [
-                                html.Div(
-                                    [
-                                        html.H3(
-                                            "Espèces observées sur le site sélectionné",
-                                            className="graph-title",
-                                        ),
-                                        dmc.Tooltip(
-                                            label="Distribution des espèces observées sur le site sélectionné",
-                                            position="top",
-                                            withArrow=True,
-                                            children=DashIconify(
-                                                icon="material-symbols:info-outline",
-                                                className="info-icon",
-                                            ),
-                                        ),
-                                    ],
-                                    style={
-                                        "display": "flex",
-                                        "align-items": "center",
-                                        #  "margin": "",
-                                        "height": "50px",
-                                    },
-                                ),
-                                dcc.Graph(
-                                    id="hist3",
-                                    figure={},
-                                    style={"height": "300px", "margin": "0px"},
-                                ),
-                            ],
-                            span=12,
-                        ),
-                    ],
-                    span=6,
-                ),
-            ]
-        ),
-    ],
-    value="1",
-)
-
-hist4_layout = dmc.GridCol(
-    [
-        html.Div(
-            [
-                html.H3(
-                    "Espèces les plus observées par les observateurs Lichens GO",
-                    className="graph-title",
-                ),
-                dmc.Tooltip(
-                    label="Distribution des espèces observées, sur l'ensemble des sites",
-                    position="top",
-                    withArrow=True,
-                    children=DashIconify(
-                        icon="material-symbols:info-outline",
-                        className="info-icon",
+sites_layout = [
+    # Divider for the date picker
+    html.Div(
+        [
+            dcc.DatePickerRange(
+                id="date-picker-range",
+                min_date_allowed=observation_with_vdl_df["date_obs"].min(),
+                max_date_allowed=datetime.now().date(),
+                start_date=observation_with_vdl_df["date_obs"].min(),
+                end_date=datetime.now().date(),
+                initial_visible_month=datetime.now().date(),
+                display_format="DD/MM/YYYY",
+                clearable=False,
+                updatemode="bothdates",  # Only update callback when both dates are selected
+                first_day_of_week=2,  # Monday
+            ),
+        ]
+    ),
+    # Divider for the 2 columns
+    html.Div(
+        style={"display": "flex", "gap": "10px"},
+        children=[
+            # Divider for the first column with map and gauge
+            html.Div(
+                style={
+                    "flex": "6",
+                    "padding": "5px",
+                    # "border": "1px solid black",
+                },
+                children=[
+                    # Divider for the map
+                    html.Div(
+                        # style={"margin-right": "10px"},
+                        style={"display": "flex", "align-items": "center", "gap": "10px"},
+                        children=[
+                            html.H3(
+                                "Carte des observations",
+                                className="graph-title",
+                            ),
+                            dcc.Dropdown(
+                                id="column-dropdown",
+                                options=[
+                                    {"label": col, "value": col} for col in map_columns
+                                ],
+                                value="nb_species_cat",  # Default value
+                                style={"width": "50%"},
+                                clearable=False,
+                            ),
+                        ],
                     ),
-                ),
-            ],
-            style={
-                "display": "flex",
-                "align-items": "center",
-                "margin": "20px",
-            },
-        ),
-        html.Div(
-            [
-                html.Label(
-                    "Sélectionner une espèce:",
-                    style={
-                        "margin-right": "10px",
-                    },
-                ),
-                dcc.Dropdown(
-                    id="species-dropdown",
-                    options=user_species_options,
-                    value=initial_user_selection_species_id,
-                    clearable=False,
-                    style={"width": "400px"},
-                ),
-            ],
-            style={
-                "display": "flex",
-                "align-items": "center",
-                "justify-content": "left",
-                "margin-left": "20px",
-            },
-        ),
-        dcc.Graph(id="hist4", figure=hist4),
-    ],
-    span=8,
-)
-
+                    dcc.Graph(
+                        id="species-map",
+                        style={
+                            "width": "100%",
+                            "display": "inline-block",
+                            "margin": "5px auto",
+                        },
+                    ),
+                ],
+            ),
+            # Divider for the second column with histograms
+            html.Div(
+                style={
+                    "flex": "5",
+                    "padding": "5px",
+                    # "border": "1px solid black",
+                },
+                children=[
+                    # Divider for 2 columns for hist1 and hist2
+                    html.Div(
+                        style={"display": "flex", "gap": "10px"},
+                        children=[
+                            # Divider for hist1
+                            html.Div(
+                                style={"flex": "1"},
+                                children=[
+                                    # Divider for title and tooltip
+                                    html.Div(
+                                        children=[
+                                            html.H3(
+                                                "Distribution du nombre d'espèces",
+                                                className="graph-title",
+                                            ),
+                                            dmc.Tooltip(
+                                                label="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge.",
+                                                position="top",
+                                                withArrow=True,
+                                                children=DashIconify(
+                                                    icon="material-symbols:info-outline",
+                                                    className="info-icon",
+                                                ),
+                                            ),
+                                        ]
+                                    ),
+                                    dcc.Graph(
+                                        id="species-hist1",
+                                        figure={},
+                                        style={"height": "300px"},
+                                    ),
+                                ]
+                            ),
+                            # Divider for hist2
+                            html.Div(
+                                style={"flex": "1"},
+                                children=[
+                                    # Divider for title and tooltip
+                                    html.Div(
+                                        [
+                                            html.H3(
+                                                "Distribution de VDL",
+                                                className="graph-title",
+                                            ),
+                                            dmc.Tooltip(
+                                                label="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge.",
+                                                position="top",
+                                                withArrow=True,
+                                                children=DashIconify(
+                                                    icon="material-symbols:info-outline",
+                                                    className="info-icon",
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                    dcc.Graph(
+                                        id="vdl-hist2",
+                                        figure={},
+                                        style={"height": "300px"},
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.H3(
+                                        "Espèces observées sur le site sélectionné",
+                                        className="graph-title",
+                                    ),
+                                    dmc.Tooltip(
+                                        label="Distribution des espèces observées sur le site sélectionné",
+                                        position="top",
+                                        withArrow=True,
+                                        children=DashIconify(
+                                            icon="material-symbols:info-outline",
+                                            className="info-icon",
+                                        ),
+                                    ),
+                                ],
+                                style={
+                                    "display": "flex",
+                                    "align-items": "center",
+                                    #  "margin": "",
+                                    "height": "50px",
+                                },
+                            ),
+                            dcc.Graph(
+                                id="hist3",
+                                figure={},
+                                style={"height": "300px", "margin": "0px"},
+                            ),
+                        ]
+                    ),
+                ],
+                # style={
+                #     "display": "flex",
+                #     "align-items": "center",
+                #     "margin": "20px",
+                # },
+            ),
+        ],
+    ),
+]
 
 # Layout for the "Espèces" tab
-species_tab = dmc.TabsPanel(
-    children=[
-        dmc.Grid(
-            children=[
-                hist4_layout,
-                dmc.GridCol(
-                    [dcc.Graph(figure={}, id="graph-placeholder")],
-                    span=4,
+species_layout = dmc.Grid(
+    [
+        dmc.GridCol(
+            [
+                html.Div(
+                    [
+                        html.H3(
+                            "Espèces les plus observées par les observateurs Lichens GO",
+                            className="graph-title",
+                        ),
+                        dmc.Tooltip(
+                            label="Distribution des espèces observées, sur l'ensemble des sites",
+                            position="top",
+                            withArrow=True,
+                            children=DashIconify(
+                                icon="material-symbols:info-outline",
+                                className="info-icon",
+                            ),
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "align-items": "center",
+                        "margin": "20px",
+                    },
                 ),
-            ]
+                html.Div(
+                    [
+                        html.Label(
+                            "Sélectionner une espèce:",
+                            style={
+                                "margin-right": "10px",
+                            },
+                        ),
+                        dcc.Dropdown(
+                            id="species-dropdown",
+                            options=user_species_options,
+                            value=initial_user_selection_species_id,
+                            clearable=False,
+                            style={"width": "400px"},
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "align-items": "center",
+                        "justify-content": "left",
+                        "margin-left": "20px",
+                    },
+                ),
+                dcc.Graph(id="hist4", figure=hist4),
+            ],
+            span=8,
         ),
-    ],
-    value="2",
+        dmc.GridCol(
+            [dcc.Graph(figure={}, id="graph-placeholder")],
+            span=4,
+        ),
+    ]
 )
 
 # Define the main layout with tabs
 app.layout = dmc.MantineProvider(
     [
-    dmc.Tabs(
-        [
-            dmc.TabsList(
-                [
-                    dmc.TabsTab("Sites", value="1"),
-                    dmc.TabsTab("Espèces", value="2"),
-                ]
-            ),
-            sites_layout,
-            species_tab,
-        ],
-        value="1",  # Default to the first tab
-    )
+        dmc.Tabs(
+            [
+                dmc.TabsList(
+                    [
+                        dmc.TabsTab("Sites", value="1"),
+                        dmc.TabsTab("Espèces", value="2"),
+                    ]
+                ),
+                dmc.TabsPanel(sites_layout, value="1"),
+                dmc.TabsPanel(species_layout, value="2"),
+            ],
+            value="1",  # Default to the first tab
+        )
     ]
 )
 
