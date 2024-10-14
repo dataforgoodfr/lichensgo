@@ -1,10 +1,9 @@
-import sys
-from pathlib import Path
 import pandas as pd
 import numpy as np
-chemin_dossier_parent = Path(__file__).parent.parent
-sys.path.append(str(chemin_dossier_parent))
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_observation_data, get_table_data, get_tree_data, get_tree_species, get_lichen_ecology
+
+
+# chemin_dossier_parent = Path(__file__).parent.parent
+# sys.path.append(str(chemin_dossier_parent))
 
 square_columns = [f'sq{i}' for i in range(1, 6)]
 orientations = ['N', 'E', 'S', 'O']
@@ -30,7 +29,7 @@ def count_lichen(table_df):
 
     # Calculate lichen per orientation
     for orientation in orientations:
-        table_with_nb_lichen_df[orientation] = table_with_nb_lichen_df['concatenated_squares'].apply(lambda x: x.count(orientation))
+        table_with_nb_lichen_df[orientation] = table_with_nb_lichen_df['concatenated_squares'].apply(lambda x, orientation: x.count(orientation))
 
     # Calculate total number of lichen by summing over all orientations
     table_with_nb_lichen_df["nb_lichen"] = table_with_nb_lichen_df[orientations].sum(axis=1)
@@ -89,8 +88,7 @@ Rename repeated lichen names in lichen_species ('Autres lichen ...' etc),
 def unique_lichen_name(nb_lichen_per_lichen_id_df):
 
     # Filter lichen that are not unique
-    non_unique_lichen = nb_lichen_per_lichen_id_df[nb_lichen_per_lichen_id_df['unique'] == False][['id', 'observation_id', 'nb_lichen','name']]
-
+    non_unique_lichen = nb_lichen_per_lichen_id_df.loc[~nb_lichen_per_lichen_id_df['unique'], ['id', 'observation_id', 'nb_lichen', 'name']]
     # Sort by 'nb_lichen' in descending order to have suffix _1, _2, _3, etc. for the most frequent lichen
     non_unique_lichen = non_unique_lichen.sort_values(by='nb_lichen', ascending=False)
 
@@ -146,9 +144,6 @@ def count_species_per_observation(lichen_df, observation_df):
 
 # Sum number of lichen per lichen_id
 def group_per_lichen_id(table_with_nb_lichen_df):
-
-    columns =[f'nb_lichen_{orientation}' for orientation in orientations] + ['nb_lichen']
-
 
     lichen_frequency_df = table_with_nb_lichen_df.groupby(by='lichen_id', as_index=False).agg(
         {

@@ -1,14 +1,13 @@
 import plotly.express as px
-import plotly.graph_objects as go
 import dash_mantine_components as dmc
 import pandas as pd
 
 from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash.dependencies import State
 from dash_iconify import DashIconify
-from datetime import datetime, timedelta, date
+from datetime import datetime
 
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data, get_lichen_ecology
+from my_data.datasets import get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data, get_lichen_ecology
 from my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency
 from charts import create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart
 

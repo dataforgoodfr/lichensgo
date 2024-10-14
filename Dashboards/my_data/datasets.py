@@ -1,5 +1,4 @@
 import pandas as pd
-from sqlalchemy import text
 from my_data.db_connect import get_session
 from my_data.model import Tree, TreeSpecies, Observation, Lichen, LichenSpecies, Environment, Table, LichenEcology, LichenFrequency
 

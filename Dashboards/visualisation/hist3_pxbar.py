@@ -1,14 +1,13 @@
 import pandas as pd
 import sys
-from pathlib import Path
-import plotly
 import plotly.express as px
+from pathlib import Path
+from my_data.db_connect import get_session
+from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 
 # Ajoute le dossier parent à sys.path
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
-from my_data.db_connect import get_session
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
 
 session = get_session()
 
