@@ -46,7 +46,7 @@ PLOTLY_LAYOUT = {
         color=BODY_FONT_COLOR
     ),
     "template": "plotly_white",
-    "margin": dict(l=20, r=20, t=40, b=20),
+    "margin": dict(l=10, r=10, t=10, b=10),
     "barcornerradius":"30%",
     "hoverlabel": PLOTLY_HOVER_STYLE
 }

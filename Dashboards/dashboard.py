@@ -185,13 +185,17 @@ sites_layout = [
                 style={
                     "flex": "6",
                     "padding": "5px",
-                    # "border": "1px solid black",
+                    "border": "1px solid black",
                 },
                 children=[
                     # Divider for the map
                     html.Div(
                         # style={"margin-right": "10px"},
-                        style={"display": "flex", "align-items": "center", "gap": "10px"},
+                        style={
+                            "display": "flex",
+                            "align-items": "center",
+                            "gap": "10px",
+                        },
                         children=[
                             html.H3(
                                 "Carte des observations",
@@ -223,7 +227,7 @@ sites_layout = [
                 style={
                     "flex": "5",
                     "padding": "5px",
-                    # "border": "1px solid black",
+                    "border": "1px solid black",
                 },
                 children=[
                     # Divider for 2 columns for hist1 and hist2
@@ -236,6 +240,10 @@ sites_layout = [
                                 children=[
                                     # Divider for title and tooltip
                                     html.Div(
+                                        style={
+                                            "display": "flex",
+                                            "align-items": "center",
+                                        },
                                         children=[
                                             html.H3(
                                                 "Distribution du nombre d'espèces",
@@ -250,14 +258,13 @@ sites_layout = [
                                                     className="info-icon",
                                                 ),
                                             ),
-                                        ]
+                                        ],
                                     ),
                                     dcc.Graph(
                                         id="species-hist1",
-                                        figure={},
                                         style={"height": "300px"},
                                     ),
-                                ]
+                                ],
                             ),
                             # Divider for hist2
                             html.Div(
@@ -265,7 +272,11 @@ sites_layout = [
                                 children=[
                                     # Divider for title and tooltip
                                     html.Div(
-                                        [
+                                        style={
+                                            "display": "flex",
+                                            "align-items": "center",
+                                        },
+                                        children=[
                                             html.H3(
                                                 "Distribution de VDL",
                                                 className="graph-title",
@@ -283,7 +294,6 @@ sites_layout = [
                                     ),
                                     dcc.Graph(
                                         id="vdl-hist2",
-                                        figure={},
                                         style={"height": "300px"},
                                     ),
                                 ],
@@ -293,7 +303,8 @@ sites_layout = [
                     html.Div(
                         [
                             html.Div(
-                                [
+                                style={"display": "flex", "align-items": "center"},
+                                children=[
                                     html.H3(
                                         "Espèces observées sur le site sélectionné",
                                         className="graph-title",
@@ -308,26 +319,14 @@ sites_layout = [
                                         ),
                                     ),
                                 ],
-                                style={
-                                    "display": "flex",
-                                    "align-items": "center",
-                                    #  "margin": "",
-                                    "height": "50px",
-                                },
                             ),
                             dcc.Graph(
                                 id="hist3",
-                                figure={},
-                                style={"height": "300px", "margin": "0px"},
+                                style={"height": "300px"},
                             ),
                         ]
                     ),
                 ],
-                # style={
-                #     "display": "flex",
-                #     "align-items": "center",
-                #     "margin": "20px",
-                # },
             ),
         ],
     ),
