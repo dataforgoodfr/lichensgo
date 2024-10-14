@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from dash import Dash, html, dcc, Output, Input
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))
+from my_data.datasets import get_lichen_data, get_lichen_species_data, get_observation_data, get_table_data, get_tree_species, get_lichen_ecology
 from my_data.computed_datasets import df_frequency
 from Dashboards.charts import create_gauge_chart
 
@@ -14,7 +15,14 @@ from Dashboards.charts import create_gauge_chart
 app = Dash(__name__)
 
 # Load the dataset
-grouped_df = df_frequency()
+
+lichen_df = get_lichen_data()
+lichen_species_df = get_lichen_species_data()
+observation_df = get_observation_data()
+table_df = get_table_data()
+tree_species_df = get_tree_species()
+ecology_df = get_lichen_ecology()
+grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df)
 
 # Calcul du degrés d'artificialisation
 def calc_deg_artif(observation_id: int):
@@ -58,7 +66,7 @@ app.layout = html.Div([
     Input('dropdown-selection', 'value')
 )
 
-def update_graph(observation_id):
+def update_gauge_charts(observation_id):
     deg_artif = calc_deg_artif(observation_id)
     pollution_acide = calc_pollution_acide(observation_id)
     pollution_azote = calc_pollution_azote(observation_id)

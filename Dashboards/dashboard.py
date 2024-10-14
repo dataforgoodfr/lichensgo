@@ -8,9 +8,9 @@ from dash.dependencies import State
 from dash_iconify import DashIconify
 from datetime import datetime, timedelta, date
 
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data
-from my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id
-from charts import create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4
+from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data, get_lichen_ecology
+from my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency
+from charts import create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart
 
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
@@ -33,6 +33,7 @@ lichen_species_df = get_lichen_species_data()
 observation_df = get_observation_data()
 table_df = get_table_data()
 tree_df = get_tree_data()
+ecology_df = get_lichen_ecology()
 
 ## For tab on observations
 merged_table_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
@@ -44,6 +45,30 @@ observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_ta
 
 # For tab on species
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df)
+
+# Dataset for the gauge charts (to be improved)
+grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df)
+
+# Calcul du degrés d'artificialisation
+def calc_deg_artif(observation_id: int):
+    global_freq = grouped_df[grouped_df['id']== observation_id]['freq'].sum()
+    base_freq = grouped_df[(grouped_df['id'] == observation_id) & (grouped_df['poleotolerance'] == 'resistant')]['freq'].sum()
+
+    return round((base_freq / global_freq) * 100, 2)
+
+# Calcul de la pollution acidé
+def calc_pollution_acide(observation_id: int):
+    global_freq = grouped_df[grouped_df['id']== observation_id]['freq'].sum()
+    acid_freq = grouped_df[(grouped_df['id'] == observation_id) & (grouped_df['ph'] == 'acidophilous')]['freq'].sum()
+
+    return round((acid_freq / global_freq) * 100, 2)
+
+# Calcul de la pollution azoté
+def calc_pollution_azote(observation_id: int):
+    global_freq = grouped_df[grouped_df['id']== observation_id]['freq'].sum()
+    azote_freq = grouped_df[(grouped_df['id'] == observation_id) & (grouped_df['eutrophication'] == 'eutrophic')]['freq'].sum()
+
+    return round((azote_freq / global_freq) * 100, 2)
 
 ## Map
 
@@ -64,6 +89,9 @@ map_columns = list(map_color_palettes.keys())
 # Callback pour mettre à jour la carte et l'histogramme en fonction des dates sélectionnées
 @callback(
     Output('species-map', 'figure'),
+    Output('gauge-chart1', 'figure'),
+    Output('gauge-chart2', 'figure'),
+    Output('gauge-chart3', 'figure'),
     Output('species-hist1', 'figure'),
     Output('vdl-hist2', 'figure'),
     Output('hist3','figure'),
@@ -108,7 +136,9 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
     # Initialize variables
     nb_species_clicked = None
     vdl_clicked = None
+    observation_id_clicked = 503 # Default observation ID, to be improved
 
+    # Initalise the filtered dataframe (unfiltered by default), and sum over all data
     filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.groupby('species_id').agg({
         'nb_lichen': 'sum',
         'nb_lichen_N': 'sum',
@@ -133,11 +163,19 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
             filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
 
 
+    deg_artif = calc_deg_artif(observation_id_clicked)
+    pollution_acide = calc_pollution_acide(observation_id_clicked)
+    pollution_azote = calc_pollution_azote(observation_id_clicked)
+
+    gauge_chart1 = create_gauge_chart(deg_artif)
+    gauge_chart2 = create_gauge_chart(pollution_acide)
+    gauge_chart3 = create_gauge_chart(pollution_azote)
+
     hist1_nb_species = create_hist1_nb_species(filtered_df, nb_species_clicked)
     hist2_vdl = create_hist2_vdl(filtered_df, vdl_clicked)
     hist3 = create_hist3(filtered_nb_lichen_per_lichen_id_df)
 
-    return fig_map, hist1_nb_species, hist2_vdl, hist3
+    return fig_map, gauge_chart1, gauge_chart2, gauge_chart3, hist1_nb_species, hist2_vdl, hist3
 
 ## Histogram 4
 # Define callback to update the bar chart based on selected observation ID
@@ -185,12 +223,11 @@ sites_layout = [
                 style={
                     "flex": "6",
                     "padding": "5px",
-                    "border": "1px solid black",
+                    # "border": "1px solid black",
                 },
                 children=[
                     # Divider for the map
                     html.Div(
-                        # style={"margin-right": "10px"},
                         style={
                             "display": "flex",
                             "align-items": "center",
@@ -220,6 +257,57 @@ sites_layout = [
                             "margin": "5px auto",
                         },
                     ),
+                    # Divider for the gauge charts, with 3 columns each
+                    html.Div(
+                        style={
+                            "display": "flex",
+                            "gap": "10px"
+                        },
+                        children=[
+                            html.Div(
+                                style={"flex": "1"},
+                                children=[
+                                    html.H3(
+                                        "Degré d'artificialisation",
+                                        className="graph-title",
+                                        style={"textAlign": "center"}
+                                    ),
+                                    dcc.Graph(
+                                        id="gauge-chart1",
+                                        style={"height": "100px"},
+                                    ),
+                                ],
+                            ),
+                            html.Div(
+                                style={"flex": "1"},
+                                children=[
+                                    html.H3(
+                                        "Pollution acide",
+                                        className="graph-title",
+                                        style={"textAlign": "center"}
+                                    ),
+                                    dcc.Graph(
+                                        id="gauge-chart2",
+                                        style={"height": "100px"},
+                                    ),
+                                ],
+                            ),
+                            html.Div(
+                                style={"flex": "1"},
+                                children=[
+                                    html.H3(
+                                        "Pollution azote",
+                                        className="graph-title",
+                                        style={"textAlign": "center"},
+                                    ),
+                                    dcc.Graph(
+                                        id="gauge-chart3",
+                                        style={"height": "100px"}
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
                 ],
             ),
             # Divider for the second column with histograms
@@ -227,7 +315,7 @@ sites_layout = [
                 style={
                     "flex": "5",
                     "padding": "5px",
-                    "border": "1px solid black",
+                    # "border": "1px solid black",
                 },
                 children=[
                     # Divider for 2 columns for hist1 and hist2

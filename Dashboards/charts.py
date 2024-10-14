@@ -79,7 +79,7 @@ def create_hist3(lichen_frequency_df):
         xaxis_showgrid=True,
     )
 
-   # Update hover template
+    # Update hover template
     hist3.update_traces(
         hovertemplate=(
             "<b>%{y}</b><br><br>"
@@ -98,99 +98,37 @@ def create_hist3(lichen_frequency_df):
 ## Gauge charts
 
 
-def create_gauge_chart(value, title):
-    fig = go.Figure(go.Indicator(
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        value = value,
-        number = {'suffix': "%"},
-        mode = "gauge+number",
-        title = {'text': title},
-        gauge = {'axis': {'range': [0, 100], 'dtick': 25},
-                'bar': {'color': "#000000"},
-                'steps' : [
-                    {'range': [0, 25], 'color': "green"},
-                    {'range': [25, 50], 'color': "yellow"},
-                    {'range': [50, 75], 'color': "orange"},
-                    {'range': [75, 100], 'color': "red"}
-                    ],
-                'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': value}
-                }))
+def create_gauge_chart(value, title=None):
+    fig = go.Figure(
+        go.Indicator(
+            domain={"x": [0, 1], "y": [0, 1]},
+            value=value,
+            number={"suffix": "%", "font": {"size": 18}},
+            mode="gauge+number",
+            title={"text": title},
+            gauge={
+                "axis": {"range": [0, 100], "dtick": 25},
+                'bar': {'color': "rgba(0,0,0,1)", 'thickness': 0.3},
+                "steps": [
+                    {'range': [0, 25], 'color': "rgba(34, 139, 34, 0.7)"},
+                    {'range': [25, 50], 'color': "rgba(255, 215, 0, 0.7)"},
+                    {'range': [50, 75], 'color': "rgba(255, 140, 0, 0.7)"},
+                    {'range': [75, 100], 'color': "rgba(255, 69, 0, 0.7)"}
+                ],
+                "threshold": {
+                    "line": {"color": "rgba(0,0,0,1)", "width": 3},
+                    "thickness": 0.75,
+                    "value": value,
+                },
+            },
+        )
+    )
+
+    fig.update_layout(
+        margin={'l': 30, 'r': 30, 'b': 0, 't': 0}
+    )
 
     return fig
-
-def create_gauge_chart_deg_artif(deg_artif):
-    fig = create_gauge_chart(deg_artif, "Degré d'artificialisation")
-    return fig
-
-def create_gauge_chart_pollution_acide(pollution_acide):
-    fig = create_gauge_chart(pollution_acide, "Pollution acide")
-    return fig
-
-def create_gauge_chart_pollution_azote(pollution_azote):
-    fig = create_gauge_chart(pollution_azote, "Pollution azoté")
-    return fig
-
-# def create_gauge_chart_deg_artif(deg_artif):
-#     fig = go.Figure(go.Indicator(
-#         domain = {'x': [0, 1], 'y': [0, 1]},
-#         value = deg_artif,
-#         number = {'suffix': "%"},
-#         mode = "gauge+number",
-#         title = {'text': "Degré d'artificialisation"},
-#         gauge = {'axis': {'range': [0, 100], 'dtick': 25},
-#                 'bar': {'color': "#000000"},
-#                 'steps' : [
-#                     {'range': [0, 25], 'color': "green"},
-#                     {'range': [25, 50], 'color': "yellow"},
-#                     {'range': [50, 75], 'color': "orange"},
-#                     {'range': [75, 100], 'color': "red"}
-#                     ],
-#                 'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': deg_artif}
-#                 }))
-
-#     return fig
-
-# def create_gauge_chart_pollution_acide(pollution_acide):
-#     fig = go.Figure(go.Indicator(
-#         domain = {'x': [0, 1], 'y': [0, 1]},
-#         value = pollution_acide,
-#         number = {'suffix': "%"},
-#         mode = "gauge+number",
-#         title = {'text': "Pollution acide"},
-#         gauge = {'axis': {'range': [0, 100], 'dtick': 25},
-#                 'bar': {'color': "#000000"},
-#                 'steps' : [
-#                     {'range': [0, 25], 'color': "green"},
-#                     {'range': [25, 50], 'color': "yellow"},
-#                     {'range': [50, 75], 'color': "orange"},
-#                     {'range': [75, 100], 'color': "red"}
-#                     ],
-#                 'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': pollution_acide}
-#                 }))
-
-#     return fig
-
-
-# def create_gauge_chart_pollution_azote(pollution_azote):
-
-#     fig = go.Figure(go.Indicator(
-#         domain = {'x': [0, 1], 'y': [0, 1]},
-#         value = pollution_azote,
-#         number = {'suffix': "%"},
-#         mode = "gauge+number",
-#         title = {'text': "Pollution azoté"},
-#         gauge = {'axis': {'range': [0, 100], 'dtick': 25},
-#                 'bar': {'color': "#000000"},
-#                 'steps' : [
-#                     {'range': [0, 25], 'color': "green"},
-#                     {'range': [25, 50], 'color': "yellow"},
-#                     {'range': [50, 75], 'color': "orange"},
-#                     {'range': [75, 100], 'color': "red"}
-#                     ],
-#                 'threshold' : {'line': {'color': "#000000", 'width': 4}, 'thickness': 0.75, 'value': pollution_azote}
-#                 }))
-
-#     return fig
 
 
 ## Histograms for species

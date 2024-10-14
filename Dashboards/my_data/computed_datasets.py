@@ -183,14 +183,7 @@ def count_lichen_per_species(lichen_df, lichen_species_df):
     return count_lichen_per_species_df
 
 
-def df_frequency():
-    # Load usefull datasets
-    lichen_df = get_lichen_data()
-    lichen_species_df = get_lichen_species_data()
-    observation_df = get_observation_data()
-    table_df = get_table_data()
-    tree_species_df = get_tree_species()
-    ecology_df = get_lichen_ecology()
+def df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df):
 
     # Calculer la fréquence
     table_df['freq'] = (
