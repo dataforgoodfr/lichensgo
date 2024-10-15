@@ -8,7 +8,7 @@ from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 from datetime import datetime
 
-from Dashboards.my_data.datasets import get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data, get_lichen_ecology
+from Dashboards.my_data.datasets import get_useful_data
 from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency
 from Dashboards.charts import create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY
@@ -29,12 +29,8 @@ app = Dash(__name__,
 # Get the datasets
 # environment_df = get_environment_data()
 print("Fetching data...")
-lichen_df = get_lichen_data()
-lichen_species_df = get_lichen_species_data()
-observation_df = get_observation_data()
-table_df = get_table_data()
-tree_df = get_tree_data()
-ecology_df = get_lichen_ecology()
+lichen_df, lichen_species_df, observation_df, table_df, tree_df, ecology_df = get_useful_data()
+
 
 # For tab on observations
 merged_table_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
@@ -51,22 +47,22 @@ grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df
 
 # Calcul du degrés d'artificialisation
 def calc_deg_artif(observation_id: int):
-    global_freq = grouped_df[grouped_df['id']== observation_id]['freq'].sum()
-    base_freq = grouped_df[(grouped_df['id'] == observation_id) & (grouped_df['poleotolerance'] == 'resistant')]['freq'].sum()
+    global_freq = grouped_df[grouped_df['observation_id']== observation_id]['freq'].sum()
+    base_freq = grouped_df[(grouped_df['observation_id'] == observation_id) & (grouped_df['poleotolerance'] == 'resistant')]['freq'].sum()
 
     return round((base_freq / global_freq) * 100, 2)
 
 # Calcul de la pollution acidé
 def calc_pollution_acide(observation_id: int):
-    global_freq = grouped_df[grouped_df['id']== observation_id]['freq'].sum()
-    acid_freq = grouped_df[(grouped_df['id'] == observation_id) & (grouped_df['ph'] == 'acidophilous')]['freq'].sum()
+    global_freq = grouped_df[grouped_df['observation_id']== observation_id]['freq'].sum()
+    acid_freq = grouped_df[(grouped_df['observation_id'] == observation_id) & (grouped_df['ph'] == 'acidophilous')]['freq'].sum()
 
     return round((acid_freq / global_freq) * 100, 2)
 
 # Calcul de la pollution azoté
 def calc_pollution_azote(observation_id: int):
-    global_freq = grouped_df[grouped_df['id']== observation_id]['freq'].sum()
-    azote_freq = grouped_df[(grouped_df['id'] == observation_id) & (grouped_df['eutrophication'] == 'eutrophic')]['freq'].sum()
+    global_freq = grouped_df[grouped_df['observation_id']== observation_id]['freq'].sum()
+    azote_freq = grouped_df[(grouped_df['observation_id'] == observation_id) & (grouped_df['eutrophication'] == 'eutrophic')]['freq'].sum()
 
     return round((azote_freq / global_freq) * 100, 2)
 
@@ -119,31 +115,30 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
     vdl_clicked = None
     observation_id_clicked = 503 # Default observation ID, to be improved
 
-    # Initalise the filtered dataframe (unfiltered by default), and sum over all data
-    filtered_nb_lichen_per_lichen_id_df = filtered_nb_lichen_per_lichen_id_df.groupby('species_id').agg({
-        'nb_lichen': 'sum',
-        'nb_lichen_N': 'sum',
-        'nb_lichen_S': 'sum',
-        'nb_lichen_O': 'sum',
-        'nb_lichen_E': 'sum',
-        'name': 'first'
-    }).reset_index().rename(columns={'name': 'unique_name'}).sort_values(by='nb_lichen', ascending=True)
-
     # If a point on the map is clicked, identify the observation ID, number of species and VDL
     if clickData is not None:
         lat_clicked = clickData['points'][0]['lat']
         lon_clicked = clickData['points'][0]['lon']
 
-
         observation_clicked = filtered_observation_with_vdl_df[(filtered_observation_with_vdl_df['localisation_lat'] == lat_clicked) & (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)]
-        print(observation_clicked)
         if not observation_clicked.empty:
             observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
-            observation_id_clicked = observation_clicked['id']
+            observation_id_clicked = observation_clicked['observation_id']
             nb_species_clicked = observation_clicked['nb_species']
             vdl_clicked = observation_clicked['VDL']
 
             filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
+
+    else:
+        # If no observation is clicked, show all observations data
+        filtered_nb_lichen_per_lichen_id_df = filtered_nb_lichen_per_lichen_id_df.groupby('species_id').agg({
+            'nb_lichen': 'sum',
+            'nb_lichen_N': 'sum',
+            'nb_lichen_S': 'sum',
+            'nb_lichen_O': 'sum',
+            'nb_lichen_E': 'sum',
+            'name': 'first'
+        }).reset_index().rename(columns={'name': 'unique_name'}).sort_values(by='nb_lichen', ascending=True)
 
     deg_artif = calc_deg_artif(observation_id_clicked)
     pollution_acide = calc_pollution_acide(observation_id_clicked)
