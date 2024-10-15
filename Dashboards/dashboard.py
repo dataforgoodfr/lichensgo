@@ -254,7 +254,6 @@ sites_layout = [
                                 ],
                                 withBorder=True,
                                 shadow="sm",
-                                radius="md",
                                 style={"padding": "0"},
                             ),
                         ],
@@ -280,7 +279,7 @@ sites_layout = [
                                             dcc.Graph(
                                                 id="gauge-chart1",
                                                 figure=gauge_chart1,
-                                                style={"height": "100px"},
+                                                style={"height": "70px"},
                                                 config={
                                                     "displayModeBar": False,
                                                 },
@@ -288,7 +287,6 @@ sites_layout = [
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        radius="md",
                                         style={"padding-top": "5px"},
                                     ),
                                 ],
@@ -318,7 +316,6 @@ sites_layout = [
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        radius="md",
                                         style={"padding-top": "5px"},
                                     ),
                                 ],
@@ -348,7 +345,6 @@ sites_layout = [
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        radius="md",
                                         style={"padding-top": "5px"},
                                     ),
                                 ],
@@ -578,6 +574,7 @@ dmc_theme = {
         },
     "primaryColor": "myBlue",
     "fontFamily": BODY_FONT_FAMILY,
+    "defaultRadius": "md", # Default radius for cards
 }
 
 

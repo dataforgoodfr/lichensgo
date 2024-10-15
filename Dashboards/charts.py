@@ -159,20 +159,36 @@ def create_gauge_chart(value, title=None):
 
     return fig
 
-def create_kpi(value, title=None):
-    fig = go.Figure(
-        go.Indicator(
-            domain={"x": [0, 1], "y": [0, 1]},
-            value=value,
-            number={"suffix": "%", "font": {"size": 18}},
-            mode="number",
-            title={"text": title},
-        )
+
+def find_interval(intervals, value):
+    for i in range(len(intervals) - 1):
+        if intervals[i] <= value < intervals[i + 1]:
+            return i
+    if value >= intervals[-1]:
+        return len(intervals) - 1
+    return None
+
+def create_kpi(value, title=None, intervals=[0, 25, 50, 75, 100.5], color_scale=['green', 'yellow', 'orange', 'red']):
+
+    if color_scale and intervals:
+        color_idx = find_interval(intervals, value)
+        color = color_scale[color_idx]
+    else:
+        color = "black"  # Default color if no color_scale or intervals are provided
+
+
+    indicator = go.Indicator(
+        value=value,
+        number={"suffix": "%", "font": {"color": color, "size": 50}},
+        mode="number",
+        title={"text": title},
     )
+
+    fig = go.Figure(indicator)
 
     fig.update_layout(
         PLOTLY_LAYOUT,
-        margin=dict(l=0, r=0, t=20, b=10),
+        margin=dict(l=0, r=0, t=0, b=0),
     )
 
     return fig
