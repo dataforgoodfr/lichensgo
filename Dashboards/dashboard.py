@@ -163,6 +163,15 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
 def update_hist4(user_selection_species_id):
     return create_hist4(nb_lichen_per_species_df, user_selection_species_id)
 
+
+## Initialize all the graphs (not really necessary, but improves loading time)
+
+date_range = [observation_with_vdl_df["date_obs"].min(), datetime.now().date()]
+selected_map_column = list(MAP_SETTINGS.keys())[0]
+clickData = None
+relayoutData = None
+fig_map, gauge_chart1, gauge_chart2, gauge_chart3, hist1_nb_species, hist2_vdl, hist3 = update_dashboard1(date_range, selected_map_column, clickData, relayoutData)
+
 # Create options for the user species dropdown
 user_species_options = [
     {"label": row["name"], "value": row["species_id"]}
@@ -234,6 +243,7 @@ sites_layout = [
                         children=[
                             dcc.Graph(
                                 id="species-map",
+                                figure=fig_map,
                                 # Rounded corners for the map
                                 style={
                                     "padding": "0px",
@@ -258,7 +268,11 @@ sites_layout = [
                                     ),
                                     dcc.Graph(
                                         id="gauge-chart1",
+                                        figure=gauge_chart1,
                                         style={"height": "100px"},
+                                        config={
+                                        "displayModeBar": False,
+                                        },
                                     ),
                                 ],
                             ),
@@ -272,7 +286,11 @@ sites_layout = [
                                     ),
                                     dcc.Graph(
                                         id="gauge-chart2",
+                                        figure=gauge_chart2,
                                         style={"height": "100px"},
+                                        config={
+                                            "displayModeBar": False,
+                                        },
                                     ),
                                 ],
                             ),
@@ -285,7 +303,12 @@ sites_layout = [
                                         style={"textAlign": "center"},
                                     ),
                                     dcc.Graph(
-                                        id="gauge-chart3", style={"height": "100px"}
+                                        id="gauge-chart3",
+                                        figure=gauge_chart3,
+                                        style={"height": "100px"},
+                                        config={
+                                            "displayModeBar": False,
+                                        },
                                     ),
                                 ],
                             ),
@@ -334,7 +357,11 @@ sites_layout = [
                                     ),
                                     dcc.Graph(
                                         id="species-hist1",
+                                        figure=hist1_nb_species,
                                         style={"height": "300px"},
+                                        config={
+                                            "displaylogo": False, # Remove plotly logo
+                                        },
                                     ),
                                 ],
                             ),
@@ -367,7 +394,11 @@ sites_layout = [
                                     ),
                                     dcc.Graph(
                                         id="vdl-hist2",
+                                        figure=hist2_vdl,
                                         style={"height": "300px"},
+                                        config={
+                                            "displaylogo": False, # Remove plotly logo
+                                        },
                                     ),
                                 ],
                             ),
@@ -396,7 +427,11 @@ sites_layout = [
                             ),
                             dcc.Graph(
                                 id="hist3",
+                                figure=hist3,
                                 style={"height": "300px"},
+                                config={
+                                            "displaylogo": False, # Remove plotly logo
+                                        },
                             ),
                         ]
                     ),
@@ -457,14 +492,16 @@ species_layout = dmc.Grid(
                         "margin-left": "20px",
                     },
                 ),
-                dcc.Graph(id="hist4", figure=hist4),
+                dcc.Graph(
+                    id="hist4",
+                    figure=hist4,
+                    config={
+                        "displaylogo": False,  # Remove plotly logo
+                    },
+                ),
             ],
             span=8,
-        ),
-        dmc.GridCol(
-            [dcc.Graph(figure={}, id="graph-placeholder")],
-            span=4,
-        ),
+        )
     ]
 )
 
