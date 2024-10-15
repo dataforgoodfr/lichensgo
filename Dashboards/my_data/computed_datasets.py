@@ -48,7 +48,7 @@ def vdl_value(observation_df, table_with_nb_lichen_df):
     # Calculate the lichen diversity value (VDL) per observation
     vdl_df = vdl_df.groupby('observation_id').sum() # Sum over all lichen species per observation
     vdl_df['VDL'] = vdl_df['nb_lichen'] / 15 # /5 pour le nombre de carrés par grille, /3 pour le nombre d'arbre par observation
-    vdl_df["VDL_cat"] = pd.cut(vdl_df["VDL"], bins=[-1, 5, 10, 15, np.inf], labels=["<5", "5-10", "10-15", ">15"])
+    vdl_df["VDL_cat"] = pd.cut(vdl_df["VDL"], bins=[-1, 4.999, 10, 15, np.inf], labels=["<5", "5-10", "10-15", ">15"])
 
     observation_with_vdl_df = observation_df.merge(vdl_df, left_on='id', right_on='observation_id', how='left')
     return observation_with_vdl_df
@@ -134,7 +134,12 @@ def count_species_per_observation(lichen_df, observation_df):
     observation_with_species_count_df = observation_df.merge(count_species_per_observation_df, how='left', left_on='id', right_on='observation_id')
 
     # Add a categorical column based on the number of lichen
-    observation_with_species_count_df["nb_species_cat"] = pd.cut(observation_with_species_count_df["nb_species"], bins=[-1, 6, 11, 15, np.inf], labels = ["<7", "7-10", "11-14", ">14"])
+    observation_with_species_count_df["nb_species_cat"] = pd.cut(
+        observation_with_species_count_df["nb_species"],
+        bins=[0, 7, 10.5, 15, np.inf],
+        labels = ["<7", "7-10", "11-14", ">14"],
+        right=False
+    )
 
     return observation_with_species_count_df
 

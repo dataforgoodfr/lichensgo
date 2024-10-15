@@ -36,7 +36,7 @@ table_df = get_table_data()
 tree_df = get_tree_data()
 ecology_df = get_lichen_ecology()
 
-## For tab on observations
+# For tab on observations
 merged_table_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
 merged_table_with_nb_lichen_df = count_lichen(merged_table_df)
 nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(merged_table_with_nb_lichen_df , lichen_df, lichen_species_df)
@@ -131,12 +131,16 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
         lat_clicked = clickData['points'][0]['lat']
         lon_clicked = clickData['points'][0]['lon']
 
+
         observation_clicked = filtered_df[(filtered_df['localisation_lat'] == lat_clicked) & (filtered_df['localisation_long'] == lon_clicked)]
+        print(observation_clicked)
         if not observation_clicked.empty:
             observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
             observation_id_clicked = observation_clicked['id']
             nb_species_clicked = observation_clicked['nb_species']
             vdl_clicked = observation_clicked['VDL']
+
+            print(nb_species_clicked)
 
             filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
 
