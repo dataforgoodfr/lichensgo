@@ -11,6 +11,8 @@ from Dashboards.my_data.datasets import get_useful_data
 from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency
 from Dashboards.charts import create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY
+from Dashboards.utils.lichen_info import fetch_image
+
 
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
@@ -153,14 +155,21 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
 
     return fig_map, gauge_chart1, gauge_chart2, gauge_chart3, hist1_nb_species, hist2_vdl, hist3
 
-## Histogram 4
-# Define callback to update the bar chart based on selected observation ID
+## Dashboard on species tab
+# Define callback to update the bar chart based on selected species
 @callback(
     Output(component_id='hist4', component_property='figure'),
+    Output(component_id='lichen-image', component_property='src'),
     Input(component_id='species-dropdown', component_property='value')
 )
-def update_hist4(user_selection_species_id):
-    return create_hist4(nb_lichen_per_species_df, user_selection_species_id)
+def update_dashboard2(user_selection_species_id):
+
+    user_selection_species_name = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == user_selection_species_id]['name'].values[0]
+    img_url = fetch_image(user_selection_species_name)
+
+    hist4 = create_hist4(nb_lichen_per_species_df, user_selection_species_id)
+
+    return hist4, img_url
 
 
 ## Initialize all the graphs (not really necessary, but improves loading time)
@@ -177,7 +186,7 @@ user_species_options = [
     for _, row in nb_lichen_per_species_df.sort_values(by="name").iterrows()
 ]
 initial_user_selection_species_id = user_species_options[0]['value'] # Default to the first species ID
-hist4 = update_hist4(initial_user_selection_species_id)
+hist4 = update_dashboard2(initial_user_selection_species_id)
 
 
 # Layout for the "Sites" tab
@@ -480,65 +489,70 @@ sites_layout = [
 # Layout for the "Espèces" tab
 species_layout = dmc.Grid(
     [
-        dmc.GridCol(
+        html.Div(
             [
-                html.Div(
-                    [
-                        dmc.Title(
-                            "Espèces les plus observées",
-                            order=4,
-                            className="graph-title",
-                        ),
-                        dmc.Tooltip(
-                            label="Distribution des espèces observées, sur l'ensemble des sites",
-                            position="top",
-                            withArrow=True,
-                            children=DashIconify(
-                                icon="material-symbols:info-outline",
-                                className="info-icon",
-                            ),
-                        ),
-                    ],
-                    style={
-                        "display": "flex",
-                        "align-items": "center",
-                        "margin": "20px",
-                    },
+                dmc.Title(
+                    "Espèces les plus observées",
+                    order=4,
+                    className="graph-title",
                 ),
-                html.Div(
-                    [
-                        html.Label(
-                            "Sélectionner une espèce:",
-                            style={
-                                "margin-right": "10px",
-                            },
-                        ),
-                        dcc.Dropdown(
-                            id="species-dropdown",
-                            options=user_species_options,
-                            value=initial_user_selection_species_id,
-                            clearable=False,
-                            style={"width": "400px"},
-                        ),
-                    ],
-                    style={
-                        "display": "flex",
-                        "align-items": "center",
-                        "justify-content": "left",
-                        "margin-left": "20px",
-                    },
-                ),
-                dcc.Graph(
-                    id="hist4",
-                    figure=hist4,
-                    config={
-                        "displaylogo": False,  # Remove plotly logo
-                    },
+                dmc.Tooltip(
+                    label="Distribution des espèces observées, sur l'ensemble des sites",
+                    position="top",
+                    withArrow=True,
+                    children=DashIconify(
+                        icon="material-symbols:info-outline",
+                        className="info-icon",
+                    ),
                 ),
             ],
-            span=8,
-        )
-    ]
+            style={
+                "display": "flex",
+                "align-items": "center",
+                "margin": "20px",
+            },
+        ),
+        html.Div(
+            [
+                html.Label(
+                    "Sélectionner une espèce:",
+                    style={
+                        "margin-right": "10px",
+                    },
+                ),
+                dcc.Dropdown(
+                    id="species-dropdown",
+                    options=user_species_options,
+                    value=initial_user_selection_species_id,
+                    clearable=False,
+                    style={"width": "400px"},
+                ),
+            ],
+            style={
+                "display": "flex",
+                "align-items": "center",
+                "justify-content": "left",
+                "margin-left": "20px",
+            },
+        ),
+        dcc.Graph(
+            id="hist4",
+            figure=hist4,
+            config={
+                "displaylogo": False,  # Remove plotly logo
+            },
+        ),
+        html.Img(
+            id="lichen-image",
+            style={
+                "width": "400px",
+                "height": "auto",
+                "margin-left": "20px",
+                "margin-top": "20px",
+            },
+        ),
+
+    ],
 )
 
 
