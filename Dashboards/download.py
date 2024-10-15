@@ -1,27 +1,14 @@
 from dash import Dash, html, dcc, Output, Input, dash_table, callback
-import plotly.express as px
 import pandas as pd
 import sys
 from pathlib import Path
-chemin_dossier_parent = Path(__file__).parent.parent
-sys.path.append(str(chemin_dossier_parent))
-from my_data.datasets import get_environment_data, get_lichen_data, get_lichen_species_data, get_observation_data, get_table_data, get_tree_data, get_tree_species, get_lichen_ecology
-from my_data.computed_datasets import df_frequency
-
-# Source : https://discuss.streamlit.io/t/develop-a-dashboard-app-with-streamlit-using-plotly/37148/4 
-# Dash version
-# run with : python Dashboards/download.py
+from my_data.data_download import get_download_data
 
 # Initialize Dash app
 app = Dash(__name__)
 
-# Get all data from the dataset
-df_frequency = df_frequency()
-
-# df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/solar.csv')
-
-# print(df.to_dict('records'))
-# print([{"name": i, "id": i} for i in df.columns])
+# Get data
+data = get_download_data()
 
 # Define app layout with a hidden input
 app.layout = html.Div([
@@ -32,7 +19,6 @@ app.layout = html.Div([
             "Export CSV", 
             id="btn_csv", 
             style={
-                # Injection de css pour le bouton
                 'backgroundColor': '#4CAF50', 
                 'color': 'white', 
                 'padding': '10px 20px', 
@@ -48,24 +34,33 @@ app.layout = html.Div([
     style={'display': 'flex', 'justifyContent': 'center'}),
     html.Div(
         dash_table.DataTable(
-            df_frequency.to_dict('records'), 
-            [{"name": i, "id": i} for i in df_frequency.columns],
+            data.to_dict('records'), 
+            [{"name": i, "id": i} for i in data.columns],
             style_table={
-                'height': 400,
-                'width': '100%',
+                'height': 500,
+                'width': '280%',
                 'overflowX': 'auto', 
-                'maxWidth': '100%',  
-                'margin': '10 auto'  
+                'maxWidth': '280%',  
+                'margin': '10px auto'
             },
             style_data={
-                'width': '150px', 
+                'width': '350px', 
                 'minWidth': '150px', 
                 'maxWidth': '150px',
                 'overflow': 'hidden',
                 'textOverflow': 'ellipsis',
+            },
+            fixed_columns={'headers': True, 'data': 1},
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
             }
         ),
-        style={'display': 'flex', 'justifyContent': 'center'}
+        style={
+            'display': 'flex', 
+            # 'justifyContent': 'center', 
+            'width': '100%'
+        }
     )
 ])
 
@@ -75,7 +70,7 @@ app.layout = html.Div([
     prevent_initial_call=True,
 )
 def func(n_clicks):
-    return dcc.send_data_frame(df_frequency.to_csv, "lichengo_frequency.csv")
+    return dcc.send_data_frame(data.to_csv, "lichengo_frequency.csv")
 
 # Run the app
 if __name__ == '__main__':
