@@ -1,12 +1,7 @@
 import pandas as pd
 import numpy as np
 
-
-# chemin_dossier_parent = Path(__file__).parent.parent
-# sys.path.append(str(chemin_dossier_parent))
-
-square_columns = [f'sq{i}' for i in range(1, 6)]
-orientations = ['N', 'E', 'S', 'O']
+from Dashboards.constants import SQUARE_COLUMNS, ORIENTATIONS
 
 # Merge table_df with lichen_df, lichen_species_df and observation_df
 def merge_tables(table_df, lichen_df, lichen_species_df, observation_df):
@@ -24,18 +19,20 @@ def count_lichen(table_df):
 
     table_with_nb_lichen_df = table_df.copy()
 
+
+
     # Concatenate all square_columns into a single list per row
-    table_with_nb_lichen_df['concatenated_squares'] = table_with_nb_lichen_df[square_columns].sum(axis=1)
+    table_with_nb_lichen_df['concatenated_squares'] = table_with_nb_lichen_df[SQUARE_COLUMNS].sum(axis=1)
 
     # Calculate lichen per orientation
-    for orientation in orientations:
-        table_with_nb_lichen_df[orientation] = table_with_nb_lichen_df['concatenated_squares'].apply(lambda x, orientation: x.count(orientation))
+    for orientation in ORIENTATIONS:
+        table_with_nb_lichen_df[orientation] = table_with_nb_lichen_df['concatenated_squares'].apply(lambda x: x.count(orientation))
 
     # Calculate total number of lichen by summing over all orientations
-    table_with_nb_lichen_df["nb_lichen"] = table_with_nb_lichen_df[orientations].sum(axis=1)
+    table_with_nb_lichen_df["nb_lichen"] = table_with_nb_lichen_df[ORIENTATIONS].sum(axis=1)
 
     # Rename the orientations count columns
-    table_with_nb_lichen_df.rename(columns={orientation:f'nb_lichen_{orientation}' for orientation in orientations}, inplace=True)
+    table_with_nb_lichen_df.rename(columns={orientation:f'nb_lichen_{orientation}' for orientation in ORIENTATIONS}, inplace=True)
 
     # Drop concatenated_squares column
     table_with_nb_lichen_df.drop(columns=['concatenated_squares'], inplace=True)
@@ -45,7 +42,7 @@ def count_lichen(table_df):
 
 def vdl_value(observation_df, table_with_nb_lichen_df):
 
-    columns = ['observation_id'] + [f'nb_lichen_{orientation}' for orientation in orientations] + ['nb_lichen']
+    columns = ['observation_id'] + [f'nb_lichen_{orientation}' for orientation in ORIENTATIONS] + ['nb_lichen']
     vdl_df = table_with_nb_lichen_df[columns]
 
     # Calculate the lichen diversity value (VDL) per observation
@@ -61,7 +58,7 @@ def vdl_value(observation_df, table_with_nb_lichen_df):
 """
 def count_lichen_per_lichen_id(table_with_nb_lichen_df, lichen_df, lichen_species_df):
      # Define the columns to be used for grouping and summing
-    columns = ['lichen_id'] + [f'nb_lichen_{orientation}' for orientation in orientations] + ['nb_lichen']
+    columns = ['lichen_id'] + [f'nb_lichen_{orientation}' for orientation in ORIENTATIONS] + ['nb_lichen']
 
     # Group by 'lichen_id' and sum the counts for each orientation and the total count
     nb_lichen_per_lichen_id_df = table_with_nb_lichen_df[columns].groupby('lichen_id').sum()

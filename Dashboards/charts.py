@@ -1,6 +1,27 @@
 import plotly.express as px
 import plotly.graph_objects as go
-from constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT
+from Dashboards.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_SETTINGS
+
+
+def create_map(filtered_df, selected_map_column, zoom, center):
+    fig_map = px.scatter_mapbox(
+        filtered_df,
+        lat="localisation_lat",
+        lon="localisation_long",
+        color=selected_map_column,
+        hover_name="date_obs",
+        hover_data=["localisation_lat", "localisation_long"],
+        mapbox_style="open-street-map",
+        color_discrete_map=MAP_SETTINGS[selected_map_column]["color_map"],
+    )
+
+    fig_map.update_layout(
+        **PLOTLY_LAYOUT,
+        mapbox_zoom=zoom,
+        mapbox_center=center,
+    )
+
+    return fig_map
 
 def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
     hist1 = px.histogram(
@@ -97,7 +118,6 @@ def create_hist3(lichen_frequency_df):
 
 ## Gauge charts
 
-
 def create_gauge_chart(value, title=None):
     fig = go.Figure(
         go.Indicator(
@@ -125,7 +145,7 @@ def create_gauge_chart(value, title=None):
     )
 
     fig.update_layout(
-        margin={'l': 30, 'r': 30, 'b': 0, 't': 0}
+        **PLOTLY_LAYOUT
     )
 
     return fig
