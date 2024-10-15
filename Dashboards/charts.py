@@ -1,6 +1,35 @@
 import plotly.express as px
 import plotly.graph_objects as go
-from constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT
+from Dashboards.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_SETTINGS
+
+
+def create_map(filtered_df, selected_map_column, zoom, center):
+    fig_map = px.scatter_mapbox(
+        filtered_df,
+        lat="localisation_lat",
+        lon="localisation_long",
+        color=selected_map_column,
+        hover_name="date_obs",
+        hover_data=["localisation_lat", "localisation_long"],
+        mapbox_style="open-street-map",
+        color_discrete_map=MAP_SETTINGS[selected_map_column]["color_map"],
+    )
+
+    fig_map.update_layout(
+        PLOTLY_LAYOUT,
+        margin=dict(l=0, r=0, t=0, b=0),
+        mapbox_zoom=zoom,
+        mapbox_center=center,
+        legend=dict(
+            x=0.02,  # Position the legend on the map
+            y=0.02,
+            bgcolor="rgba(255, 255, 255, 0.7)",  # Semi-transparent background
+            bordercolor="grey",
+            borderwidth=1.5,
+        ),
+    )
+
+    return fig_map
 
 def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
     hist1 = px.histogram(
@@ -15,6 +44,15 @@ def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
         yaxis_title="Nombre de sites",
         yaxis_showgrid=True,
         bargap=0.1,
+    )
+
+    # Update hover template
+    hist1.update_traces(
+        hovertemplate=(
+            "<b>Nombre d'espèces:</b> %{x}<br>"
+            "<b>Nombre de sites:</b> %{y}<br>"
+            "<extra></extra>"
+        )
     )
 
     # Add vertical line for the clicked number of species
@@ -45,6 +83,15 @@ def create_hist2_vdl(observation_with_vdl_df, vdl_clicked):
         yaxis_title="Nombre de sites",
         yaxis_showgrid=True,
         bargap=0.1,
+    )
+
+    # Update hover template
+    hist2.update_traces(
+        hovertemplate=(
+            "<b>VDL:</b> %{x}<br>"
+            "<b>Nombre de sites:</b> %{y}<br>"
+            "<extra></extra>"
+        )
     )
 
     # Add vertical line for the clicked VDL value
@@ -97,7 +144,6 @@ def create_hist3(lichen_frequency_df):
 
 ## Gauge charts
 
-
 def create_gauge_chart(value, title=None):
     fig = go.Figure(
         go.Indicator(
@@ -125,7 +171,43 @@ def create_gauge_chart(value, title=None):
     )
 
     fig.update_layout(
-        margin={'l': 30, 'r': 30, 'b': 0, 't': 0}
+        PLOTLY_LAYOUT,
+        margin=dict(l=0, r=0, t=20, b=10),
+    )
+
+    return fig
+
+
+def find_interval(intervals, value):
+    for i in range(len(intervals) - 1):
+        if intervals[i] <= value < intervals[i + 1]:
+            return i
+    if value >= intervals[-1]:
+        return len(intervals) - 1
+    return None
+
+def create_kpi(value, title=None, intervals=None, color_scale=None):
+
+    if intervals is None:
+        intervals = [0, 25, 50, 75, 100.5]
+    if color_scale is None:
+        color_scale = ['green', 'yellow', 'orange', 'red']
+
+    color_idx = find_interval(intervals, value)
+    color = color_scale[color_idx]
+
+    indicator = go.Indicator(
+        value=value,
+        number={"suffix": "%", "font": {"color": color, "size": 50}},
+        mode="number",
+        title={"text": title},
+    )
+
+    fig = go.Figure(indicator)
+
+    fig.update_layout(
+        PLOTLY_LAYOUT,
+        margin=dict(l=0, r=0, t=0, b=0),
     )
 
     return fig

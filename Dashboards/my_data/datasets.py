@@ -130,3 +130,22 @@ def get_lichen_frequency():
             "poleotolerance": lichen_frequency.poleotolerance
         })
     return pd.DataFrame(lichen_frequency_data)
+
+
+def get_useful_data():
+    lichen_df = get_lichen_data()
+    lichen_species_df = get_lichen_species_data()
+    observation_df = get_observation_data()
+    table_df = get_table_data()
+    tree_df = get_tree_data()
+    ecology_df = get_lichen_ecology()
+
+    # Rename the id columns for easier merge
+    lichen_df.rename(columns={'id': 'lichen_id'}, inplace=True)
+    lichen_species_df.rename(columns={'id': 'species_id'}, inplace=True)
+    observation_df.rename(columns={'id': 'observation_id'}, inplace=True)
+    table_df.rename(columns={'id': 'table_id'}, inplace=True)
+    tree_df.rename(columns={'id': 'tree_id'}, inplace=True)
+    ecology_df.rename(columns={'id': 'ecology_id'}, inplace=True)
+
+    return lichen_df, lichen_species_df, observation_df, table_df, tree_df, ecology_df
