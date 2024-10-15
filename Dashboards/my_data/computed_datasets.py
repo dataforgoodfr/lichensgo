@@ -24,7 +24,7 @@ def count_lichen(table_df):
 
     # Calculate lichen per orientation
     for orientation in ORIENTATIONS:
-        table_with_nb_lichen_df[orientation] = table_with_nb_lichen_df['concatenated_squares'].apply(lambda x: x.count(orientation))
+        table_with_nb_lichen_df[orientation] = table_with_nb_lichen_df['concatenated_squares'].apply(lambda x, orientation=orientation: x.count(orientation))
 
     # Calculate total number of lichen by summing over all orientations
     table_with_nb_lichen_df["nb_lichen"] = table_with_nb_lichen_df[ORIENTATIONS].sum(axis=1)

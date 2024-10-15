@@ -186,14 +186,15 @@ def find_interval(intervals, value):
         return len(intervals) - 1
     return None
 
-def create_kpi(value, title=None, intervals=[0, 25, 50, 75, 100.5], color_scale=['green', 'yellow', 'orange', 'red']):
+def create_kpi(value, title=None, intervals=None, color_scale=None):
 
-    if color_scale and intervals:
-        color_idx = find_interval(intervals, value)
-        color = color_scale[color_idx]
-    else:
-        color = "black"  # Default color if no color_scale or intervals are provided
+    if intervals is None:
+        intervals = [0, 25, 50, 75, 100.5]
+    if color_scale is None:
+        color_scale = ['green', 'yellow', 'orange', 'red']
 
+    color_idx = find_interval(intervals, value)
+    color = color_scale[color_idx]
 
     indicator = go.Indicator(
         value=value,
