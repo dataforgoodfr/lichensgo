@@ -16,9 +16,17 @@ def create_map(filtered_df, selected_map_column, zoom, center):
     )
 
     fig_map.update_layout(
-        **PLOTLY_LAYOUT,
+        PLOTLY_LAYOUT,
+        margin=dict(l=0, r=0, t=0, b=0),
         mapbox_zoom=zoom,
         mapbox_center=center,
+        legend=dict(
+            x=0.02,  # Position the legend on the map
+            y=0.02,
+            bgcolor="rgba(255, 255, 255, 0.7)",  # Semi-transparent background
+            bordercolor="grey",
+            borderwidth=1.5,
+        ),
     )
 
     return fig_map
@@ -145,7 +153,8 @@ def create_gauge_chart(value, title=None):
     )
 
     fig.update_layout(
-        **PLOTLY_LAYOUT
+        PLOTLY_LAYOUT,
+        margin=dict(l=0, r=0, t=20, b=10),
     )
 
     return fig

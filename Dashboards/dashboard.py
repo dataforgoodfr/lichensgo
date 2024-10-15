@@ -71,8 +71,6 @@ def calc_pollution_azote(observation_id: int):
 
     return round((azote_freq / global_freq) * 100, 2)
 
-## Map
-
 
 # Callback pour mettre à jour la carte et l'histogramme en fonction des dates sélectionnées
 @callback(
@@ -91,7 +89,7 @@ def calc_pollution_azote(observation_id: int):
     State('species-map', 'relayoutData')  # État actuel du zoom et de la position de la carte
 
 )
-def update_map(date_range, selected_map_column, clickData, relayoutData):
+def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
     # Avoid updating when one of the date is None (not selected)
     if None in date_range:
         raise PreventUpdate
@@ -231,13 +229,20 @@ sites_layout = [
                             ),
                         ],
                     ),
-                    dcc.Graph(
-                        id="species-map",
-                        style={
-                            "width": "100%",
-                            "display": "inline-block",
-                            "padding": "5px",
-                        },
+                    html.Div(
+                        style={"padding": "5px"},
+                        children=[
+                            dcc.Graph(
+                                id="species-map",
+                                # Rounded corners for the map
+                                style={
+                                    "padding": "0px",
+                                    "border-radius": "20px",
+                                    "overflow": "hidden",
+                                    "border": "1px solid #c1c4c6",
+                                },
+                            ),
+                        ],
                     ),
                     # Divider for the gauge charts, with 3 columns each
                     html.Div(

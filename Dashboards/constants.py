@@ -77,15 +77,11 @@ PLOTLY_HOVER_STYLE = {
 
 # Define the plotly layout for all plots
 PLOTLY_LAYOUT = {
-    "font": dict(
-        family=BODY_FONT_FAMILY,
-        color=PLOTLY_FONT_COLOR
-    ),
+    "font": dict(family=BODY_FONT_FAMILY, color=PLOTLY_FONT_COLOR),
     "template": "plotly_white",
-    "margin": dict(l=0, r=0
-                   , t=10, b=10),
-    "barcornerradius":"30%",
+    "margin": dict(l=0, r=0, t=10, b=10),
+    "barcornerradius": "30%",
     "hoverlabel": PLOTLY_HOVER_STYLE,
     "plot_bgcolor": "rgba(0, 0, 0, 0)",  # Transparent plot background
-    "paper_bgcolor": "rgba(0, 0, 0, 0)", # Transparent paper background
+    "paper_bgcolor": "rgba(0, 0, 0, 0)",  # Transparent paper background
 }
