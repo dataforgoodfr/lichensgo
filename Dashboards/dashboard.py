@@ -39,7 +39,6 @@ ecology_df = get_lichen_ecology()
 # For tab on observations
 merged_table_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
 merged_table_with_nb_lichen_df = count_lichen(merged_table_df)
-nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(merged_table_with_nb_lichen_df , lichen_df, lichen_species_df)
 
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
 observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_table_with_nb_lichen_df)
@@ -97,8 +96,12 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
     start_date = pd.to_datetime(date_range[0]).date()
     end_date = pd.to_datetime(date_range[1]).date()
 
-    # Filtrer le dataframe pour correspondre aux dates sélectionnées
-    filtered_df = observation_with_vdl_df[(observation_with_vdl_df['date_obs'] >= start_date) & (observation_with_vdl_df['date_obs'] <= end_date)]
+    # Filter the data based on the selected date range
+    filtered_observation_with_vdl_df = observation_with_vdl_df[(observation_with_vdl_df['date_obs'] >= start_date) & (observation_with_vdl_df['date_obs'] <= end_date)]
+    filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[(merged_table_with_nb_lichen_df['date_obs'] >= start_date) & (merged_table_with_nb_lichen_df['date_obs'] <= end_date)]
+
+    # Count lichen per lichen_id on filtered table
+    filtered_nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(filtered_table_with_nb_lichen_df, lichen_df, lichen_species_df)
 
     # Si le zoom et la position actuels sont disponibles, les utiliser, sinon définir des valeurs par défaut
     if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
@@ -106,10 +109,10 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
         current_center = relayoutData["mapbox.center"]
     else:
         current_zoom = 4.8  # Valeur par défaut du zoom
-        current_center = {"lat": filtered_df['localisation_lat'].mean() + 0.5, "lon": filtered_df['localisation_long'].mean()}
+        current_center = {"lat": filtered_observation_with_vdl_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_with_vdl_df['localisation_long'].mean()}
 
     # Afficher la carte
-    fig_map = create_map(filtered_df, selected_map_column, current_zoom, current_center)
+    fig_map = create_map(filtered_observation_with_vdl_df, selected_map_column, current_zoom, current_center)
 
     # Initialize variables
     nb_species_clicked = None
@@ -117,7 +120,7 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
     observation_id_clicked = 503 # Default observation ID, to be improved
 
     # Initalise the filtered dataframe (unfiltered by default), and sum over all data
-    filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.groupby('species_id').agg({
+    filtered_nb_lichen_per_lichen_id_df = filtered_nb_lichen_per_lichen_id_df.groupby('species_id').agg({
         'nb_lichen': 'sum',
         'nb_lichen_N': 'sum',
         'nb_lichen_S': 'sum',
@@ -132,7 +135,7 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
         lon_clicked = clickData['points'][0]['lon']
 
 
-        observation_clicked = filtered_df[(filtered_df['localisation_lat'] == lat_clicked) & (filtered_df['localisation_long'] == lon_clicked)]
+        observation_clicked = filtered_observation_with_vdl_df[(filtered_observation_with_vdl_df['localisation_lat'] == lat_clicked) & (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)]
         print(observation_clicked)
         if not observation_clicked.empty:
             observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
@@ -140,9 +143,7 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
             nb_species_clicked = observation_clicked['nb_species']
             vdl_clicked = observation_clicked['VDL']
 
-            print(nb_species_clicked)
-
-            filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
+            filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
 
     deg_artif = calc_deg_artif(observation_id_clicked)
     pollution_acide = calc_pollution_acide(observation_id_clicked)
@@ -152,8 +153,8 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
     gauge_chart2 = create_gauge_chart(pollution_acide)
     gauge_chart3 = create_gauge_chart(pollution_azote)
 
-    hist1_nb_species = create_hist1_nb_species(filtered_df, nb_species_clicked)
-    hist2_vdl = create_hist2_vdl(filtered_df, vdl_clicked)
+    hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, nb_species_clicked)
+    hist2_vdl = create_hist2_vdl(filtered_observation_with_vdl_df, vdl_clicked)
     hist3 = create_hist3(filtered_nb_lichen_per_lichen_id_df)
 
     return fig_map, gauge_chart1, gauge_chart2, gauge_chart3, hist1_nb_species, hist2_vdl, hist3

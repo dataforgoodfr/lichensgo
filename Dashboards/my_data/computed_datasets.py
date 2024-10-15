@@ -19,8 +19,6 @@ def count_lichen(table_df):
 
     table_with_nb_lichen_df = table_df.copy()
 
-
-
     # Concatenate all square_columns into a single list per row
     table_with_nb_lichen_df['concatenated_squares'] = table_with_nb_lichen_df[SQUARE_COLUMNS].sum(axis=1)
 
@@ -57,20 +55,23 @@ def vdl_value(observation_df, table_with_nb_lichen_df):
     Count the number of lichen per lichen ID.
 """
 def count_lichen_per_lichen_id(table_with_nb_lichen_df, lichen_df, lichen_species_df):
-     # Define the columns to be used for grouping and summing
+    # Define the columns to be used for grouping and summing
     columns = ['lichen_id'] + [f'nb_lichen_{orientation}' for orientation in ORIENTATIONS] + ['nb_lichen']
 
     # Group by 'lichen_id' and sum the counts for each orientation and the total count
-    nb_lichen_per_lichen_id_df = table_with_nb_lichen_df[columns].groupby('lichen_id').sum()
+    nb_lichen_per_lichen_id_df = table_with_nb_lichen_df[columns].groupby('lichen_id').sum().reset_index()
 
     # Merge the grouped DataFrame with the lichen DataFrame to add lichen information
-    nb_lichen_per_lichen_id_df = lichen_df.merge(nb_lichen_per_lichen_id_df, how='left', left_on='id', right_on='lichen_id')
+    nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.merge(lichen_df, how='left', left_on='lichen_id', right_on='id').drop(columns='id')
 
     # Merge the result with the lichen species DataFrame to add species information
-    nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.merge(lichen_species_df, how='left', left_on='species_id', right_on='id', suffixes=['', '_s'])
+    nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.merge(lichen_species_df, how='left', left_on='species_id', right_on='id', suffixes=['', '_s']).drop(columns=['id'])
 
     # Sort by observation_id and number of lichen in ascending order
-    nb_lichen_per_lichen_id_df  = nb_lichen_per_lichen_id_df.sort_values(by=['observation_id','nb_lichen'], ascending=True)
+    nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.sort_values(by=['observation_id','nb_lichen'], ascending=True, ignore_index=True)
+
+    # Rename the lichen_id column
+    nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.rename(columns={'lichen_id':'id'})
 
     # Rename the repeated lichen names with a unique name
     nb_lichen_per_lichen_id_df = unique_lichen_name(nb_lichen_per_lichen_id_df)
