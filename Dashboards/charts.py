@@ -159,6 +159,24 @@ def create_gauge_chart(value, title=None):
 
     return fig
 
+def create_kpi(value, title=None):
+    fig = go.Figure(
+        go.Indicator(
+            domain={"x": [0, 1], "y": [0, 1]},
+            value=value,
+            number={"suffix": "%", "font": {"size": 18}},
+            mode="number",
+            title={"text": title},
+        )
+    )
+
+    fig.update_layout(
+        PLOTLY_LAYOUT,
+        margin=dict(l=0, r=0, t=20, b=10),
+    )
+
+    return fig
+
 
 ## Histograms for species
 

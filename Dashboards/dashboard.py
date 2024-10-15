@@ -10,7 +10,7 @@ from datetime import datetime
 
 from Dashboards.my_data.datasets import get_lichen_data, get_lichen_species_data, get_tree_data, get_observation_data, get_table_data, get_lichen_ecology
 from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency
-from Dashboards.charts import create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart
+from Dashboards.charts import create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY
 
 _dash_renderer._set_react_version("18.2.0")
@@ -144,7 +144,7 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
     pollution_acide = calc_pollution_acide(observation_id_clicked)
     pollution_azote = calc_pollution_azote(observation_id_clicked)
 
-    gauge_chart1 = create_gauge_chart(deg_artif)
+    gauge_chart1 = create_kpi(deg_artif)
     gauge_chart2 = create_gauge_chart(pollution_acide)
     gauge_chart3 = create_gauge_chart(pollution_azote)
 
@@ -227,6 +227,7 @@ sites_layout = [
                                 order=4,
                                 className="graph-title",
                             ),
+                            # Selector for the map column
                             dmc.SegmentedControl(
                                 id="map-column-select",
                                 value=list(MAP_SETTINGS.keys())[0],
@@ -241,16 +242,20 @@ sites_layout = [
                     html.Div(
                         style={"padding": "5px"},
                         children=[
-                            dcc.Graph(
-                                id="species-map",
-                                figure=fig_map,
-                                # Rounded corners for the map
-                                style={
-                                    "padding": "0px",
-                                    "border-radius": "20px",
-                                    "overflow": "hidden",
-                                    "border": "1px solid #c1c4c6",
-                                },
+                            dmc.Card(
+                                children=[
+                                    dcc.Graph(
+                                        id="species-map",
+                                        figure=fig_map,
+                                        config={
+                                            "displaylogo": False,  # Remove plotly logo
+                                        },
+                                    ),
+                                ],
+                                withBorder=True,
+                                shadow="sm",
+                                radius="md",
+                                style={"padding": "0"},
                             ),
                         ],
                     ),
@@ -261,54 +266,90 @@ sites_layout = [
                             html.Div(
                                 style={"flex": "1"},
                                 children=[
-                                    dmc.Title(
-                                        "Degré d'artificialisation",
-                                        order=4,
-                                        style={"textAlign": "center"},
-                                    ),
-                                    dcc.Graph(
-                                        id="gauge-chart1",
-                                        figure=gauge_chart1,
-                                        style={"height": "100px"},
-                                        config={
-                                        "displayModeBar": False,
-                                        },
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                style={"flex": "1"},
-                                children=[
-                                    dmc.Title(
-                                        "Pollution acide",
-                                        order=4,
-                                        style={"textAlign": "center"},
-                                    ),
-                                    dcc.Graph(
-                                        id="gauge-chart2",
-                                        figure=gauge_chart2,
-                                        style={"height": "100px"},
-                                        config={
-                                            "displayModeBar": False,
-                                        },
+                                    dmc.Card(
+                                        children=[
+                                            dmc.Title(
+                                                "Degré d'artificialisation",
+                                                order=4,
+                                                style={
+                                                    "textAlign": "left",
+                                                    "margin": "0px",
+                                                    "padding": "0px",
+                                                },
+                                            ),
+                                            dcc.Graph(
+                                                id="gauge-chart1",
+                                                figure=gauge_chart1,
+                                                style={"height": "100px"},
+                                                config={
+                                                    "displayModeBar": False,
+                                                },
+                                            ),
+                                        ],
+                                        withBorder=True,
+                                        shadow="sm",
+                                        radius="md",
+                                        style={"padding-top": "5px"},
                                     ),
                                 ],
                             ),
                             html.Div(
                                 style={"flex": "1"},
                                 children=[
-                                    dmc.Title(
-                                        "Pollution azote",
-                                        order=4,
-                                        style={"textAlign": "center"},
+                                    dmc.Card(
+                                        children=[
+                                            dmc.Title(
+                                                "Pollution acide",
+                                                order=4,
+                                                style={
+                                                    "textAlign": "left",
+                                                    "margin": "0px",
+                                                    "padding": "0px",
+                                                },
+                                            ),
+                                            dcc.Graph(
+                                                id="gauge-chart2",
+                                                figure=gauge_chart2,
+                                                style={"height": "100px"},
+                                                config={
+                                                    "displayModeBar": False,
+                                                },
+                                            ),
+                                        ],
+                                        withBorder=True,
+                                        shadow="sm",
+                                        radius="md",
+                                        style={"padding-top": "5px"},
                                     ),
-                                    dcc.Graph(
-                                        id="gauge-chart3",
-                                        figure=gauge_chart3,
-                                        style={"height": "100px"},
-                                        config={
-                                            "displayModeBar": False,
-                                        },
+                                ],
+                            ),
+                            html.Div(
+                                style={"flex": "1"},
+                                children=[
+                                    dmc.Card(
+                                        children=[
+                                            dmc.Title(
+                                                "Pollution azote",
+                                                order=4,
+                                                style={
+                                                    "textAlign": "left",
+                                                    "margin": "0px",
+                                                    "padding": "0px",
+                                                },
+                                            ),
+                                            dcc.Graph(
+                                                id="gauge-chart3",
+                                                figure=gauge_chart3,
+                                                style={"height": "100px"},
+                                                config={
+                                                    "displayModeBar": False,
+                                                },
+                                            ),
+                                        ],
+                                        withBorder=True,
+                                        shadow="sm",
+                                        radius="md",
+                                        style={"padding-top": "5px"},
                                     ),
                                 ],
                             ),
@@ -360,7 +401,7 @@ sites_layout = [
                                         figure=hist1_nb_species,
                                         style={"height": "300px"},
                                         config={
-                                            "displaylogo": False, # Remove plotly logo
+                                            "displaylogo": False,  # Remove plotly logo
                                         },
                                     ),
                                 ],
@@ -397,7 +438,7 @@ sites_layout = [
                                         figure=hist2_vdl,
                                         style={"height": "300px"},
                                         config={
-                                            "displaylogo": False, # Remove plotly logo
+                                            "displaylogo": False,  # Remove plotly logo
                                         },
                                     ),
                                 ],
@@ -430,8 +471,8 @@ sites_layout = [
                                 figure=hist3,
                                 style={"height": "300px"},
                                 config={
-                                            "displaylogo": False, # Remove plotly logo
-                                        },
+                                    "displaylogo": False,  # Remove plotly logo
+                                },
                             ),
                         ]
                     ),
