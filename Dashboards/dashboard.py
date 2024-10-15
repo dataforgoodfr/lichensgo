@@ -1,4 +1,3 @@
-import plotly.express as px
 import dash_mantine_components as dmc
 import pandas as pd
 

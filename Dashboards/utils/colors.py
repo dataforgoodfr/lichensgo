@@ -10,7 +10,7 @@ def rgb_to_hex(rgb_color):
 def lighten_color(rgb_color, factor=0.5):
     """Lighten the color by mixing it with white."""
     white = (255, 255, 255)
-    return tuple(int((1 - factor) * c + factor * w) for c, w in zip(rgb_color, white))
+    return tuple(int((1 - factor) * c + factor * w) for c, w in zip(rgb_color, white, strict=False))
 
 def create_pastel_palette(base_palette, factor=0.5):
     """Create a pastel version of the base color palette."""
