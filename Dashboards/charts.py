@@ -46,6 +46,15 @@ def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
         bargap=0.1,
     )
 
+    # Update hover template
+    hist1.update_traces(
+        hovertemplate=(
+            "<b>Nombre d'espèces:</b> %{x}<br>"
+            "<b>Nombre de sites:</b> %{y}<br>"
+            "<extra></extra>"
+        )
+    )
+
     # Add vertical line for the clicked number of species
     if nb_species_clicked:
         hist1.add_shape(
@@ -74,6 +83,15 @@ def create_hist2_vdl(observation_with_vdl_df, vdl_clicked):
         yaxis_title="Nombre de sites",
         yaxis_showgrid=True,
         bargap=0.1,
+    )
+
+    # Update hover template
+    hist2.update_traces(
+        hovertemplate=(
+            "<b>VDL:</b> %{x}<br>"
+            "<b>Nombre de sites:</b> %{y}<br>"
+            "<extra></extra>"
+        )
     )
 
     # Add vertical line for the clicked VDL value
