@@ -1,5 +1,6 @@
-import dash_mantine_components as dmc
 import pandas as pd
+import os
+import dash_mantine_components as dmc
 
 from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash.dependencies import State
@@ -9,23 +10,13 @@ from datetime import datetime
 
 from Dashboards.my_data.datasets import get_useful_data
 from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency
-from Dashboards.charts import create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
+from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY
-from Dashboards.utils.lichen_info import fetch_image
 
 
 _dash_renderer._set_react_version("18.2.0")
 # run with : python Dashboards/dashboard.py
 
-# Initialize the Dash app
-app = Dash(__name__,
-           external_stylesheets=[
-               dmc.styles.ALL,
-               dmc.styles.DATES,
-              "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap"
-           ],
-           title="Lichens GO"
-    )
 
 # Get the datasets
 # environment_df = get_environment_data()
@@ -42,6 +33,12 @@ observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_ta
 
 # For tab on species
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df)
+
+# For the lichen images
+current_dir = os.path.dirname(__file__)
+lichen_img_dir = os.path.join('assets', 'img')
+lichen_img_csv_path = os.path.join(current_dir, 'assets', 'lichen_img.csv')
+lichen_img_df = pd.read_csv(lichen_img_csv_path)
 
 # Dataset for the gauge charts (to be improved)
 grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df)
@@ -85,7 +82,7 @@ def calc_pollution_azote(observation_id: int):
     State('species-map', 'relayoutData')  # État actuel du zoom et de la position de la carte
 
 )
-def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
+def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
     # Avoid updating when one of the date is None (not selected)
     if None in date_range:
         raise PreventUpdate
@@ -109,7 +106,7 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
         current_center = {"lat": filtered_observation_with_vdl_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_with_vdl_df['localisation_long'].mean()}
 
     # Afficher la carte
-    fig_map = create_map(filtered_observation_with_vdl_df, selected_map_column, current_zoom, current_center)
+    fig_map = create_map(filtered_observation_with_vdl_df, map_column_selected, current_zoom, current_center)
 
     # Initialize variables
     nb_species_clicked = None
@@ -162,31 +159,36 @@ def update_dashboard1(date_range, selected_map_column, clickData, relayoutData):
     Output(component_id='lichen-image', component_property='src'),
     Input(component_id='species-dropdown', component_property='value')
 )
-def update_dashboard2(user_selection_species_id):
+def update_dashboard2(species_id_selected):
 
-    user_selection_species_name = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == user_selection_species_id]['name'].values[0]
-    img_url = fetch_image(user_selection_species_name)
+    hist4 = create_hist4(nb_lichen_per_species_df, species_id_selected)
 
-    hist4 = create_hist4(nb_lichen_per_species_df, user_selection_species_id)
+    filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
+    species_name_selected = filtered_nb_lichen_per_species_df['name']
 
-    return hist4, img_url
+    lichen_img = lichen_img_df[lichen_img_df['species_id'] == species_id_selected]['img_file'].iloc[0]
+    lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
+    print(lichen_img_path)
+
+    return hist4, lichen_img_path
 
 
-## Initialize all the graphs (not really necessary, but improves loading time)
 
+# Initialize a blank figure to show during loading
+blank_fig = blank_figure()
+
+# Initialize the selections
 date_range = [observation_with_vdl_df["date_obs"].min(), datetime.now().date()]
-selected_map_column = list(MAP_SETTINGS.keys())[0]
+map_column_selected = list(MAP_SETTINGS.keys())[0]
 clickData = None
 relayoutData = None
-fig_map, gauge_chart1, gauge_chart2, gauge_chart3, hist1_nb_species, hist2_vdl, hist3 = update_dashboard1(date_range, selected_map_column, clickData, relayoutData)
 
-# Create options for the user species dropdown
+# Create options for the user species dropdown, sorted by name
 user_species_options = [
     {"label": row["name"], "value": row["species_id"]}
     for _, row in nb_lichen_per_species_df.sort_values(by="name").iterrows()
 ]
-initial_user_selection_species_id = user_species_options[0]['value'] # Default to the first species ID
-hist4 = update_dashboard2(initial_user_selection_species_id)
+species_id_selected = user_species_options[0]['value'] # Default to the first species ID
 
 
 # Layout for the "Sites" tab
@@ -254,7 +256,7 @@ sites_layout = [
                                 children=[
                                     dcc.Graph(
                                         id="species-map",
-                                        figure=fig_map,
+                                        figure=blank_fig,
                                         config={
                                             "displaylogo": False,  # Remove plotly logo
                                         },
@@ -286,7 +288,7 @@ sites_layout = [
                                             ),
                                             dcc.Graph(
                                                 id="gauge-chart1",
-                                                figure=gauge_chart1,
+                                                figure=blank_fig,
                                                 style={"height": "70px"},
                                                 config={
                                                     "displayModeBar": False,
@@ -315,7 +317,7 @@ sites_layout = [
                                             ),
                                             dcc.Graph(
                                                 id="gauge-chart2",
-                                                figure=gauge_chart2,
+                                                figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
                                                     "displayModeBar": False,
@@ -344,7 +346,7 @@ sites_layout = [
                                             ),
                                             dcc.Graph(
                                                 id="gauge-chart3",
-                                                figure=gauge_chart3,
+                                                figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
                                                     "displayModeBar": False,
@@ -402,7 +404,7 @@ sites_layout = [
                                     ),
                                     dcc.Graph(
                                         id="species-hist1",
-                                        figure=hist1_nb_species,
+                                        figure=blank_fig,
                                         style={"height": "300px"},
                                         config={
                                             "displaylogo": False,  # Remove plotly logo
@@ -439,7 +441,7 @@ sites_layout = [
                                     ),
                                     dcc.Graph(
                                         id="vdl-hist2",
-                                        figure=hist2_vdl,
+                                        figure=blank_fig,
                                         style={"height": "300px"},
                                         config={
                                             "displaylogo": False,  # Remove plotly logo
@@ -472,7 +474,7 @@ sites_layout = [
                             ),
                             dcc.Graph(
                                 id="hist3",
-                                figure=hist3,
+                                figure=blank_fig,
                                 style={"height": "300px"},
                                 config={
                                     "displaylogo": False,  # Remove plotly logo
@@ -523,7 +525,7 @@ species_layout = dmc.Grid(
                 dcc.Dropdown(
                     id="species-dropdown",
                     options=user_species_options,
-                    value=initial_user_selection_species_id,
+                    value=species_id_selected,
                     clearable=False,
                     style={"width": "400px"},
                 ),
@@ -537,7 +539,7 @@ species_layout = dmc.Grid(
         ),
         dcc.Graph(
             id="hist4",
-            figure=hist4,
+            figure=blank_fig,
             config={
                 "displaylogo": False,  # Remove plotly logo
             },
@@ -546,7 +548,6 @@ species_layout = dmc.Grid(
             id="lichen-image",
             style={
                 "width": "400px",
-                "height": "auto",
                 "margin-left": "20px",
                 "margin-top": "20px",
             },
@@ -589,6 +590,17 @@ dmc_theme = {
     "fontFamily": BODY_FONT_FAMILY,
     "defaultRadius": "md", # Default radius for cards
 }
+
+
+# Initialize the Dash app
+app = Dash(__name__,
+           external_stylesheets=[
+               dmc.styles.ALL,
+               dmc.styles.DATES,
+              "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap"
+           ],
+           title="Lichens GO"
+    )
 
 
 # Define the main layout with tabs

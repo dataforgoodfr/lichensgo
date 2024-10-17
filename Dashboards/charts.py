@@ -3,6 +3,18 @@ import plotly.graph_objects as go
 from Dashboards.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_SETTINGS
 
 
+"""
+Create a blank figure for initialisation
+
+"""
+def blank_figure():
+    fig = go.Figure(go.Scatter(x=[], y = []))
+    fig.update_layout(template = None)
+    fig.update_xaxes(showgrid = False, showticklabels = False, zeroline=False)
+    fig.update_yaxes(showgrid = False, showticklabels = False, zeroline=False)
+
+    return fig
+
 def create_map(filtered_df, selected_map_column, zoom, center):
     fig_map = px.scatter_mapbox(
         filtered_df,
