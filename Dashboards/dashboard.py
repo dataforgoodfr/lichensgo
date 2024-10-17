@@ -102,7 +102,6 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
         current_zoom = 4.8  # Valeur par défaut du zoom
         current_center = {"lat": filtered_observation_with_vdl_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_with_vdl_df['localisation_long'].mean()}
 
-    # Afficher la carte
     fig_map = create_map(filtered_observation_with_vdl_df, map_column_selected, current_zoom, current_center)
 
     # Initialize variables
@@ -165,10 +164,8 @@ def update_dashboard2(species_id_selected):
 
     lichen_img = lichen_img_df[lichen_img_df['species_id'] == species_id_selected]['img_file'].iloc[0]
     lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
-    print(lichen_img_path)
 
     return hist4, lichen_img_path
-
 
 
 # Initialize a blank figure to show during loading
@@ -188,7 +185,7 @@ user_species_options = [
 species_id_selected = user_species_options[0]['value'] # Default to the first species ID
 
 
-# Layout for the "Sites" tab
+# Layout for the sites (observations)
 sites_layout = [
     # Divider for the date picker
     html.Div(
@@ -598,25 +595,57 @@ app = Dash(__name__,
     )
 
 
-# Define the main layout with tabs
+# Define the main layout with toggle and accordion
 app.layout = dmc.MantineProvider(
     id="mantine-provider",
     theme=dmc_theme,
     children=[
-        dmc.Tabs(
-            [
-                dmc.TabsList(
-                    [
-                        dmc.TabsTab("Sites", value="1"),
-                        dmc.TabsTab("Espèces", value="2"),
-                        theme_toggle,
-                    ],
+        theme_toggle,
+        dmc.Accordion(
+            disableChevronRotation=True,
+            chevronPosition="left",
+            variant="contained",
+            multiple=True,
+            children=[
+                dmc.AccordionItem(
+                            children=[
+                                dmc.AccordionControl(
+                                    dmc.Group(
+                                        children=[
+                                            DashIconify(
+                                                icon="tabler:map-pin",
+                                                height=25,
+                                            ),
+                                            dmc.Title("Sites", order=3)
+                                        ],
+                                        align="bottom",
+                                    ),
+                                ),
+                                dmc.AccordionPanel(sites_layout)
+                            ],
+                    value="sites",
                 ),
-                dmc.TabsPanel(sites_layout, value="1"),
-                dmc.TabsPanel(species_layout, value="2"),
+                dmc.AccordionItem(
+                    children=[
+                        dmc.AccordionControl(
+                            dmc.Group(
+                                children=[
+                                    DashIconify(
+                                        icon="ph:plant",
+                                        height=25,
+                                    ),
+                                    dmc.Title("Espèces", order=3)
+                                ],
+                                align="bottom",
+                            ),
+                        ),
+                        dmc.AccordionPanel(species_layout)
+                    ],
+                    value="species",
+                ),
             ],
-            value="1",  # Default to the first tab
-        ),
+            value=["sites", "species"],  # open both toggles by default
+        )
     ],
 )
 
