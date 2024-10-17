@@ -1,39 +1,39 @@
 species_id,name,img_file
-1,Xanthoria parietina,img1.jpg
-2,Candelaria concolor,img1.jpg
-3,Flavoparmelia caperata/soredians,img1.jpg
-4,Hypotrachyna afrorevoluta/revoluta,img1.jpg
-5,Lichen crustace aspect poudreux,img1.jpg
-6,Ramalina farinacea,img1.jpg
-7,Amandinea punctata/Lecidella elaeochroma,img1.jpg
-8,Evernia prunastri,img1.jpg
-9,Lecanora sp.,img1.jpg
-10,Melanelixia glabratula/Melanohalea exasperatula,img1.jpg
-11,Parmelia sulcata,img1.jpg
-12,Phaeophyscia orbicularis,img1.jpg
-13,Physcia adscendens/tenella,img1.jpg
-14,Physconia grisea,img1.jpg
-15,Pleurosticta acetabulum,img1.jpg
-16,Physcia leptalea,img1.jpg
-17,Punctelia sp.,img1.jpg
-18,Physconia distorta,img1.jpg
-19,Physcia aipolia/stellaris,img1.jpg
-20,Autre lichen foliace,img1.jpg
-21,Candelariella sp.,img1.jpg
-22,Hypogymnia physodes/tubulosa,img1.jpg
-23,Parmelina tiliacea/pastillifera,img1.jpg
-24,Hyperphyscia adglutinata,img1.jpg
-25,Melanohalea exasperata,img1.jpg
-26,Ramalina fraxinea,img1.jpg
-27,Pseudevernia furfuracea,img1.jpg
-28,Anaptychia ciliaris,img1.jpg
-29,Pertusaria pertusa,img1.jpg
-30,Autre lichen crustace,img1.jpg
-31,Parmotrema perlatum/reticulatum,img1.jpg
-32,Ramalina fastigiata,img1.jpg
-33,Parmelia saxatilis,img1.jpg
-34,Usnea sp.,img1.jpg
-35,Diploicia canescens,img1.jpg
-36,Autre lichen fruticuleux,img1.jpg
-37,Polycauliona polycarpa,img1.jpg
-38,Lichens crustace a lire,img1.jpg
+1,Xanthoria parietina,xanthoria_parietina.jpg
+2,Candelaria concolor,candelaria_concolor.jpg
+3,Flavoparmelia caperata/soredians,error.jpg
+4,Hypotrachyna afrorevoluta/revoluta,other_lichen.jpg
+5,Lichen crustace aspect poudreux,other_lichen.jpg
+6,Ramalina farinacea,other_lichen.jpg
+7,Amandinea punctata/Lecidella elaeochroma,other_lichen.jpg
+8,Evernia prunastri,other_lichen.jpg
+9,Lecanora sp.,other_lichen.jpg
+10,Melanelixia glabratula/Melanohalea exasperatula,other_lichen.jpg
+11,Parmelia sulcata,other_lichen.jpg
+12,Phaeophyscia orbicularis,other_lichen.jpg
+13,Physcia adscendens/tenella,other_lichen.jpg
+14,Physconia grisea,other_lichen.jpg
+15,Pleurosticta acetabulum,other_lichen.jpg
+16,Physcia leptalea,other_lichen.jpg
+17,Punctelia sp.,other_lichen.jpg
+18,Physconia distorta,other_lichen.jpg
+19,Physcia aipolia/stellaris,other_lichen.jpg
+20,Autre lichen foliace,other_lichen.jpg
+21,Candelariella sp.,other_lichen.jpg
+22,Hypogymnia physodes/tubulosa,other_lichen.jpg
+23,Parmelina tiliacea/pastillifera,other_lichen.jpg
+24,Hyperphyscia adglutinata,other_lichen.jpg
+25,Melanohalea exasperata,other_lichen.jpg
+26,Ramalina fraxinea,other_lichen.jpg
+27,Pseudevernia furfuracea,other_lichen.jpg
+28,Anaptychia ciliaris,other_lichen.jpg
+29,Pertusaria pertusa,other_lichen.jpg
+30,Autre lichen crustace,other_lichen.jpg
+31,Parmotrema perlatum/reticulatum,other_lichen.jpg
+32,Ramalina fastigiata,other_lichen.jpg
+33,Parmelia saxatilis,other_lichen.jpg
+34,Usnea sp.,other_lichen.jpg
+35,Diploicia canescens,other_lichen.jpg
+36,Autre lichen fruticuleux,other_lichen.jpg
+37,Polycauliona polycarpa,other_lichen.jpg
+38,Lichens crustace a lire,other_lichen.jpg

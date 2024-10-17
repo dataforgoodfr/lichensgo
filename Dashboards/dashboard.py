@@ -13,13 +13,10 @@ from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_
 from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY
 
-
 _dash_renderer._set_react_version("18.2.0")
-# run with : python Dashboards/dashboard.py
 
 
 # Get the datasets
-# environment_df = get_environment_data()
 print("Fetching data...")
 lichen_df, lichen_species_df, observation_df, table_df, tree_df, ecology_df = get_useful_data()
 
@@ -65,7 +62,7 @@ def calc_pollution_azote(observation_id: int):
     return round((azote_freq / global_freq) * 100, 2)
 
 
-# Callback pour mettre à jour la carte et l'histogramme en fonction des dates sélectionnées
+# Callback to update the dashboard on the observation
 @callback(
     Output('species-map', 'figure'),
     Output('gauge-chart1', 'figure'),
@@ -544,15 +541,13 @@ species_layout = dmc.Grid(
                 "displaylogo": False,  # Remove plotly logo
             },
         ),
-        html.Img(
+        dmc.Image(
             id="lichen-image",
-            style={
-                "width": "400px",
-                "margin-left": "20px",
-                "margin-top": "20px",
-            },
+            radius="md",
+            src=None,
+            h=200,
+            fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
         ),
-
     ],
 )
 
