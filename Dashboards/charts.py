@@ -156,25 +156,27 @@ def create_hist3(lichen_frequency_df):
 
 ## Gauge charts
 
-def create_gauge_chart(value, title=None):
+def create_gauge_chart(value, intervals, color_scale):
+
     fig = go.Figure(
         go.Indicator(
             domain={"x": [0, 1], "y": [0, 1]},
             value=value,
-            number={"suffix": "%", "font": {"size": 18}},
+            number={"suffix": "%",
+                    "font":
+                        {"size": 24 ,
+                         "color": find_color(value, intervals=intervals, color_scale=color_scale)
+                         }
+                    },
             mode="gauge+number",
-            title={"text": title},
             gauge={
                 "axis": {"range": [0, 100], "dtick": 25},
-                'bar': {'color': "rgba(0,0,0,1)", 'thickness': 0.3},
+                'bar': {'color': "rgba(60, 60, 60, 1)", 'thickness': 0.4},
                 "steps": [
-                    {'range': [0, 25], 'color': "rgba(34, 139, 34, 0.7)"},
-                    {'range': [25, 50], 'color': "rgba(255, 215, 0, 0.7)"},
-                    {'range': [50, 75], 'color': "rgba(255, 140, 0, 0.7)"},
-                    {'range': [75, 100], 'color': "rgba(255, 69, 0, 0.7)"}
+                    {'range': intervals[i:i+2], 'color': color_scale[i]} for i in range(len(intervals) - 1)
                 ],
                 "threshold": {
-                    "line": {"color": "rgba(0,0,0,1)", "width": 3},
+                    "line": {"color": "rgba(60, 60, 60, 1)", "width": 3},
                     "thickness": 0.75,
                     "value": value,
                 },
@@ -190,13 +192,25 @@ def create_gauge_chart(value, title=None):
     return fig
 
 
-def find_interval(intervals, value):
+def find_interval(value, intervals):
     for i in range(len(intervals) - 1):
         if intervals[i] <= value < intervals[i + 1]:
             return i
+
+    if value == intervals[-1]:
+        return len(intervals) - 2 # Return the last interval index if the value is equal to the last element
+
     if value >= intervals[-1]:
         return len(intervals) - 1
+
     return None
+
+def find_color(value, intervals, color_scale):
+    if len(intervals) != len(color_scale) + 1:
+        raise ValueError("The number of intervals should be equal to the number of colors + 1")
+
+    color_idx = find_interval(value, intervals)
+    return color_scale[color_idx]
 
 def create_kpi(value, title=None, intervals=None, color_scale=None):
 
@@ -205,8 +219,7 @@ def create_kpi(value, title=None, intervals=None, color_scale=None):
     if color_scale is None:
         color_scale = ['green', 'yellow', 'orange', 'red']
 
-    color_idx = find_interval(intervals, value)
-    color = color_scale[color_idx]
+    color = find_color(value, intervals, color_scale)
 
     indicator = go.Indicator(
         value=value,

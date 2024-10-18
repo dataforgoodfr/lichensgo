@@ -45,6 +45,17 @@ PASTEL_COLOR_PALETTE = [
     "#ebedef",
 ]
 
+# Color palette for negative gauge, from green to red
+NEGATIVE_GAUGE_COLOR_PALETTE = [
+        "rgba(34, 139, 34, 1)",
+        "rgba(255, 215, 0, 1)",
+        "rgba(255, 140, 0, 1)",
+        "rgba(255, 69, 0, 1)"
+    ]
+
+# Color palette for positive gauge, from red to green
+POSITIVE_GAUGE_COLOR_PALETTE = NEGATIVE_GAUGE_COLOR_PALETTE[::-1]
+
 
 SQUARE_COLUMNS = [f'sq{i}' for i in range(1, 6)]
 

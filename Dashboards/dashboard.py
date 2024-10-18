@@ -9,9 +9,9 @@ from dash_iconify import DashIconify
 from datetime import datetime
 
 from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency
+from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency, group_table_with_nb_lichen_and_ecology_df, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
 from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
-from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY
+from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE
 
 _dash_renderer._set_react_version("18.2.0")
 
@@ -24,6 +24,9 @@ lichen_df, lichen_species_df, observation_df, table_df, tree_df, ecology_df = ge
 # For tab on observations
 merged_table_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
 merged_table_with_nb_lichen_df = count_lichen(merged_table_df)
+grouped_table_with_nb_lichen_and_ecology_df = group_table_with_nb_lichen_and_ecology_df(merged_table_with_nb_lichen_df, ecology_df) # dataset for the gauge charts
+
+# grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df)
 
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
 observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_table_with_nb_lichen_df)
@@ -31,35 +34,12 @@ observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_ta
 # For tab on species
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df)
 
+
 # For the lichen images
 current_dir = os.path.dirname(__file__)
 lichen_img_dir = os.path.join('assets', 'img')
 lichen_img_csv_path = os.path.join(current_dir, 'assets', 'lichen_img.csv')
 lichen_img_df = pd.read_csv(lichen_img_csv_path)
-
-# Dataset for the gauge charts (to be improved)
-grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df)
-
-# Calcul du degrés d'artificialisation
-def calc_deg_artif(observation_id: int):
-    global_freq = grouped_df[grouped_df['observation_id']== observation_id]['freq'].sum()
-    base_freq = grouped_df[(grouped_df['observation_id'] == observation_id) & (grouped_df['poleotolerance'] == 'resistant')]['freq'].sum()
-
-    return round((base_freq / global_freq) * 100, 2)
-
-# Calcul de la pollution acidé
-def calc_pollution_acide(observation_id: int):
-    global_freq = grouped_df[grouped_df['observation_id']== observation_id]['freq'].sum()
-    acid_freq = grouped_df[(grouped_df['observation_id'] == observation_id) & (grouped_df['ph'] == 'acidophilous')]['freq'].sum()
-
-    return round((acid_freq / global_freq) * 100, 2)
-
-# Calcul de la pollution azoté
-def calc_pollution_azote(observation_id: int):
-    global_freq = grouped_df[grouped_df['observation_id']== observation_id]['freq'].sum()
-    azote_freq = grouped_df[(grouped_df['observation_id'] == observation_id) & (grouped_df['eutrophication'] == 'eutrophic')]['freq'].sum()
-
-    return round((azote_freq / global_freq) * 100, 2)
 
 
 # Callback to update the dashboard on the observation
@@ -91,6 +71,8 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
     filtered_observation_with_vdl_df = observation_with_vdl_df[(observation_with_vdl_df['date_obs'] >= start_date) & (observation_with_vdl_df['date_obs'] <= end_date)]
     filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[(merged_table_with_nb_lichen_df['date_obs'] >= start_date) & (merged_table_with_nb_lichen_df['date_obs'] <= end_date)]
 
+
+
     # Count lichen per lichen_id on filtered table
     filtered_nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(filtered_table_with_nb_lichen_df, lichen_df, lichen_species_df)
 
@@ -107,46 +89,56 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
     # Initialize variables
     nb_species_clicked = None
     vdl_clicked = None
-    observation_id_clicked = 503 # Default observation ID, to be improved
 
-    # If a point on the map is clicked, identify the observation ID, number of species and VDL
+    gauge_chart1_artif = blank_fig
+    gauge_chart2_acide = blank_fig
+    gauge_chart3_azote = blank_fig
+    hist3 = blank_fig
+
+    # If a point on the map is clicked, identify the observation ID, number of species, and VDL
     if clickData is not None:
         lat_clicked = clickData['points'][0]['lat']
         lon_clicked = clickData['points'][0]['lon']
 
-        observation_clicked = filtered_observation_with_vdl_df[(filtered_observation_with_vdl_df['localisation_lat'] == lat_clicked) & (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)]
-        if not observation_clicked.empty:
-            observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
-            observation_id_clicked = observation_clicked['observation_id']
-            nb_species_clicked = observation_clicked['nb_species']
-            vdl_clicked = observation_clicked['VDL']
+        observation_clicked = filtered_observation_with_vdl_df[
+            (filtered_observation_with_vdl_df['localisation_lat'] == lat_clicked) &
+            (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)
+        ]
 
-            filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
 
-    else:
-        # If no observation is clicked, show all observations data
-        filtered_nb_lichen_per_lichen_id_df = filtered_nb_lichen_per_lichen_id_df.groupby('species_id').agg({
-            'nb_lichen': 'sum',
-            'nb_lichen_N': 'sum',
-            'nb_lichen_S': 'sum',
-            'nb_lichen_O': 'sum',
-            'nb_lichen_E': 'sum',
-            'name': 'first'
-        }).reset_index().rename(columns={'name': 'unique_name'}).sort_values(by='nb_lichen', ascending=True)
+        if observation_clicked.empty:
+            # No observation found for the clicked point
+            return fig_map, None, None, None, None, None, None
 
-    deg_artif = calc_deg_artif(observation_id_clicked)
-    pollution_acide = calc_pollution_acide(observation_id_clicked)
-    pollution_azote = calc_pollution_azote(observation_id_clicked)
+        observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
+        observation_id_clicked = observation_clicked['observation_id']
+        nb_species_clicked = observation_clicked['nb_species']
+        vdl_clicked = observation_clicked['VDL']
 
-    gauge_chart1 = create_kpi(deg_artif)
-    gauge_chart2 = create_gauge_chart(pollution_acide)
-    gauge_chart3 = create_gauge_chart(pollution_azote)
 
+
+        # Filter the data based on the clicked observation
+        filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
+
+        filtered_lichen_with_ecology_df = grouped_table_with_nb_lichen_and_ecology_df[
+            grouped_table_with_nb_lichen_and_ecology_df['observation_id'] == observation_id_clicked
+        ]
+
+        deg_artif = calc_deg_artif(filtered_lichen_with_ecology_df)
+        pollution_acide = calc_pollution_acide(filtered_lichen_with_ecology_df)
+        pollution_azote = calc_pollution_azote(filtered_lichen_with_ecology_df)
+
+        gauge_chart1_artif = create_gauge_chart(deg_artif, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+        gauge_chart2_acide = create_gauge_chart(pollution_acide, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
+        gauge_chart3_azote = create_gauge_chart(pollution_azote, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+
+        hist3 = create_hist3(filtered_nb_lichen_per_lichen_id_df)
+
+    # Those figures are still needed even if no observation is clicked
     hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, nb_species_clicked)
     hist2_vdl = create_hist2_vdl(filtered_observation_with_vdl_df, vdl_clicked)
-    hist3 = create_hist3(filtered_nb_lichen_per_lichen_id_df)
 
-    return fig_map, gauge_chart1, gauge_chart2, gauge_chart3, hist1_nb_species, hist2_vdl, hist3
+    return fig_map, gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist1_nb_species, hist2_vdl, hist3
 
 ## Dashboard on species tab
 # Define callback to update the bar chart based on selected species
@@ -272,7 +264,7 @@ sites_layout = [
                                     dmc.Card(
                                         children=[
                                             dmc.Title(
-                                                "Degré d'artificialisation",
+                                                "% Espèces toxitolérantes",
                                                 order=4,
                                                 style={
                                                     "textAlign": "left",
@@ -283,38 +275,9 @@ sites_layout = [
                                             dcc.Graph(
                                                 id="gauge-chart1",
                                                 figure=blank_fig,
-                                                style={"height": "70px"},
-                                                config={
-                                                    "displayModeBar": False,
-                                                },
-                                            ),
-                                        ],
-                                        withBorder=True,
-                                        shadow="sm",
-                                        style={"padding-top": "5px"},
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                style={"flex": "1"},
-                                children=[
-                                    dmc.Card(
-                                        children=[
-                                            dmc.Title(
-                                                "Pollution acide",
-                                                order=4,
-                                                style={
-                                                    "textAlign": "left",
-                                                    "margin": "0px",
-                                                    "padding": "0px",
-                                                },
-                                            ),
-                                            dcc.Graph(
-                                                id="gauge-chart2",
-                                                figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False,
+                                                    "displayModeBar": False, # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
@@ -324,13 +287,13 @@ sites_layout = [
                                     ),
                                 ],
                             ),
-                            html.Div(
+                                                        html.Div(
                                 style={"flex": "1"},
                                 children=[
                                     dmc.Card(
                                         children=[
                                             dmc.Title(
-                                                "Pollution azote",
+                                                "% Espèces eutrophes",
                                                 order=4,
                                                 style={
                                                     "textAlign": "left",
@@ -343,7 +306,36 @@ sites_layout = [
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False,
+                                                    "displayModeBar": False, # Remove plotly tool bar
+                                                },
+                                            ),
+                                        ],
+                                        withBorder=True,
+                                        shadow="sm",
+                                        style={"padding-top": "5px"},
+                                    ),
+                                ],
+                            ),
+                            html.Div(
+                                style={"flex": "1"},
+                                children=[
+                                    dmc.Card(
+                                        children=[
+                                            dmc.Title(
+                                                "% Espèces acidophiles",
+                                                order=4,
+                                                style={
+                                                    "textAlign": "left",
+                                                    "margin": "0px",
+                                                    "padding": "0px",
+                                                },
+                                            ),
+                                            dcc.Graph(
+                                                id="gauge-chart2",
+                                                figure=blank_fig,
+                                                style={"height": "100px"},
+                                                config={
+                                                    "displayModeBar": False, # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
