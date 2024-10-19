@@ -9,7 +9,7 @@ from dash_iconify import DashIconify
 from datetime import datetime
 
 from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, df_frequency, group_table_with_nb_lichen_and_ecology_df, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
+from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_with_nb_lichen_and_ecology_df, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
 from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE
 
@@ -18,13 +18,13 @@ _dash_renderer._set_react_version("18.2.0")
 
 # Get the datasets
 print("Fetching data...")
-lichen_df, lichen_species_df, observation_df, table_df, tree_df, ecology_df = get_useful_data()
+lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df = get_useful_data()
 
 
 # For tab on observations
-merged_table_df = merge_tables(table_df, lichen_df, lichen_species_df, observation_df)
-merged_table_with_nb_lichen_df = count_lichen(merged_table_df)
-grouped_table_with_nb_lichen_and_ecology_df = group_table_with_nb_lichen_and_ecology_df(merged_table_with_nb_lichen_df, ecology_df) # dataset for the gauge charts
+table_with_nb_lichen_df = count_lichen(table_df)
+merged_table_with_nb_lichen_df = merge_tables(table_with_nb_lichen_df, lichen_df, observation_df)
+grouped_table_with_nb_lichen_and_ecology_df = group_table_with_nb_lichen_and_ecology_df(merged_table_with_nb_lichen_df, merged_lichen_species_df) # dataset for the gauge charts
 
 # grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df)
 
@@ -32,14 +32,11 @@ observation_with_species_count_df = count_species_per_observation(lichen_df, obs
 observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_table_with_nb_lichen_df)
 
 # For tab on species
-nb_lichen_per_species_df = count_lichen_per_species(lichen_df, lichen_species_df)
-
+nb_lichen_per_species_df = count_lichen_per_species(lichen_df, merged_lichen_species_df)
 
 # For the lichen images
 current_dir = os.path.dirname(__file__)
 lichen_img_dir = os.path.join('assets', 'img')
-lichen_img_csv_path = os.path.join(current_dir, 'assets', 'lichen_img.csv')
-lichen_img_df = pd.read_csv(lichen_img_csv_path)
 
 
 # Callback to update the dashboard on the observation
@@ -74,7 +71,7 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
 
 
     # Count lichen per lichen_id on filtered table
-    filtered_nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(filtered_table_with_nb_lichen_df, lichen_df, lichen_species_df)
+    filtered_nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(filtered_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df)
 
     # Si le zoom et la position actuels sont disponibles, les utiliser, sinon définir des valeurs par défaut
     if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
@@ -116,7 +113,6 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
         vdl_clicked = observation_clicked['VDL']
 
 
-
         # Filter the data based on the clicked observation
         filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
 
@@ -154,7 +150,7 @@ def update_dashboard2(species_id_selected):
     filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
     species_name_selected = filtered_nb_lichen_per_species_df['name']
 
-    lichen_img = lichen_img_df[lichen_img_df['species_id'] == species_id_selected]['img_file'].iloc[0]
+    lichen_img = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected]['picture'].iloc[0]
     lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
 
     return hist4, lichen_img_path

@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from my_data.db_connect import get_session
 from my_data.model import Tree, TreeSpecies, Observation, Lichen, LichenSpecies, Environment, Table, LichenEcology, LichenFrequency
 
@@ -116,6 +117,15 @@ def get_lichen_ecology():
         })
     return pd.DataFrame(lichen_ecology_data)
 
+
+def get_lichen_ecology_csv():
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    lichen_ecology_csv_path = os.path.join(parent_dir, 'assets', 'lichen_species_ecology.csv')
+    lichen_ecology_df = pd.read_csv(lichen_ecology_csv_path, delimiter=';')
+
+    return lichen_ecology_df
+
 def get_lichen_frequency():
     data = session.query(LichenFrequency).all()
     lichen_frequency_data = []
@@ -131,21 +141,39 @@ def get_lichen_frequency():
         })
     return pd.DataFrame(lichen_frequency_data)
 
+def merge_lichen_ecology(lichen_species_df, lichen_species_ecology_df):
+    merged_lichen_species_df = lichen_species_df.merge(lichen_species_ecology_df, on='species_id', how='left')
+
+    # Check if there are missing species in the ecology data
+    missing_data_rows = merged_lichen_species_df[['species_id', 'name']][merged_lichen_species_df[lichen_species_ecology_df.columns].isnull().any(axis=1)]
+    if not missing_data_rows.empty:
+        print('Warning: some species are missing from the ecology data')
+        print(missing_data_rows)
+
+    # Check if the names of the species are the same lichen_species and lichen_species_ecology
+    if not merged_lichen_species_df[~(merged_lichen_species_df['name'] == merged_lichen_species_df['Taxon'])].empty:
+        print('Warning: some species have different names in the lichen_species and lichen_species_ecology data')
+        print(merged_lichen_species_df[~(merged_lichen_species_df['name'] == merged_lichen_species_df['Taxon'])][['species_id', 'name', 'Taxon']])
+
+    return merged_lichen_species_df
+
 
 def get_useful_data():
     lichen_df = get_lichen_data()
     lichen_species_df = get_lichen_species_data()
+    lichen_species_ecology_df = get_lichen_ecology_csv()
     observation_df = get_observation_data()
     table_df = get_table_data()
     tree_df = get_tree_data()
-    ecology_df = get_lichen_ecology()
 
     # Rename the id columns for easier merge
     lichen_df.rename(columns={'id': 'lichen_id'}, inplace=True)
     lichen_species_df.rename(columns={'id': 'species_id'}, inplace=True)
+    lichen_species_ecology_df.rename(columns={'id': 'species_id'}, inplace=True)
     observation_df.rename(columns={'id': 'observation_id'}, inplace=True)
     table_df.rename(columns={'id': 'table_id'}, inplace=True)
     tree_df.rename(columns={'id': 'tree_id'}, inplace=True)
-    ecology_df.rename(columns={'id': 'ecology_id'}, inplace=True)
 
-    return lichen_df, lichen_species_df, observation_df, table_df, tree_df, ecology_df
+    merged_lichen_species_df = merge_lichen_ecology(lichen_species_df, lichen_species_ecology_df)
+
+    return lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df

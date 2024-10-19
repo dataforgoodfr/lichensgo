@@ -4,11 +4,11 @@ import numpy as np
 from Dashboards.constants import SQUARE_COLUMNS, ORIENTATIONS
 
 # Merge table_df with lichen_df, lichen_species_df and observation_df
-def merge_tables(table_df, lichen_df, lichen_species_df, observation_df):
+def merge_tables(table_df, lichen_df, observation_df):
 
     merged_df = table_df.merge(lichen_df, on='lichen_id', suffixes=('', '_l'), how='left')
-    merged_df = merged_df.merge(lichen_species_df, on='species_id', suffixes=('', '_ls'), how='left')
-    merged_df = merged_df.merge(observation_df, on='observation_id', suffixes=('', '_o'), how ='left')
+    # merged_df = merged_df.merge(lichen_species_df, on='species_id', how='left')
+    merged_df = merged_df.merge(observation_df, on='observation_id', how ='left')
 
     return merged_df
 
@@ -162,11 +162,12 @@ def count_lichen_per_species(lichen_df, lichen_species_df):
     return count_lichen_per_species_df
 
 # Group by species' type and observation id and sum the number of lichen
-def group_table_with_nb_lichen_and_ecology_df(merged_table_with_nb_lichen_df, ecology_df):
+def group_table_with_nb_lichen_and_ecology_df(merged_table_with_nb_lichen_df, merged_lichen_species_df):
 
     # TO DO: merge on species_id instead of name
-    grouped_table_with_nb_lichen_df = merged_table_with_nb_lichen_df.groupby(['observation_id', 'name'])['nb_lichen'].sum().reset_index()
-    grouped_table_with_nb_lichen_df = grouped_table_with_nb_lichen_df.merge(ecology_df, left_on='name', right_on='cleaned_taxon', suffixes=('', '_e'))
+    grouped_table_with_nb_lichen_df = merged_table_with_nb_lichen_df.groupby(['observation_id', 'species_id'])['nb_lichen'].sum().reset_index()
+
+    grouped_table_with_nb_lichen_df = grouped_table_with_nb_lichen_df.merge(merged_lichen_species_df, on='species_id')
 
     grouped_table_with_nb_lichen_df  = grouped_table_with_nb_lichen_df[['observation_id', 'name', 'nb_lichen', 'pH','eutrophication', 'poleotolerance']]
 
@@ -209,37 +210,3 @@ def calc_pollution_azote(filtered_lichen_with_ecology_df):
 
     # Return the ratio in percentage
     return (eutrophic_nb_lichen / total_nb_lichen) * 100
-
-def df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df):
-
-    # Calculer la fréquence
-    table_df['nb_lichen'] = (
-        table_df['sq1'].apply(lambda x: len(x) if pd.notnull(x).any() else 0)  +
-        table_df['sq2'].apply(lambda x: len(x) if pd.notnull(x).any() else 0) +
-        table_df['sq3'].apply(lambda x: len(x) if pd.notnull(x).any() else 0) +
-        table_df['sq4'].apply(lambda x: len(x) if pd.notnull(x).any() else 0) +
-        table_df['sq5'].apply(lambda x: len(x) if pd.notnull(x).any() else 0)
-    )
-
-    # Joindre table avec lichen et observation
-    merged_df = table_df.merge(lichen_df, on='lichen_id', suffixes=('', '_l'))
-    merged_df = merged_df.merge(lichen_species_df, on='species_id', suffixes=('', '_ls'))
-    merged_df = merged_df.merge(observation_df, on='observation_id', suffixes=('', '_o'))
-
-    # Grouper par 'species' et 'observation_id' et additionner les fréquences
-    grouped_df = merged_df.groupby(['name', 'observation_id'])['nb_lichen'].sum().reset_index()
-
-    # Regrouper les deux tables afficher les données écologiques
-    grouped_df = grouped_df.merge(ecology_df, left_on='name', right_on='cleaned_taxon', suffixes=('', '_e'))
-
-    # ajustement des noms finaux
-    grouped_df = grouped_df[['observation_id', 'name', 'nb_lichen','pH','eutrophication', 'poleotolerance']]
-    # grouped_df = grouped_df.rename(
-    #     columns={
-    #         'name': 'lichen',
-    #         'pH': 'ph',
-    #         'eutrophication': 'eutrophication',
-    #         'poleotolerance': 'poleotolerance'
-    #         })
-
-    return grouped_df
