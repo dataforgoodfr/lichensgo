@@ -9,7 +9,7 @@ from dash_iconify import DashIconify
 from datetime import datetime
 
 from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_by_observation_and_species, group_table_by_observation_and_thallus, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
+from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_by_observation_and_species, group_lichen_by_observation_and_thallus, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
 from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE
 
@@ -25,7 +25,7 @@ lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df = get_use
 table_with_nb_lichen_df = count_lichen(table_df)
 merged_table_with_nb_lichen_df = merge_tables(table_with_nb_lichen_df, lichen_df, observation_df)
 grouped_table_by_observation_and_species_df = group_table_by_observation_and_species(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for the gauge charts
-grouped_table_by_observation_and_thallus_df = group_table_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for pie chart
+grouped_lichen_by_observation_and_thallus_df = group_lichen_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for pie chart
 
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
 observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_table_with_nb_lichen_df)
@@ -124,8 +124,8 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
                 grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
             ]
 
-            filtered_grouped_table_by_observation_and_thallus_df = grouped_table_by_observation_and_thallus_df[
-                grouped_table_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
+            filtered_grouped_lichen_by_observation_and_thallus_df = grouped_lichen_by_observation_and_thallus_df[
+                grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
             ]
 
 
@@ -139,7 +139,7 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
 
             hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
 
-            pie_thallus = create_pie_thallus(filtered_grouped_table_by_observation_and_thallus_df)
+            pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
 
     # Those figures are still needed even if no observation is clicked
     hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, nb_species_clicked)
@@ -384,6 +384,7 @@ sites_layout = [
                                             ),
                                         ],
                                     ),
+                                    dmc.Card(
                                     dcc.Graph(
                                         id="hist1-nb_species",
                                         figure=blank_fig,
@@ -392,6 +393,10 @@ sites_layout = [
                                             "displaylogo": False,  # Remove plotly logo
                                         },
                                     ),
+                                    withBorder=True,
+                                    shadow="sm",
+                                    )
+
                                 ],
                             ),
                             # Column for hist2
@@ -433,34 +438,40 @@ sites_layout = [
                             dmc.GridCol(
                                 span=8,
                                 children=[
-                                    # Divider for the title and tooltip
-                                    html.Div(
-                                        style={"display": "flex",
-                                               "align-items": "center"},
+                                    dmc.Card(
                                         children=[
-                                            dmc.Title(
-                                                "Espèces observées sur le site sélectionné",
-                                                order=4,
-                                                className="graph-title",
-                                            ),
-                                            dmc.Tooltip(
-                                                label="Distribution des espèces observées sur le site sélectionné",
-                                                position="top",
-                                                withArrow=True,
-                                                children=DashIconify(
-                                                    icon="material-symbols:info-outline",
-                                                    className="info-icon",
+                                        # Divider for the title and tooltip
+                                        html.Div(
+                                            style={"display": "flex",
+                                                "align-items": "center"},
+                                            children=[
+                                                dmc.Title(
+                                                    "Espèces observées sur le site sélectionné",
+                                                    order=4,
+                                                    className="graph-title",
                                                 ),
-                                            ),
+                                                dmc.Tooltip(
+                                                    label="Distribution des espèces observées sur le site sélectionné",
+                                                    position="top",
+                                                    withArrow=True,
+                                                    children=DashIconify(
+                                                        icon="material-symbols:info-outline",
+                                                        className="info-icon",
+                                                    ),
+                                                ),
+                                            ],
+                                        ),
+                                        dcc.Graph(
+                                            id="hist3-species",
+                                            figure=blank_fig,
+                                            style={"height": "300px"},
+                                            config={
+                                                "displaylogo": False,  # Remove plotly logo
+                                            },
+                                        ),
                                         ],
-                                    ),
-                                    dcc.Graph(
-                                        id="hist3-species",
-                                        figure=blank_fig,
-                                        style={"height": "300px"},
-                                        config={
-                                            "displaylogo": False,  # Remove plotly logo
-                                        },
+                                        withBorder=True,
+                                        shadow="sm",
                                     ),
                                 ],
                             ),
@@ -474,7 +485,7 @@ sites_layout = [
                                                "align-items": "center"},
                                         children=[
                                             dmc.Title(
-                                                "Pie chart",
+                                                "Morphologie du site sélectionné",
                                                 order=4,
                                                 className="graph-title",
                                             ),

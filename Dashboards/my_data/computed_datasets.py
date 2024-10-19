@@ -173,14 +173,17 @@ def group_table_by_observation_and_species(merged_table_with_nb_lichen_df, merge
     return grouped_table_by_observation_and_species_df
 
 
-# Group by observation and thallus and sum the number of lichen
-def group_table_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df):
+# Group lichen by observation and thallus and sum the count of lichen_id (not the number of lichen)
+# NB: We count the number of lichen_id and not species as we want to count multiple times the non-unique lichen (other lichen etc)
+def group_lichen_by_observation_and_thallus(lichen_df, merged_lichen_species_df):
 
-    grouped_table_by_observation_and_thallus_df = merged_table_with_nb_lichen_df.merge(merged_lichen_species_df, on='species_id')
+    merged_lichen_df = lichen_df.merge(merged_lichen_species_df[['species_id', 'thallus']], on='species_id')
 
-    grouped_table_by_observation_and_thallus_df = grouped_table_by_observation_and_thallus_df.groupby(['observation_id', 'thallus'])['nb_lichen'].sum().reset_index()
+    grouped_lichen_by_observation_and_thallus_df = merged_lichen_df.groupby(['observation_id', 'thallus'])['lichen_id'].count().reset_index()
 
-    return grouped_table_by_observation_and_thallus_df
+    grouped_lichen_by_observation_and_thallus_df = grouped_lichen_by_observation_and_thallus_df.rename(columns={'lichen_id': 'nb_lichen_id'})
+
+    return grouped_lichen_by_observation_and_thallus_df
 
 
 # Degree of artificialisation (poleotolerance)
