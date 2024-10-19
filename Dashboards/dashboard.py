@@ -102,33 +102,30 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
             (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)
         ]
 
+        if not observation_clicked.empty:
 
-        if observation_clicked.empty:
-            # No observation found for the clicked point
-            return fig_map, None, None, None, None, None, None
-
-        observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
-        observation_id_clicked = observation_clicked['observation_id']
-        nb_species_clicked = observation_clicked['nb_species']
-        vdl_clicked = observation_clicked['VDL']
+            observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
+            observation_id_clicked = observation_clicked['observation_id']
+            nb_species_clicked = observation_clicked['nb_species']
+            vdl_clicked = observation_clicked['VDL']
 
 
-        # Filter the data based on the clicked observation
-        filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
+            # Filter the data based on the clicked observation
+            filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
 
-        filtered_lichen_with_ecology_df = grouped_table_with_nb_lichen_and_ecology_df[
-            grouped_table_with_nb_lichen_and_ecology_df['observation_id'] == observation_id_clicked
-        ]
+            filtered_lichen_with_ecology_df = grouped_table_with_nb_lichen_and_ecology_df[
+                grouped_table_with_nb_lichen_and_ecology_df['observation_id'] == observation_id_clicked
+            ]
 
-        deg_artif = calc_deg_artif(filtered_lichen_with_ecology_df)
-        pollution_acide = calc_pollution_acide(filtered_lichen_with_ecology_df)
-        pollution_azote = calc_pollution_azote(filtered_lichen_with_ecology_df)
+            deg_artif = calc_deg_artif(filtered_lichen_with_ecology_df)
+            pollution_acide = calc_pollution_acide(filtered_lichen_with_ecology_df)
+            pollution_azote = calc_pollution_azote(filtered_lichen_with_ecology_df)
 
-        gauge_chart1_artif = create_gauge_chart(deg_artif, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
-        gauge_chart2_acide = create_gauge_chart(pollution_acide, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
-        gauge_chart3_azote = create_gauge_chart(pollution_azote, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+            gauge_chart1_artif = create_gauge_chart(deg_artif, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+            gauge_chart2_acide = create_gauge_chart(pollution_acide, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
+            gauge_chart3_azote = create_gauge_chart(pollution_azote, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
 
-        hist3 = create_hist3(filtered_nb_lichen_per_lichen_id_df)
+            hist3 = create_hist3(filtered_nb_lichen_per_lichen_id_df)
 
     # Those figures are still needed even if no observation is clicked
     hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, nb_species_clicked)
