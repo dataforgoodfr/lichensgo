@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 import dash_mantine_components as dmc
-import dash_bootstrap_components as dbc
 
 from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash.dependencies import State
@@ -180,21 +179,18 @@ species_id_selected = species_options[0]['value'] # Default to the first species
 sites_layout = [
     # Divider for the 2 columns
     html.Div(
-        style={"display": "flex", "gap": "10px"},
+        style={"display": "flex", "gap": "10px", "padding": "5px"},
         children=[
             # Divider for the first column with map and gauge
             html.Div(
                 style={
-                    "flex": "6",
+                    "flex": "5",
                     "padding": "5px",
-                    # "border": "1px solid black",
                 },
                 children=[
-                    # Divider for the map
+                    # Divider for the map title and selector
                     html.Div(
-                        style={
-                            "display": "flex",
-                            "align-items": "center",
+                        style={"display": "flex", "align-items": "center",
                             "gap": "10px",
                         },
                         children=[
@@ -202,6 +198,7 @@ sites_layout = [
                                 "Carte des observations",
                                 order=4,
                                 className="graph-title",
+                                style={"padding": "0px"},
                             ),
                             # Selector for the map column
                             dmc.SegmentedControl(
@@ -216,7 +213,6 @@ sites_layout = [
                         ],
                     ),
                     html.Div(
-                        style={"padding": "5px"},
                         children=[
                             dmc.Card(
                                 children=[
@@ -236,7 +232,7 @@ sites_layout = [
                     ),
                     # Divider for the gauge charts, with 3 columns each
                     html.Div(
-                        style={"display": "flex", "gap": "10px", "padding": "5px"},
+                        style={"display": "flex", "gap": "10px", "padding-top": "10px"},
                         children=[
                             html.Div(
                                 style={"flex": "1"},
@@ -331,10 +327,8 @@ sites_layout = [
             ),
             # Divider for the second column with histograms
             html.Div(
-                style={
-                    "flex": "5",
+                style={"flex": "5",
                     "padding": "5px",
-                    # "border": "1px solid black",
                 },
                 children=[
                     dmc.Grid(
@@ -485,7 +479,7 @@ sites_layout = [
                                     dcc.Graph(
                                         id="pie-thallus",
                                         figure=blank_fig,
-                                        style={"height": "300px"},
+                                        style={"height": "250px"},
                                         config={
                                             "displaylogo": False,  # Remove plotly logo
                                         },
@@ -654,8 +648,9 @@ dashboards_layout = dmc.Box(
                                 ],
                                 align="bottom",
                             ),
+                            mah=40 # Max height
                         ),
-                        dmc.AccordionPanel(sites_layout)
+                        dmc.AccordionPanel(sites_layout),
                     ],
                     value="sites",
                 ),
@@ -673,6 +668,7 @@ dashboards_layout = dmc.Box(
                                 ],
                                 align="bottom",
                             ),
+                            mah=40 # Max height
                         ),
                         dmc.AccordionPanel(species_layout)
                     ],

@@ -178,7 +178,7 @@ def create_pie_thallus(grouped_table_by_observation_and_thallus_df):
         legend=dict(
             orientation="h",  # Horizontal legend
             yanchor="bottom",  # Anchor the legend to the bottom
-            y=1,  # Position the legend at the top
+            y=1.1,  # Position the legend at the top
             xanchor="center",  # Center the legend horizontally
             x=0.5  # Center the legend horizontally
         ),
