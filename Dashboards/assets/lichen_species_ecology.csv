@@ -1,0 +1,39 @@
+id;Taxon;pH;aridity;eutrophication;poleotolerance;thallus;picture
+7;Amandinea punctata/Lecidella elaeochroma;neutrophilous;xerophilous;mesotrophic;resistant;crustose;amandinea_punctata.jpg
+28;Anaptychia ciliaris;neutrophilous;mesophilous;mesotrophic;intermediate;fruticose;anaptychia_ciliaris.jpg
+30;Autre lichen crustacé;unknown;unknown;unknown;intermediate;crustose;lichen_crustace.jpg
+20;Autre lichen foliacé;unknown;unknown;unknown;intermediate;foliose;lichen_foliace.jpg
+36;Autre lichen fruticuleux;unknown;unknown;unknown;intermediate;fruticose;lichen_crustace.jpg
+2;Candelaria concolor;neutrophilous;xerophilous;eutrophic;resistant;foliose;candelaria_concolor.jpg
+21;Candelariella sp.;neutrophilous;mesophilous;eutrophic;resistant;crustose;candelariella.jpg
+35;Diploicia canescens;basophilous;mesophilous;mesotrophic;intermediate;crustose;diploicia_canescens.jpg
+8;Evernia prunastri;acidophilous;mesophilous;oligotrophic;intermediate;fruticose;evernia_prunastri.jpg
+3;Flavoparmelia caperata/soredians;neutrophilous;mesophilous;oligotrophic;intermediate;foliose;flavoparmelia_caperata.jpg
+24;Hyperphyscia adglutinata;basophilous;xerophilous;eutrophic;resistant;foliose;hyperphyscia_adglutinata.jpg
+22;Hypogymnia physodes/tubulosa;acidophilous;mesophilous;oligotrophic;intermediate;foliose;hypogymnia_physodes.jpg
+4;Hypotrachyna afrorevoluta/revoluta;acidophilous;mesophilous;oligotrophic;intermediate;foliose;hypotrachyna_afrevoluta.jpg
+9;Lecanora sp.;unknown;unknown;unknown;intermediate;crustose;lecanora.jpg
+5;Lichen crustacé à aspect poudreux;acidophilous;unknown;unknown;intermediate;crustose;crustaces_poudreux.jpg
+38;Lichen crustacé à lirelles;unknown;unknown;unknown;intermediate;crustose;crustaces_lirelles.jpg
+10;Melanelixia glabratula/Melanohalea exasperatula;neutrophilous;mesophilous;mesotrophic;resistant;foliose;melanelixia_glabratula.jpg
+25;Melanohalea exasperata;neutrophilous;xerophilous;mesotrophic;intermediate;foliose;melanohalea_exasperata.jpg
+33;Parmelia saxatilis;acidophilous;mesophilous;oligotrophic;intermediate;foliose;parmelia_saxatilis.jpg
+11;Parmelia sulcata;acidophilous;mesophilous;oligotrophic;resistant;foliose;parmelia_sulcata.jpg
+23;Parmelina tiliacea/pastillifera;neutrophilous;hygrophilous;mesotrophic;intermediate;foliose;parmelina_tiliacea.jpg
+31;Parmotrema perlatum/reticulatum;neutrophilous;mesophilous;oligotrophic;intermediate;foliose;parmotrema_perlatum.jpg
+29;Pertusaria pertusa;acidophilous;mesophilous;oligotrophic;intermediate;crustose;pertusaria_pertusa.jpg
+12;Phaeophyscia orbicularis;neutrophilous;xerophilous;eutrophic;resistant;foliose;phaeophyscia_orbicularis.jpg
+13;Physcia adscendens/tenella;basophilous;xerophilous;eutrophic;resistant;foliose;physcia_adscendens.jpg
+19;Physcia aipolia/stellaris;neutrophilous;mesophilous;eutrophic;resistant;foliose;physcia_aipolia.jpg
+16;Physcia leptalea;neutrophilous;xerophilous;mesotrophic;intermediate;foliose;physcia_leptalea.jpg
+18;Physconia distorta;neutrophilous;xerophilous;eutrophic;resistant;foliose;physconia_distorta.jpg
+14;Physconia grisea;neutrophilous;mesophilous;eutrophic;resistant;foliose;physconia_grisea.jpg
+15;Pleurosticta acetabulum;neutrophilous;xerophilous;mesotrophic;intermediate;foliose;pleurosticta_acetabulum.jpg
+37;Polycauliona polycarpa;neutrophilous;xerophilous;mesotrophic;intermediate;foliose;polycauliona_polycarpa.jpg
+27;Pseudevernia furfuracea;acidophilous;xerophilous;oligotrophic;intermediate;fruticose;pseudevernia_furfuracea.jpg
+17;Punctelia sp.;neutrophilous;mesophilous;oligotrophic;resistant;foliose;punctelia_sp_.jpg
+6;Ramalina farinacea;neutrophilous;hygrophilous;oligotrophic;intermediate;fruticose;ramalina_farinacea.jpg
+32;Ramalina fastigiata;neutrophilous;mesophilous;oligotrophic;intermediate;fruticose;ramalina_fastigiata.jpg
+26;Ramalina fraxinea;neutrophilous;mesophilous;mesotrophic;sensitive;fruticose;ramalina_fraxinea.jpg
+34;Usnea sp.;acidophilous;hygrophilous;oligotrophic;sensitive;fruticose;usnea.jpg
+1;Xanthoria parietina;neutrophilous;xerophilous;eutrophic;resistant;foliose;xanthoria_parietina.jpg
