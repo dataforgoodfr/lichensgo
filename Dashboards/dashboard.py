@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import dash_mantine_components as dmc
+import dash_bootstrap_components as dbc
 
 from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash.dependencies import State
@@ -177,25 +178,6 @@ species_id_selected = species_options[0]['value'] # Default to the first species
 
 # Layout for the sites (observations)
 sites_layout = [
-    # Divider for the date picker
-    html.Div(
-        style={"padding": "10px"},
-        children=[
-            # Widget for the date filter
-            dmc.DatePicker(
-                id="date-picker-range",
-                minDate=observation_with_vdl_df["date_obs"].min(),
-                maxDate=datetime.now().date(),
-                type="range",
-                value=[
-                    observation_with_vdl_df["date_obs"].min(),
-                    datetime.now().date(),
-                ],
-                valueFormat="DD/MM/YYYY",
-                w=200,  # width
-            ),
-        ],
-    ),
     # Divider for the 2 columns
     html.Div(
         style={"display": "flex", "gap": "10px"},
@@ -631,12 +613,28 @@ app = Dash(__name__,
     )
 
 
-# Define the main layout with toggle and accordion
-app.layout = dmc.MantineProvider(
-    id="mantine-provider",
-    theme=dmc_theme,
+sidebar_layout = dmc.Box(
     children=[
         theme_toggle,
+        dmc.DatePicker(
+            id="date-picker-range",
+            label="Sélectionner une plage de dates",
+            minDate=observation_with_vdl_df["date_obs"].min(),
+            maxDate=datetime.now().date(),
+            type="range",
+            value=[
+                observation_with_vdl_df["date_obs"].min(),
+                datetime.now().date(),
+            ],
+            valueFormat="DD/MM/YYYY",
+            w=170,  # width
+        ),
+    ],
+    style={"width": "200px", "padding": "10px"},
+)
+
+dashboards_layout = dmc.Box(
+    children=[
         dmc.Accordion(
             disableChevronRotation=True,
             chevronPosition="left",
@@ -644,21 +642,21 @@ app.layout = dmc.MantineProvider(
             multiple=True,
             children=[
                 dmc.AccordionItem(
-                            children=[
-                                dmc.AccordionControl(
-                                    dmc.Group(
-                                        children=[
-                                            DashIconify(
-                                                icon="tabler:map-pin",
-                                                height=25,
-                                            ),
-                                            dmc.Title("Sites", order=3)
-                                        ],
-                                        align="bottom",
+                    children=[
+                        dmc.AccordionControl(
+                            dmc.Group(
+                                children=[
+                                    DashIconify(
+                                        icon="tabler:map-pin",
+                                        height=25,
                                     ),
-                                ),
-                                dmc.AccordionPanel(sites_layout)
-                            ],
+                                    dmc.Title("Sites", order=3)
+                                ],
+                                align="bottom",
+                            ),
+                        ),
+                        dmc.AccordionPanel(sites_layout)
+                    ],
                     value="sites",
                 ),
                 dmc.AccordionItem(
@@ -670,7 +668,8 @@ app.layout = dmc.MantineProvider(
                                         icon="ph:plant",
                                         height=25,
                                     ),
-                                    dmc.Title("Espèces", order=3)
+                                    dmc.Title(
+                                        "Espèces", order=3)
                                 ],
                                 align="bottom",
                             ),
@@ -680,7 +679,26 @@ app.layout = dmc.MantineProvider(
                     value="species",
                 ),
             ],
-            value=["sites", "species"],  # open both toggles by default
+            # open both toggles by default
+            value=["sites", "species"],
+        )
+    ],
+    style={"flex": 1, "padding": "10px"},
+)
+
+# Define the main layout with toggle and accordion
+app.layout = dmc.MantineProvider(
+    id="mantine-provider",
+    theme=dmc_theme,
+    children=[
+        dmc.Group(
+            children=[
+                # Sidebar
+                sidebar_layout,
+                dmc.Divider(orientation="vertical"),
+                dashboards_layout,
+            ],
+            align="start",
         )
     ],
 )
