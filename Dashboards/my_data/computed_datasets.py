@@ -161,17 +161,26 @@ def count_lichen_per_species(lichen_df, lichen_species_df):
 
     return count_lichen_per_species_df
 
-# Group by species' type and observation id and sum the number of lichen
-def group_table_with_nb_lichen_and_ecology_df(merged_table_with_nb_lichen_df, merged_lichen_species_df):
+# Group by species' type and observation id and sum the number of lichen, and merge with lichen species ecology
+def group_table_by_observation_and_species(merged_table_with_nb_lichen_df, merged_lichen_species_df):
 
-    # TO DO: merge on species_id instead of name
-    grouped_table_with_nb_lichen_df = merged_table_with_nb_lichen_df.groupby(['observation_id', 'species_id'])['nb_lichen'].sum().reset_index()
+    grouped_table_by_observation_and_species_df = merged_table_with_nb_lichen_df.groupby(['observation_id', 'species_id'])['nb_lichen'].sum().reset_index()
 
-    grouped_table_with_nb_lichen_df = grouped_table_with_nb_lichen_df.merge(merged_lichen_species_df, on='species_id')
+    grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df.merge(merged_lichen_species_df, on='species_id')
 
-    grouped_table_with_nb_lichen_df  = grouped_table_with_nb_lichen_df[['observation_id', 'name', 'nb_lichen', 'pH','eutrophication', 'poleotolerance']]
+    grouped_table_by_observation_and_species_df  = grouped_table_by_observation_and_species_df[['observation_id', 'species_id', 'name', 'nb_lichen', 'pH','eutrophication', 'poleotolerance', 'thallus']]
 
-    return grouped_table_with_nb_lichen_df
+    return grouped_table_by_observation_and_species_df
+
+
+# Group by observation and thallus and sum the number of lichen
+def group_table_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df):
+
+    grouped_table_by_observation_and_thallus_df = merged_table_with_nb_lichen_df.merge(merged_lichen_species_df, on='species_id')
+
+    grouped_table_by_observation_and_thallus_df = grouped_table_by_observation_and_thallus_df.groupby(['observation_id', 'thallus'])['nb_lichen'].sum().reset_index()
+
+    return grouped_table_by_observation_and_thallus_df
 
 
 # Degree of artificialisation (poleotolerance)

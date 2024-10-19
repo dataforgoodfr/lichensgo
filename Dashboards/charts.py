@@ -154,6 +154,40 @@ def create_hist3(lichen_frequency_df):
 
     return hist3
 
+
+def create_pie_thallus(grouped_table_by_observation_and_thallus_df):
+
+    # Capitalize the thallus names
+    grouped_table_by_observation_and_thallus_df['thallus'] = grouped_table_by_observation_and_thallus_df['thallus'].str.capitalize()
+
+
+    pie_thallus = px.pie(
+        grouped_table_by_observation_and_thallus_df,
+        names="thallus",
+        values="nb_lichen",
+        color_discrete_sequence=BASE_COLOR_PALETTE[::3],
+    )
+
+    pie_thallus.update_layout(
+        **PLOTLY_LAYOUT,
+        showlegend=True,
+        legend=dict(
+            orientation="h",  # Horizontal legend
+            yanchor="bottom",  # Anchor the legend to the bottom
+            y=1,  # Position the legend at the top
+            xanchor="center",  # Center the legend horizontally
+            x=0.5  # Center the legend horizontally
+        ),
+    )
+
+    # Update hover template and text template
+    pie_thallus.update_traces(
+        hovertemplate="<b>%{label}</b><br><b>Nombre:</b> %{value}<extra></extra>",
+        texttemplate="%{percent:.0%}"  # Format displayed values as percentages with no decimal places
+    )
+
+    return pie_thallus
+
 ## Gauge charts
 
 def create_gauge_chart(value, intervals, color_scale):

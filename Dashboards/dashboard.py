@@ -9,8 +9,8 @@ from dash_iconify import DashIconify
 from datetime import datetime
 
 from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_with_nb_lichen_and_ecology_df, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
-from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_hist4, create_gauge_chart, create_kpi
+from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_by_observation_and_species, group_table_by_observation_and_thallus, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
+from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE
 
 _dash_renderer._set_react_version("18.2.0")
@@ -24,9 +24,8 @@ lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df = get_use
 # For tab on observations
 table_with_nb_lichen_df = count_lichen(table_df)
 merged_table_with_nb_lichen_df = merge_tables(table_with_nb_lichen_df, lichen_df, observation_df)
-grouped_table_with_nb_lichen_and_ecology_df = group_table_with_nb_lichen_and_ecology_df(merged_table_with_nb_lichen_df, merged_lichen_species_df) # dataset for the gauge charts
-
-# grouped_df = df_frequency(lichen_df, lichen_species_df, observation_df, table_df, ecology_df)
+grouped_table_by_observation_and_species_df = group_table_by_observation_and_species(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for the gauge charts
+grouped_table_by_observation_and_thallus_df = group_table_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for pie chart
 
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
 observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_table_with_nb_lichen_df)
@@ -38,16 +37,24 @@ nb_lichen_per_species_df = count_lichen_per_species(lichen_df, merged_lichen_spe
 current_dir = os.path.dirname(__file__)
 lichen_img_dir = os.path.join('assets', 'img')
 
+# Initialize a blank figure to show during loading
+blank_fig = blank_figure()
+
+# Initialize the selections
+date_range = [observation_with_vdl_df["date_obs"].min(), datetime.now().date()]
+map_column_selected = list(MAP_SETTINGS.keys())[0]
+
 
 # Callback to update the dashboard on the observation
 @callback(
     Output('species-map', 'figure'),
-    Output('gauge-chart1', 'figure'),
-    Output('gauge-chart2', 'figure'),
-    Output('gauge-chart3', 'figure'),
-    Output('species-hist1', 'figure'),
-    Output('vdl-hist2', 'figure'),
-    Output('hist3','figure'),
+    Output('gauge-chart1-artif', 'figure'),
+    Output('gauge-chart2-acide', 'figure'),
+    Output('gauge-chart3-azote', 'figure'),
+    Output('hist1-nb_species', 'figure'),
+    Output('hist2-vdl', 'figure'),
+    Output('hist3-species','figure'),
+    Output('pie-thallus', 'figure'),
 
     Input('date-picker-range', 'value'),
     Input('map-column-select', 'value'),
@@ -67,7 +74,6 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
     # Filter the data based on the selected date range
     filtered_observation_with_vdl_df = observation_with_vdl_df[(observation_with_vdl_df['date_obs'] >= start_date) & (observation_with_vdl_df['date_obs'] <= end_date)]
     filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[(merged_table_with_nb_lichen_df['date_obs'] >= start_date) & (merged_table_with_nb_lichen_df['date_obs'] <= end_date)]
-
 
 
     # Count lichen per lichen_id on filtered table
@@ -90,7 +96,8 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
     gauge_chart1_artif = blank_fig
     gauge_chart2_acide = blank_fig
     gauge_chart3_azote = blank_fig
-    hist3 = blank_fig
+    hist3_species = blank_fig
+    pie_thallus = blank_fig
 
     # If a point on the map is clicked, identify the observation ID, number of species, and VDL
     if clickData is not None:
@@ -113,36 +120,43 @@ def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
             # Filter the data based on the clicked observation
             filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
 
-            filtered_lichen_with_ecology_df = grouped_table_with_nb_lichen_and_ecology_df[
-                grouped_table_with_nb_lichen_and_ecology_df['observation_id'] == observation_id_clicked
+            filtered_grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df[
+                grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
             ]
 
-            deg_artif = calc_deg_artif(filtered_lichen_with_ecology_df)
-            pollution_acide = calc_pollution_acide(filtered_lichen_with_ecology_df)
-            pollution_azote = calc_pollution_azote(filtered_lichen_with_ecology_df)
+            filtered_grouped_table_by_observation_and_thallus_df = grouped_table_by_observation_and_thallus_df[
+                grouped_table_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
+            ]
+
+
+            deg_artif = calc_deg_artif(filtered_grouped_table_by_observation_and_species_df)
+            pollution_acide = calc_pollution_acide(filtered_grouped_table_by_observation_and_species_df)
+            pollution_azote = calc_pollution_azote(filtered_grouped_table_by_observation_and_species_df)
 
             gauge_chart1_artif = create_gauge_chart(deg_artif, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
             gauge_chart2_acide = create_gauge_chart(pollution_acide, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
             gauge_chart3_azote = create_gauge_chart(pollution_azote, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
 
-            hist3 = create_hist3(filtered_nb_lichen_per_lichen_id_df)
+            hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
+
+            pie_thallus = create_pie_thallus(filtered_grouped_table_by_observation_and_thallus_df)
 
     # Those figures are still needed even if no observation is clicked
     hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, nb_species_clicked)
     hist2_vdl = create_hist2_vdl(filtered_observation_with_vdl_df, vdl_clicked)
 
-    return fig_map, gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist1_nb_species, hist2_vdl, hist3
+    return fig_map, gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist1_nb_species, hist2_vdl, hist3_species, pie_thallus
 
 ## Dashboard on species tab
 # Define callback to update the bar chart based on selected species
 @callback(
-    Output(component_id='hist4', component_property='figure'),
+    Output(component_id='hist4-species', component_property='figure'),
     Output(component_id='lichen-image', component_property='src'),
     Input(component_id='species-dropdown', component_property='value')
 )
 def update_dashboard2(species_id_selected):
 
-    hist4 = create_hist4(nb_lichen_per_species_df, species_id_selected)
+    hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected)
 
     filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
     species_name_selected = filtered_nb_lichen_per_species_df['name']
@@ -150,24 +164,15 @@ def update_dashboard2(species_id_selected):
     lichen_img = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected]['picture'].iloc[0]
     lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
 
-    return hist4, lichen_img_path
+    return hist4_species, lichen_img_path
 
-
-# Initialize a blank figure to show during loading
-blank_fig = blank_figure()
-
-# Initialize the selections
-date_range = [observation_with_vdl_df["date_obs"].min(), datetime.now().date()]
-map_column_selected = list(MAP_SETTINGS.keys())[0]
-clickData = None
-relayoutData = None
 
 # Create options for the user species dropdown, sorted by name
-user_species_options = [
+species_options = [
     {"label": row["name"], "value": row["species_id"]}
     for _, row in nb_lichen_per_species_df.sort_values(by="name").iterrows()
 ]
-species_id_selected = user_species_options[0]['value'] # Default to the first species ID
+species_id_selected = species_options[0]['value'] # Default to the first species ID
 
 
 # Layout for the sites (observations)
@@ -266,7 +271,7 @@ sites_layout = [
                                                 },
                                             ),
                                             dcc.Graph(
-                                                id="gauge-chart1",
+                                                id="gauge-chart1-artif",
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
@@ -295,7 +300,7 @@ sites_layout = [
                                                 },
                                             ),
                                             dcc.Graph(
-                                                id="gauge-chart3",
+                                                id="gauge-chart3-azote",
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
@@ -324,7 +329,7 @@ sites_layout = [
                                                 },
                                             ),
                                             dcc.Graph(
-                                                id="gauge-chart2",
+                                                id="gauge-chart2-acide",
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
@@ -350,20 +355,18 @@ sites_layout = [
                     # "border": "1px solid black",
                 },
                 children=[
-                    # Divider for 2 columns for hist1 and hist2
-                    html.Div(
-                        style={"display": "flex", "gap": "10px"},
+                    dmc.Grid(
+                        gutter="md",
+                        align="stretch",
                         children=[
-                            # Divider for hist1
-                            html.Div(
-                                style={"flex": "1"},
+                            # Column for hist1
+                            dmc.GridCol(
+                                span=6,
                                 children=[
                                     # Divider for title and tooltip
                                     html.Div(
-                                        style={
-                                            "display": "flex",
-                                            "align-items": "center",
-                                        },
+                                        style={"display": "flex",
+                                               "align-items": "center"},
                                         children=[
                                             dmc.Title(
                                                 "Distribution du nombre d'espèces",
@@ -382,7 +385,7 @@ sites_layout = [
                                         ],
                                     ),
                                     dcc.Graph(
-                                        id="species-hist1",
+                                        id="hist1-nb_species",
                                         figure=blank_fig,
                                         style={"height": "300px"},
                                         config={
@@ -391,16 +394,14 @@ sites_layout = [
                                     ),
                                 ],
                             ),
-                            # Divider for hist2
-                            html.Div(
-                                style={"flex": "1"},
+                            # Column for hist2
+                            dmc.GridCol(
+                                span=6,
                                 children=[
                                     # Divider for title and tooltip
                                     html.Div(
-                                        style={
-                                            "display": "flex",
-                                            "align-items": "center",
-                                        },
+                                        style={"display": "flex",
+                                               "align-items": "center"},
                                         children=[
                                             dmc.Title(
                                                 "Distribution de VDL",
@@ -419,7 +420,77 @@ sites_layout = [
                                         ],
                                     ),
                                     dcc.Graph(
-                                        id="vdl-hist2",
+                                        id="hist2-vdl",
+                                        figure=blank_fig,
+                                        style={"height": "300px"},
+                                        config={
+                                            "displaylogo": False,  # Remove plotly logo
+                                        },
+                                    ),
+                                ],
+                            ),
+                            # Column for hist3
+                            dmc.GridCol(
+                                span=8,
+                                children=[
+                                    # Divider for the title and tooltip
+                                    html.Div(
+                                        style={"display": "flex",
+                                               "align-items": "center"},
+                                        children=[
+                                            dmc.Title(
+                                                "Espèces observées sur le site sélectionné",
+                                                order=4,
+                                                className="graph-title",
+                                            ),
+                                            dmc.Tooltip(
+                                                label="Distribution des espèces observées sur le site sélectionné",
+                                                position="top",
+                                                withArrow=True,
+                                                children=DashIconify(
+                                                    icon="material-symbols:info-outline",
+                                                    className="info-icon",
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                    dcc.Graph(
+                                        id="hist3-species",
+                                        figure=blank_fig,
+                                        style={"height": "300px"},
+                                        config={
+                                            "displaylogo": False,  # Remove plotly logo
+                                        },
+                                    ),
+                                ],
+                            ),
+                            # Column for pie chart
+                            dmc.GridCol(
+                                span=4,
+                                children=[
+                                    # Divider for the title and tooltip
+                                    html.Div(
+                                        style={"display": "flex",
+                                               "align-items": "center"},
+                                        children=[
+                                            dmc.Title(
+                                                "Pie chart",
+                                                order=4,
+                                                className="graph-title",
+                                            ),
+                                            dmc.Tooltip(
+                                                label="",
+                                                position="top",
+                                                withArrow=True,
+                                                children=DashIconify(
+                                                    icon="material-symbols:info-outline",
+                                                    className="info-icon",
+                                                ),
+                                            ),
+                                        ],
+                                    ),
+                                    dcc.Graph(
+                                        id="pie-thallus",
                                         figure=blank_fig,
                                         style={"height": "300px"},
                                         config={
@@ -429,38 +500,7 @@ sites_layout = [
                                 ],
                             ),
                         ],
-                    ),
-                    html.Div(
-                        [
-                            html.Div(
-                                style={"display": "flex", "align-items": "center"},
-                                children=[
-                                    dmc.Title(
-                                        "Espèces observées sur le site sélectionné",
-                                        order=4,
-                                        className="graph-title",
-                                    ),
-                                    dmc.Tooltip(
-                                        label="Distribution des espèces observées sur le site sélectionné",
-                                        position="top",
-                                        withArrow=True,
-                                        children=DashIconify(
-                                            icon="material-symbols:info-outline",
-                                            className="info-icon",
-                                        ),
-                                    ),
-                                ],
-                            ),
-                            dcc.Graph(
-                                id="hist3",
-                                figure=blank_fig,
-                                style={"height": "300px"},
-                                config={
-                                    "displaylogo": False,  # Remove plotly logo
-                                },
-                            ),
-                        ]
-                    ),
+                    )
                 ],
             ),
         ],
@@ -503,7 +543,7 @@ species_layout = dmc.Grid(
                 ),
                 dcc.Dropdown(
                     id="species-dropdown",
-                    options=user_species_options,
+                    options=species_options,
                     value=species_id_selected,
                     clearable=False,
                     style={"width": "400px"},
@@ -517,7 +557,7 @@ species_layout = dmc.Grid(
             },
         ),
         dcc.Graph(
-            id="hist4",
+            id="hist4-species",
             figure=blank_fig,
             config={
                 "displaylogo": False,  # Remove plotly logo
