@@ -567,16 +567,25 @@ dashboards_layout = dmc.Box(
                                         height=20,
                                         color=BASE_COLOR_PALETTE[0]
                                     ),
-                                    dmc.Title("Sites", order=3)
+                                    dmc.Title("Sites", order=3),
+                                    dmc.Tooltip(
+                                        label="Cliquez sur un site pour découvrir ce que les lichens peuvent nous apprendre",
+                                        position="right",
+                                        withArrow=True,
+                                        children=DashIconify(
+                                            icon="material-symbols:info-outline",
+                                            className="info-icon",
+                                        )
+                                    ),
                                 ],
                                 align="center",
                             ),
-                        ),
-                        dmc.AccordionPanel(sites_layout),
-                    ],
-                    value="sites",
-                ),
-                dmc.AccordionItem(
+                            ),
+                            dmc.AccordionPanel(sites_layout),
+                        ],
+                        value= "sites",
+                    ),
+                    dmc.AccordionItem(
                     children=[
                         dmc.AccordionControl(
                             dmc.Group(
