@@ -45,107 +45,115 @@ date_range = [observation_with_vdl_df["date_obs"].min(), datetime.now().date()]
 map_column_selected = list(MAP_SETTINGS.keys())[0]
 
 
-# Callback to update the dashboard on the observation
+# First callback to update the dashboard based on date and map selection
 @callback(
     Output('species-map', 'figure'),
-    Output('gauge-chart1-artif', 'figure'),
-    Output('gauge-chart2-acide', 'figure'),
-    Output('gauge-chart3-azote', 'figure'),
     Output('hist1-nb_species', 'figure'),
     Output('hist2-vdl', 'figure'),
-    Output('hist3-species','figure'),
-    Output('pie-thallus', 'figure'),
-
     Input('date-picker-range', 'value'),
     Input('map-column-select', 'value'),
-    Input('species-map', 'clickData'),
-
-    State('species-map', 'relayoutData')  # État actuel du zoom et de la position de la carte
-
+    State('species-map', 'relayoutData')
 )
-def update_dashboard1(date_range, map_column_selected, clickData, relayoutData):
-    # Avoid updating when one of the date is None (not selected)
+def update_dashboard_map(date_range, map_column_selected, relayoutData):
     if None in date_range:
         raise PreventUpdate
 
     start_date = pd.to_datetime(date_range[0]).date()
     end_date = pd.to_datetime(date_range[1]).date()
 
-    # Filter the data based on the selected date range
     filtered_observation_with_vdl_df = observation_with_vdl_df[(observation_with_vdl_df['date_obs'] >= start_date) & (observation_with_vdl_df['date_obs'] <= end_date)]
-    filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[(merged_table_with_nb_lichen_df['date_obs'] >= start_date) & (merged_table_with_nb_lichen_df['date_obs'] <= end_date)]
 
-
-    # Count lichen per lichen_id on filtered table
-    filtered_nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(filtered_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df)
-
-    # Si le zoom et la position actuels sont disponibles, les utiliser, sinon définir des valeurs par défaut
     if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
         current_zoom = relayoutData["mapbox.zoom"]
         current_center = relayoutData["mapbox.center"]
     else:
-        current_zoom = 4.8  # Valeur par défaut du zoom
+        current_zoom = 4.8
         current_center = {"lat": filtered_observation_with_vdl_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_with_vdl_df['localisation_long'].mean()}
 
     fig_map = create_map(filtered_observation_with_vdl_df, map_column_selected, current_zoom, current_center)
 
-    # Initialize variables
-    nb_species_clicked = None
-    vdl_clicked = None
+    hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, None)
+    hist2_vdl = create_hist2_vdl(filtered_observation_with_vdl_df, None)
 
-    gauge_chart1_artif = blank_fig
-    gauge_chart2_acide = blank_fig
-    gauge_chart3_azote = blank_fig
-    hist3_species = blank_fig
-    pie_thallus = blank_fig
+    return fig_map, hist1_nb_species, hist2_vdl
 
-    # If a point on the map is clicked, identify the observation ID, number of species, and VDL
-    if clickData is not None:
-        lat_clicked = clickData['points'][0]['lat']
-        lon_clicked = clickData['points'][0]['lon']
+# Second callback to update the dashboard based on observation click
+@callback(
+    Output('gauge-chart1-artif', 'figure'),
+    Output('gauge-chart2-acide', 'figure'),
+    Output('gauge-chart3-azote', 'figure'),
+    Output('hist3-species', 'figure'),
+    Output('pie-thallus', 'figure'),
+    Output('hist1-nb_species', 'figure', allow_duplicate=True),
+    Output('hist2-vdl', 'figure', allow_duplicate=True),
+    Input('species-map', 'clickData'),
+    Input('date-picker-range', 'value'),
+    prevent_initial_call=True
+)
+def update_dashboard_observation(clickData, date_range):
+    if None in date_range or clickData is None:
+        raise PreventUpdate
 
-        observation_clicked = filtered_observation_with_vdl_df[
-            (filtered_observation_with_vdl_df['localisation_lat'] == lat_clicked) &
-            (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)
-        ]
+    start_date = pd.to_datetime(date_range[0]).date()
+    end_date = pd.to_datetime(date_range[1]).date()
 
-        if not observation_clicked.empty:
+    filtered_observation_with_vdl_df = observation_with_vdl_df[
+        (observation_with_vdl_df['date_obs'] >= start_date) &
+        (observation_with_vdl_df['date_obs'] <= end_date)
+    ]
+    filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[
+        (merged_table_with_nb_lichen_df['date_obs'] >= start_date) &
+        (merged_table_with_nb_lichen_df['date_obs'] <= end_date)
+    ]
+    filtered_nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(
+        filtered_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df
+    )
 
-            observation_clicked = observation_clicked.iloc[0]  # Take the first element matching the latitude and longitude
-            observation_id_clicked = observation_clicked['observation_id']
-            nb_species_clicked = observation_clicked['nb_species']
-            vdl_clicked = observation_clicked['VDL']
+    lat_clicked = clickData['points'][0]['lat']
+    lon_clicked = clickData['points'][0]['lon']
 
+    observation_clicked = filtered_observation_with_vdl_df[
+        (filtered_observation_with_vdl_df['localisation_lat'] == lat_clicked) &
+        (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)
+    ]
 
-            # Filter the data based on the clicked observation
-            filtered_nb_lichen_per_lichen_id_df =  filtered_nb_lichen_per_lichen_id_df[filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked]
+    if observation_clicked.empty:
+        return (
+            blank_fig, blank_fig, blank_fig, blank_fig, blank_fig,
+            create_hist1_nb_species(filtered_observation_with_vdl_df, None),
+            create_hist2_vdl(filtered_observation_with_vdl_df, None)
+        )
 
-            filtered_grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df[
-                grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
-            ]
+    observation_clicked = observation_clicked.iloc[0]
+    observation_id_clicked = observation_clicked['observation_id']
+    nb_species_clicked = observation_clicked['nb_species']
+    vdl_clicked = observation_clicked['VDL']
 
-            filtered_grouped_lichen_by_observation_and_thallus_df = grouped_lichen_by_observation_and_thallus_df[
-                grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
-            ]
+    filtered_nb_lichen_per_lichen_id_df = filtered_nb_lichen_per_lichen_id_df[
+        filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked
+    ]
+    filtered_grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df[
+        grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
+    ]
+    filtered_grouped_lichen_by_observation_and_thallus_df = grouped_lichen_by_observation_and_thallus_df[
+        grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
+    ]
 
+    deg_artif = calc_deg_artif(filtered_grouped_table_by_observation_and_species_df)
+    pollution_acide = calc_pollution_acide(filtered_grouped_table_by_observation_and_species_df)
+    pollution_azote = calc_pollution_azote(filtered_grouped_table_by_observation_and_species_df)
 
-            deg_artif = calc_deg_artif(filtered_grouped_table_by_observation_and_species_df)
-            pollution_acide = calc_pollution_acide(filtered_grouped_table_by_observation_and_species_df)
-            pollution_azote = calc_pollution_azote(filtered_grouped_table_by_observation_and_species_df)
+    gauge_chart1_artif = create_gauge_chart(deg_artif, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart2_acide = create_gauge_chart(pollution_acide, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart3_azote = create_gauge_chart(pollution_azote, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
 
-            gauge_chart1_artif = create_gauge_chart(deg_artif, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
-            gauge_chart2_acide = create_gauge_chart(pollution_acide, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
-            gauge_chart3_azote = create_gauge_chart(pollution_azote, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+    hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
+    pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
 
-            hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
-
-            pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
-
-    # Those figures are still needed even if no observation is clicked
     hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, nb_species_clicked)
     hist2_vdl = create_hist2_vdl(filtered_observation_with_vdl_df, vdl_clicked)
 
-    return fig_map, gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist1_nb_species, hist2_vdl, hist3_species, pie_thallus
+    return gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist3_species, pie_thallus, hist1_nb_species, hist2_vdl
 
 ## Dashboard on species tab
 # Define callback to update the bar chart based on selected species
