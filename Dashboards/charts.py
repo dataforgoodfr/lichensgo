@@ -8,10 +8,14 @@ Create a blank figure for initialisation
 
 """
 def blank_figure():
-    fig = go.Figure(go.Scatter(x=[], y = []))
-    fig.update_layout(template = None)
-    fig.update_xaxes(showgrid = False, showticklabels = False, zeroline=False)
-    fig.update_yaxes(showgrid = False, showticklabels = False, zeroline=False)
+    fig = go.Figure(go.Scatter(x=[], y=[]))
+    fig.update_layout(
+        template=None,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    fig.update_xaxes(showgrid=False, showticklabels=False, zeroline=False)
+    fig.update_yaxes(showgrid=False, showticklabels=False, zeroline=False)
 
     return fig
 
