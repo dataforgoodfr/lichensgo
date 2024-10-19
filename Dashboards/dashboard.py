@@ -167,6 +167,24 @@ def update_dashboard2(species_id_selected):
     return hist4_species, lichen_img_path
 
 
+def title_and_tooltip(title, tooltip_text):
+    return html.Div(
+        style={"display": "flex", "align-items": "center"},
+        children=[
+            dmc.Title(title, order=4, className="graph-title"),
+            dmc.Tooltip(
+                label=tooltip_text,
+                position="top",
+                withArrow=True,
+                children=DashIconify(
+                    icon="material-symbols:info-outline",
+                    className="info-icon",
+                ),
+            ),
+        ],
+    )
+
+
 # Create options for the user species dropdown, sorted by name
 species_options = [
     {"label": row["name"], "value": row["species_id"]}
@@ -179,20 +197,15 @@ species_id_selected = species_options[0]['value'] # Default to the first species
 sites_layout = [
     # Divider for the 2 columns
     html.Div(
-        style={"display": "flex", "gap": "10px", "padding": "5px"},
+        style={"display": "flex", "gap": "10px"},
         children=[
             # Divider for the first column with map and gauge
             html.Div(
-                style={
-                    "flex": "5",
-                    "padding": "5px",
-                },
+                style={"flex": "5"},
                 children=[
                     # Divider for the map title and selector
                     html.Div(
-                        style={"display": "flex", "align-items": "center",
-                            "gap": "10px",
-                        },
+                        style={"display": "flex", "align-items": "center", "gap": "10px",},
                         children=[
                             dmc.Title(
                                 "Carte des observations",
@@ -226,7 +239,7 @@ sites_layout = [
                                 ],
                                 withBorder=True,
                                 shadow="sm",
-                                style={"padding": "0"},
+                                style={"padding": "0"}, # Remove padding between the card and the map
                             ),
                         ],
                     ),
@@ -239,14 +252,9 @@ sites_layout = [
                                 children=[
                                     dmc.Card(
                                         children=[
-                                            dmc.Title(
-                                                "% Espèces toxitolérantes",
-                                                order=4,
-                                                style={
-                                                    "textAlign": "left",
-                                                    "margin": "0px",
-                                                    "padding": "0px",
-                                                },
+                                            title_and_tooltip(
+                                                title="% Espèces toxitolérantes",
+                                                tooltip_text="Pourcentage d'espèces toxitolérantes sur le site sélectionné",
                                             ),
                                             dcc.Graph(
                                                 id="gauge-chart1-artif",
@@ -259,7 +267,7 @@ sites_layout = [
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        style={"padding-top": "5px"},
+                                        style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
                                     ),
                                 ],
                             ),
@@ -268,14 +276,9 @@ sites_layout = [
                                 children=[
                                     dmc.Card(
                                         children=[
-                                            dmc.Title(
-                                                "% Espèces eutrophes",
-                                                order=4,
-                                                style={
-                                                    "textAlign": "left",
-                                                    "margin": "0px",
-                                                    "padding": "0px",
-                                                },
+                                            title_and_tooltip(
+                                                title="% Espèces eutophes",
+                                                tooltip_text="Pourcentage d'espèces eutrophes sur le site sélectionné"
                                             ),
                                             dcc.Graph(
                                                 id="gauge-chart3-azote",
@@ -288,7 +291,7 @@ sites_layout = [
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        style={"padding-top": "5px"},
+                                         style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
                                     ),
                                 ],
                             ),
@@ -297,14 +300,9 @@ sites_layout = [
                                 children=[
                                     dmc.Card(
                                         children=[
-                                            dmc.Title(
-                                                "% Espèces acidophiles",
-                                                order=4,
-                                                style={
-                                                    "textAlign": "left",
-                                                    "margin": "0px",
-                                                    "padding": "0px",
-                                                },
+                                            title_and_tooltip(
+                                                title="% Espèces acidophiles",
+                                                tooltip_text="Pourcentage d'espèces acidophiles sur le site sélectionné"
                                             ),
                                             dcc.Graph(
                                                 id="gauge-chart2-acide",
@@ -317,7 +315,7 @@ sites_layout = [
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        style={"padding-top": "5px"},
+                                         style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
                                     ),
                                 ],
                             ),
@@ -339,66 +337,31 @@ sites_layout = [
                             dmc.GridCol(
                                 span=6,
                                 children=[
-                                    # Divider for title and tooltip
-                                    html.Div(
-                                        style={"display": "flex",
-                                               "align-items": "center"},
-                                        children=[
-                                            dmc.Title(
-                                                "Distribution du nombre d'espèces",
-                                                order=4,
-                                                className="graph-title",
-                                            ),
-                                            dmc.Tooltip(
-                                                label="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge.",
-                                                position="top",
-                                                withArrow=True,
-                                                children=DashIconify(
-                                                    icon="material-symbols:info-outline",
-                                                    className="info-icon",
-                                                ),
-                                            ),
-                                        ],
+                                    title_and_tooltip(
+                                        title="Distribution du nombre d'espèces",
+                                        tooltip_text="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge."
                                     ),
                                     dmc.Card(
-                                    dcc.Graph(
-                                        id="hist1-nb_species",
-                                        figure=blank_fig,
-                                        style={"height": "300px"},
-                                        config={
-                                            "displaylogo": False,  # Remove plotly logo
-                                        },
-                                    ),
-                                    withBorder=True,
-                                    shadow="sm",
+                                        dcc.Graph(
+                                            id="hist1-nb_species",
+                                            figure=blank_fig,
+                                            style={"height": "300px"},
+                                            config={
+                                                "displaylogo": False,  # Remove plotly logo
+                                            },
+                                        ),
+                                        withBorder=True,
+                                        shadow="sm",
                                     )
-
                                 ],
                             ),
                             # Column for hist2
                             dmc.GridCol(
                                 span=6,
                                 children=[
-                                    # Divider for title and tooltip
-                                    html.Div(
-                                        style={"display": "flex",
-                                               "align-items": "center"},
-                                        children=[
-                                            dmc.Title(
-                                                "Distribution de VDL",
-                                                order=4,
-                                                className="graph-title",
-                                            ),
-                                            dmc.Tooltip(
-                                                label="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge.",
-                                                position="top",
-                                                withArrow=True,
-                                                children=DashIconify(
-                                                    icon="material-symbols:info-outline",
-                                                    className="info-icon",
-                                                ),
-                                            ),
-                                        ],
+                                    title_and_tooltip(
+                                        title="Distribution de VDL",
+                                        tooltip_text="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge."
                                     ),
                                     dcc.Graph(
                                         id="hist2-vdl",
@@ -416,27 +379,10 @@ sites_layout = [
                                 children=[
                                     dmc.Card(
                                         children=[
-                                        # Divider for the title and tooltip
-                                        html.Div(
-                                            style={"display": "flex",
-                                                "align-items": "center"},
-                                            children=[
-                                                dmc.Title(
-                                                    "Espèces observées sur le site sélectionné",
-                                                    order=4,
-                                                    className="graph-title",
-                                                ),
-                                                dmc.Tooltip(
-                                                    label="Distribution des espèces observées sur le site sélectionné",
-                                                    position="top",
-                                                    withArrow=True,
-                                                    children=DashIconify(
-                                                        icon="material-symbols:info-outline",
-                                                        className="info-icon",
-                                                    ),
-                                                ),
-                                            ],
-                                        ),
+                                            title_and_tooltip(
+                                                title="Espèces observées sur le site sélectionné",
+                                                tooltip_text="Distribution des espèces observées sur le site sélectionné"
+                                            ),
                                         dcc.Graph(
                                             id="hist3-species",
                                             figure=blank_fig,
@@ -455,26 +401,9 @@ sites_layout = [
                             dmc.GridCol(
                                 span=4,
                                 children=[
-                                    # Divider for the title and tooltip
-                                    html.Div(
-                                        style={"display": "flex",
-                                               "align-items": "center"},
-                                        children=[
-                                            dmc.Title(
-                                                "Morphologie du site sélectionné",
-                                                order=4,
-                                                className="graph-title",
-                                            ),
-                                            dmc.Tooltip(
-                                                label="",
-                                                position="top",
-                                                withArrow=True,
-                                                children=DashIconify(
-                                                    icon="material-symbols:info-outline",
-                                                    className="info-icon",
-                                                ),
-                                            ),
-                                        ],
+                                    title_and_tooltip(
+                                        title="Morphologie du site sélectionné",
+                                        tooltip_text="Distribution des thalles sur le site sélectionné"
                                     ),
                                     dcc.Graph(
                                         id="pie-thallus",
@@ -497,29 +426,14 @@ sites_layout = [
 # Layout for the "Espèces" tab
 species_layout = dmc.Grid(
     [
-        html.Div(
-            [
-                dmc.Title(
-                    "Espèces les plus observées",
-                    order=4,
-                    className="graph-title",
-                ),
-                dmc.Tooltip(
-                    label="Distribution des espèces observées, sur l'ensemble des sites",
-                    position="top",
-                    withArrow=True,
-                    children=DashIconify(
-                        icon="material-symbols:info-outline",
-                        className="info-icon",
-                    ),
-                ),
-            ],
-            style={
-                "display": "flex",
-                "align-items": "center",
-                "margin": "20px",
-            },
+        title_and_tooltip(
+            title="Espèces les plus observées",
+            tooltip_text="Distribution des espèces observées, sur l'ensemble des sites"
         ),
+        title_and_tooltip(
+            title="Espèces les plus observées",
+            tooltip_text="Distribution des espèces observées, sur l'ensemble des sites"
+            ),
         html.Div(
             [
                 html.Label(
@@ -607,7 +521,7 @@ app = Dash(__name__,
     )
 
 
-sidebar_layout = dmc.Box(
+sidebar = dmc.Box(
     children=[
         theme_toggle,
         dmc.DatePicker(
@@ -621,10 +535,10 @@ sidebar_layout = dmc.Box(
                 datetime.now().date(),
             ],
             valueFormat="DD/MM/YYYY",
-            w=170,  # width
+            w=110,  # width
         ),
     ],
-    style={"width": "200px", "padding": "10px"},
+    style={"width": "120px", "padding": "10px"},
 )
 
 dashboards_layout = dmc.Box(
@@ -642,13 +556,13 @@ dashboards_layout = dmc.Box(
                                 children=[
                                     DashIconify(
                                         icon="tabler:map-pin",
-                                        height=25,
+                                        height=20,
+                                        color=BASE_COLOR_PALETTE[0]
                                     ),
                                     dmc.Title("Sites", order=3)
                                 ],
-                                align="bottom",
+                                align="center",
                             ),
-                            mah=40 # Max height
                         ),
                         dmc.AccordionPanel(sites_layout),
                     ],
@@ -662,13 +576,13 @@ dashboards_layout = dmc.Box(
                                     DashIconify(
                                         icon="ph:plant",
                                         height=25,
+                                        color=BASE_COLOR_PALETTE[0]
                                     ),
                                     dmc.Title(
                                         "Espèces", order=3)
                                 ],
                                 align="bottom",
                             ),
-                            mah=40 # Max height
                         ),
                         dmc.AccordionPanel(species_layout)
                     ],
@@ -689,8 +603,7 @@ app.layout = dmc.MantineProvider(
     children=[
         dmc.Group(
             children=[
-                # Sidebar
-                sidebar_layout,
+                sidebar,
                 dmc.Divider(orientation="vertical"),
                 dashboards_layout,
             ],
