@@ -145,17 +145,6 @@ def count_lichen_per_species(lichen_df, lichen_species_df):
 
     return count_lichen_per_species_df
 
-# Group by species' type and observation id and sum the number of lichen, and merge with lichen species ecology
-def group_table_by_observation_and_species(merged_table_with_nb_lichen_df, merged_lichen_species_df):
-
-    grouped_table_by_observation_and_species_df = merged_table_with_nb_lichen_df.groupby(['observation_id', 'species_id'])['nb_lichen'].sum().reset_index()
-
-    grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df.merge(merged_lichen_species_df, on='species_id')
-
-    grouped_table_by_observation_and_species_df  = grouped_table_by_observation_and_species_df[['observation_id', 'species_id', 'name', 'nb_lichen', 'pH','eutrophication', 'poleotolerance', 'thallus']]
-
-    return grouped_table_by_observation_and_species_df
-
 
 # Group lichen by observation and thallus and sum the count of lichen_id (not the number of lichen)
 # NB: We count the number of lichen_id and not species as we want to count multiple times the non-unique lichen (other lichen etc)
@@ -170,39 +159,50 @@ def group_lichen_by_observation_and_thallus(lichen_df, merged_lichen_species_df)
     return grouped_lichen_by_observation_and_thallus_df
 
 
-# Degree of artificialisation (poleotolerance)
-def calc_deg_artif(filtered_lichen_with_ecology_df):
+def calc_degrees_pollution(merged_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df):
+    nb_lichen_df = merged_table_with_nb_lichen_df[['observation_id', 'lichen_id', 'nb_lichen']].groupby(['observation_id', 'lichen_id']).sum().reset_index()
+    nb_lichen_df = nb_lichen_df.merge(lichen_df[['lichen_id', 'species_id']], on='lichen_id', how='left')
+    nb_lichen_df = nb_lichen_df.merge(merged_lichen_species_df[['species_id', 'pH', 'eutrophication', 'poleotolerance']], on='species_id', how='left')
 
-    # Calculate the total number of lichens
-    total_nb_lichen = filtered_lichen_with_ecology_df['nb_lichen'].sum()
+    # Calculate the total number of nb_lichen per observation_id
+    nb_lichen_per_observation = nb_lichen_df.groupby('observation_id')['nb_lichen'].sum().reset_index()
 
-    # Calculate the number of poleotolerance (resistant) lichens
-    poleotolerant_nb_lichen = filtered_lichen_with_ecology_df[(filtered_lichen_with_ecology_df['poleotolerance'] == 'resistant')]['nb_lichen'].sum()
+    #  Calculate the number of resistant lichen per observation_id
+    resistant_lichen_per_observation = (
+        nb_lichen_df[nb_lichen_df['poleotolerance'] == 'resistant'] # Fitler on resistant lichen
+        .groupby('observation_id', as_index=False)['nb_lichen'].sum()  # Group by observation_id without setting it as index
+        .rename(columns={'nb_lichen':'nb_lichen_resistant'})
+    )
 
-    # Return the ratio in percentage
-    return (poleotolerant_nb_lichen / total_nb_lichen) * 100
+    #  Calculate the number of acid lichen per observation_id
+    acid_lichen_per_observation = (
+        nb_lichen_df[nb_lichen_df['pH'] == 'acidophilous'] # Fitler on acidophilous lichen
+        .groupby('observation_id', as_index=False)['nb_lichen'].sum()  # Group by observation_id without setting it as index
+        .rename(columns={'nb_lichen':'nb_lichen_acid'})
+    )
 
-# Acid pollution calculation
-def calc_pollution_acide(filtered_lichen_with_ecology_df):
+    #  Calculate the number of eutrophic lichen per observation_id
+    eutrophic_lichen_per_observation = (
+        nb_lichen_df[nb_lichen_df['eutrophication'] == 'eutrophic'] # Fitler on eutrophic lichen
+        .groupby('observation_id', as_index=False)['nb_lichen'].sum()  # Group by observation_id without setting it as index
+        .rename(columns={'nb_lichen':'nb_lichen_eutrophic'})
+    )
 
-    # Calculate the total number of lichens
-    total_nb_lichen = filtered_lichen_with_ecology_df['nb_lichen'].sum()
+    # Merge the dataframes
+    merged_df = nb_lichen_per_observation.merge(resistant_lichen_per_observation, on='observation_id', how='left')
+    merged_df = merged_df.merge(acid_lichen_per_observation, on='observation_id', how='left')
+    merged_df = merged_df.merge(eutrophic_lichen_per_observation, on='observation_id', how='left')
 
-    # Calculate the number of acidophilous lichens
-    acid_nb_lichen =  filtered_lichen_with_ecology_df[filtered_lichen_with_ecology_df['pH'] == 'acidophilous']['nb_lichen'].sum()
+    # Fill NaN values with 0 (in case there are observations with no resistant, acid or eutrophic lichen)
+    merged_df = merged_df.fillna(0)
 
-    # Return the ratio in percentage
-    return (acid_nb_lichen / total_nb_lichen) * 100
+    # Calculate the ratio of resistant nb_lichen to total nb_lichen
+    merged_df['deg_artif'] = merged_df['nb_lichen_resistant'] / merged_df['nb_lichen']
 
+    # Calculate the degree of acid pollution
+    merged_df['deg_pollution_acid'] = merged_df['nb_lichen_acid'] / merged_df['nb_lichen']
 
-# Azoic pollution calculation
-def calc_pollution_azote(filtered_lichen_with_ecology_df):
+    # Calculate the degree of nitrogen (azote in french) pollution
+    merged_df['deg_pollution_azote'] = merged_df['nb_lichen_eutrophic'] / merged_df['nb_lichen']
 
-    # Calculate the total number of lichens
-    total_nb_lichen = filtered_lichen_with_ecology_df['nb_lichen'].sum()
-
-    # Calculate the number of eutrophic lichens
-    eutrophic_nb_lichen =  filtered_lichen_with_ecology_df[filtered_lichen_with_ecology_df['eutrophication'] == 'eutrophic']['nb_lichen'].sum()
-
-    # Return the ratio in percentage
-    return (eutrophic_nb_lichen / total_nb_lichen) * 100
+    return merged_df

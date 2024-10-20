@@ -196,14 +196,17 @@ def create_pie_thallus(grouped_table_by_observation_and_thallus_df):
 
 def create_gauge_chart(value, intervals, color_scale):
 
+    percentage_value = value * 100
+
     fig = go.Figure(
         go.Indicator(
             domain={"x": [0, 1], "y": [0, 1]},
-            value=value,
+            value=percentage_value,
             number={"suffix": "%",
+                    "valueformat": ".0f", # Format the value as a number with no decimals
                     "font":
                         {"size": 24 ,
-                         "color": find_color(value, intervals=intervals, color_scale=color_scale)
+                         "color": find_color(percentage_value, intervals=intervals, color_scale=color_scale)
                          }
                     },
             mode="gauge+number",
@@ -216,7 +219,7 @@ def create_gauge_chart(value, intervals, color_scale):
                 "threshold": {
                     "line": {"color": "rgba(60, 60, 60, 1)", "width": 3},
                     "thickness": 0.75,
-                    "value": value,
+                    "value": percentage_value,
                 },
             },
         )

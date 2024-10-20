@@ -9,7 +9,7 @@ from dash_iconify import DashIconify
 from datetime import datetime
 
 from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_by_observation_and_species, group_lichen_by_observation_and_thallus, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
+from Dashboards.my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
 from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE
 
@@ -24,12 +24,14 @@ lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df = get_use
 # For tab on observations
 table_with_nb_lichen_df = count_lichen(table_df)
 merged_table_with_nb_lichen_df = merge_tables(table_with_nb_lichen_df, lichen_df, observation_df)
-grouped_table_by_observation_and_species_df = group_table_by_observation_and_species(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for the gauge charts
 grouped_lichen_by_observation_and_thallus_df = group_lichen_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for pie chart
 
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
-vdl_df = calc_vdl(merged_table_with_nb_lichen_df)
-observation_with_vdl_df = observation_with_species_count_df.merge(vdl_df, on='observation_id')
+observation_with_deg_pollution_df = calc_degrees_pollution(merged_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df)
+observation_with_vdl_df = calc_vdl(merged_table_with_nb_lichen_df)
+
+merged_observation_df = observation_with_species_count_df.merge(observation_with_deg_pollution_df, on='observation_id')
+merged_observation_df = merged_observation_df.merge(observation_with_vdl_df, on='observation_id')
 
 # For tab on species
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, merged_lichen_species_df)
@@ -42,7 +44,7 @@ lichen_img_dir = os.path.join('assets', 'img')
 blank_fig = blank_figure()
 
 # Initialize the selections
-date_range = [observation_with_vdl_df["date_obs"].min(), datetime.now().date()]
+date_range = [merged_observation_df["date_obs"].min(), datetime.now().date()]
 map_column_selected = list(MAP_SETTINGS.keys())[0]
 
 
@@ -62,19 +64,19 @@ def update_dashboard_map(date_range, map_column_selected, relayoutData):
     start_date = pd.to_datetime(date_range[0]).date()
     end_date = pd.to_datetime(date_range[1]).date()
 
-    filtered_observation_with_vdl_df = observation_with_vdl_df[(observation_with_vdl_df['date_obs'] >= start_date) & (observation_with_vdl_df['date_obs'] <= end_date)]
+    filtered_observation_df = merged_observation_df[(merged_observation_df['date_obs'] >= start_date) & (merged_observation_df['date_obs'] <= end_date)]
 
     if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
         current_zoom = relayoutData["mapbox.zoom"]
         current_center = relayoutData["mapbox.center"]
     else:
         current_zoom = 4.8
-        current_center = {"lat": filtered_observation_with_vdl_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_with_vdl_df['localisation_long'].mean()}
+        current_center = {"lat": filtered_observation_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_df['localisation_long'].mean()}
 
-    fig_map = create_map(filtered_observation_with_vdl_df, map_column_selected, current_zoom, current_center)
+    fig_map = create_map(filtered_observation_df, map_column_selected, current_zoom, current_center)
 
-    hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, None)
-    hist2_vdl = create_hist2_vdl(filtered_observation_with_vdl_df, None)
+    hist1_nb_species = create_hist1_nb_species(filtered_observation_df, None)
+    hist2_vdl = create_hist2_vdl(filtered_observation_df, None)
 
     return fig_map, hist1_nb_species, hist2_vdl
 
@@ -98,9 +100,9 @@ def update_dashboard_observation(clickData, date_range):
     start_date = pd.to_datetime(date_range[0]).date()
     end_date = pd.to_datetime(date_range[1]).date()
 
-    filtered_observation_with_vdl_df = observation_with_vdl_df[
-        (observation_with_vdl_df['date_obs'] >= start_date) &
-        (observation_with_vdl_df['date_obs'] <= end_date)
+    filtered_observation_df = merged_observation_df[
+        (merged_observation_df['date_obs'] >= start_date) &
+        (merged_observation_df['date_obs'] <= end_date)
     ]
     filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[
         (merged_table_with_nb_lichen_df['date_obs'] >= start_date) &
@@ -113,46 +115,45 @@ def update_dashboard_observation(clickData, date_range):
     lat_clicked = clickData['points'][0]['lat']
     lon_clicked = clickData['points'][0]['lon']
 
-    observation_clicked = filtered_observation_with_vdl_df[
-        (filtered_observation_with_vdl_df['localisation_lat'] == lat_clicked) &
-        (filtered_observation_with_vdl_df['localisation_long'] == lon_clicked)
+    observation_clicked = filtered_observation_df[
+        (filtered_observation_df['localisation_lat'] == lat_clicked) &
+        (filtered_observation_df['localisation_long'] == lon_clicked)
     ]
 
     if observation_clicked.empty:
         return (
             blank_fig, blank_fig, blank_fig, blank_fig, blank_fig,
-            create_hist1_nb_species(filtered_observation_with_vdl_df, None),
-            create_hist2_vdl(filtered_observation_with_vdl_df, None)
+            create_hist1_nb_species(filtered_observation_df, None),
+            create_hist2_vdl(filtered_observation_df, None)
         )
 
     observation_clicked = observation_clicked.iloc[0]
     observation_id_clicked = observation_clicked['observation_id']
     nb_species_clicked = observation_clicked['nb_species']
     vdl_clicked = observation_clicked['VDL']
+    deg_artif_clicked = observation_clicked['deg_artif']
+    deg_pollution_acid_clicked = observation_clicked['deg_pollution_acid']
+    deg_pollution_azote_clicked = observation_clicked['deg_pollution_azote']
 
     filtered_nb_lichen_per_lichen_id_df = filtered_nb_lichen_per_lichen_id_df[
         filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked
     ]
-    filtered_grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df[
-        grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
-    ]
+    # filtered_grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df[
+    #     grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
+    # ]
     filtered_grouped_lichen_by_observation_and_thallus_df = grouped_lichen_by_observation_and_thallus_df[
         grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
     ]
 
-    deg_artif = calc_deg_artif(filtered_grouped_table_by_observation_and_species_df)
-    pollution_acide = calc_pollution_acide(filtered_grouped_table_by_observation_and_species_df)
-    pollution_azote = calc_pollution_azote(filtered_grouped_table_by_observation_and_species_df)
-
-    gauge_chart1_artif = create_gauge_chart(deg_artif, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
-    gauge_chart2_acide = create_gauge_chart(pollution_acide, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
-    gauge_chart3_azote = create_gauge_chart(pollution_azote, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart1_artif = create_gauge_chart(deg_artif_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart2_acide = create_gauge_chart(deg_pollution_acid_clicked, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart3_azote = create_gauge_chart(deg_pollution_azote_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
 
     hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
     pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
 
-    hist1_nb_species = create_hist1_nb_species(filtered_observation_with_vdl_df, nb_species_clicked)
-    hist2_vdl = create_hist2_vdl(filtered_observation_with_vdl_df, vdl_clicked)
+    hist1_nb_species = create_hist1_nb_species(filtered_observation_df, nb_species_clicked)
+    hist2_vdl = create_hist2_vdl(filtered_observation_df, vdl_clicked)
 
     return gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist3_species, pie_thallus, hist1_nb_species, hist2_vdl
 
@@ -168,7 +169,7 @@ def update_dashboard2(species_id_selected):
     hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected)
 
     filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
-    species_name_selected = filtered_nb_lichen_per_species_df['name']
+    # species_name_selected = filtered_nb_lichen_per_species_df['name']
 
     lichen_img = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected]['picture'].iloc[0]
     lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
@@ -536,11 +537,11 @@ sidebar = dmc.Box(
         dmc.DatePicker(
             id="date-picker-range",
             label="Sélectionner une plage de dates",
-            minDate=observation_with_vdl_df["date_obs"].min(),
+            minDate=merged_observation_df["date_obs"].min(),
             maxDate=datetime.now().date(),
             type="range",
             value=[
-                observation_with_vdl_df["date_obs"].min(),
+                merged_observation_df["date_obs"].min(),
                 datetime.now().date(),
             ],
             valueFormat="DD/MM/YYYY",
