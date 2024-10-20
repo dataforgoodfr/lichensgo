@@ -168,7 +168,7 @@ def update_dashboard2(species_id_selected):
 
     hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected)
 
-    filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
+    # filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
     # species_name_selected = filtered_nb_lichen_per_species_df['name']
 
     lichen_img = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected]['picture'].iloc[0]
