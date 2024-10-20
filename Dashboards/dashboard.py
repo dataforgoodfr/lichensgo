@@ -108,10 +108,6 @@ def update_dashboard_observation(clickData, date_range):
         (merged_observation_df['date_obs'] >= start_date) &
         (merged_observation_df['date_obs'] <= end_date)
     ]
-    # filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[
-    #     (merged_table_with_nb_lichen_df['date_obs'] >= start_date) &
-    #     (merged_table_with_nb_lichen_df['date_obs'] <= end_date)
-    # ]
 
     lat_clicked = clickData['points'][0]['lat']
     lon_clicked = clickData['points'][0]['lon']
@@ -139,9 +135,7 @@ def update_dashboard_observation(clickData, date_range):
     filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[
         nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked
     ]
-    # filtered_grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df[
-    #     grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
-    # ]
+
     filtered_grouped_lichen_by_observation_and_thallus_df = grouped_lichen_by_observation_and_thallus_df[
         grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
     ]
