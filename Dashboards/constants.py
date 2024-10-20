@@ -56,7 +56,6 @@ NEGATIVE_GAUGE_COLOR_PALETTE = [
 # Color palette for positive gauge, from red to green
 POSITIVE_GAUGE_COLOR_PALETTE = NEGATIVE_GAUGE_COLOR_PALETTE[::-1]
 
-
 SQUARE_COLUMNS = [f'sq{i}' for i in range(1, 6)]
 
 ORIENTATIONS_MAPPING = {
@@ -75,7 +74,7 @@ MAP_SETTINGS = {
     },
     "VDL_cat": {
         "title": "VDL",
-        "color_map": {'<5': 'red', '5-10': 'orange', '10-15': 'yellow', '>15': 'green'}
+        "color_map": {'<25': 'red', '25-50': 'orange', '50-75': 'yellow', '>75': 'green'}
     }
 }
 

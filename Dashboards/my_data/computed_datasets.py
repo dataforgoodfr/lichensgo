@@ -38,18 +38,19 @@ def count_lichen(table_df):
     return table_with_nb_lichen_df
 
 
-def vdl_value(observation_df, table_with_nb_lichen_df):
+def calc_vdl(table_with_nb_lichen_df):
 
-    columns = ['observation_id'] + [f'nb_lichen_{orientation}' for orientation in ORIENTATIONS] + ['nb_lichen']
-    vdl_df = table_with_nb_lichen_df[columns]
+    nb_lichen_df = table_with_nb_lichen_df[['observation_id', 'lichen_id', 'nb_lichen']]
 
-    # Calculate the lichen diversity value (VDL) per observation
-    vdl_df = vdl_df.groupby('observation_id').sum() # Sum over all lichen species per observation
-    vdl_df['VDL'] = vdl_df['nb_lichen'] / 15 # /5 pour le nombre de carrés par grille, /3 pour le nombre d'arbre par observation
-    vdl_df["VDL_cat"] = pd.cut(vdl_df["VDL"], bins=[-1, 4.999, 10, 15, np.inf], labels=["<5", "5-10", "10-15", ">15"])
+    # Count the average number of lichen per tree (by grouping by observation_id and lichen_id)
+    avg_nb_lichen_per_tree = nb_lichen_df.groupby(['observation_id', 'lichen_id']).mean()
 
-    observation_with_vdl_df = observation_df.merge(vdl_df, on='observation_id', how='left')
-    return observation_with_vdl_df
+    # Sum over all lichen per observation
+    vdl_df = avg_nb_lichen_per_tree.groupby('observation_id').sum().reset_index().rename(columns={'nb_lichen': 'VDL'})
+
+    vdl_df["VDL_cat"] = pd.cut(vdl_df["VDL"], bins=[-1, 25, 50, 75, np.inf], labels=["<25", "25-50", "50-75", ">75"])
+
+    return vdl_df
 
 """
     Count the number of lichen per lichen ID.
@@ -104,24 +105,7 @@ def unique_lichen_name(nb_lichen_per_lichen_id_df):
 
     return merged_df
 
-# """
-# Count the number of lichen per square in the given table_df.
-# """
-# def count_lichen_per_square(table_df):
 
-#     table_with_count_per_square_df = table_df.copy()
-
-
-#     for col in square_columns:
-#        table_with_count_per_square_df[f'{col}'] = table_with_count_per_square_df[col].apply(lambda x : len(x))
-
-#     table_with_count_per_square_df['nb_lichen'] = table_with_count_per_square_df[square_columns].sum(axis=1) # Sum over all squares
-
-#     return table_with_count_per_square_df
-
-
-# def calculate_frequency(column):
-#     return column.apply(lambda x: sum(1 for orientation in x if orientation in orientations))
 
 # Count the number of lichen (species) for each observation
 def count_species_per_observation(lichen_df, observation_df):

@@ -9,7 +9,7 @@ from dash_iconify import DashIconify
 from datetime import datetime
 
 from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, vdl_value, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_by_observation_and_species, group_lichen_by_observation_and_thallus, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
+from Dashboards.my_data.computed_datasets import merge_tables, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_table_by_observation_and_species, group_lichen_by_observation_and_thallus, calc_deg_artif, calc_pollution_acide, calc_pollution_azote
 from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
 from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE
 
@@ -28,7 +28,8 @@ grouped_table_by_observation_and_species_df = group_table_by_observation_and_spe
 grouped_lichen_by_observation_and_thallus_df = group_lichen_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for pie chart
 
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
-observation_with_vdl_df = vdl_value(observation_with_species_count_df, merged_table_with_nb_lichen_df)
+vdl_df = calc_vdl(merged_table_with_nb_lichen_df)
+observation_with_vdl_df = observation_with_species_count_df.merge(vdl_df, on='observation_id')
 
 # For tab on species
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, merged_lichen_species_df)
@@ -583,7 +584,7 @@ dashboards_layout = dmc.Box(
                             ),
                             dmc.AccordionPanel(sites_layout),
                         ],
-                        value= "sites",
+                        value="sites",
                     ),
                     dmc.AccordionItem(
                     children=[
