@@ -62,6 +62,8 @@ def count_lichen_per_lichen_id(table_with_nb_lichen_df, lichen_df, lichen_specie
     # Group by 'lichen_id' and sum the counts for each orientation and the total count
     nb_lichen_per_lichen_id_df = table_with_nb_lichen_df[columns].groupby('lichen_id').sum().reset_index()
 
+    nb_lichen_per_lichen_id_df['nb_lichen_ratio'] = nb_lichen_per_lichen_id_df['nb_lichen'] / (3 * 5 * 4) # divided by number of trees x number of quadrants x number of orientations
+
     # Merge the grouped DataFrame with the lichen DataFrame to add lichen information
     nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df.merge(lichen_df, how='left', on='lichen_id')
 

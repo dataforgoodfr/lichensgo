@@ -26,6 +26,10 @@ table_with_nb_lichen_df = count_lichen(table_df)
 merged_table_with_nb_lichen_df = merge_tables(table_with_nb_lichen_df, lichen_df, observation_df)
 grouped_lichen_by_observation_and_thallus_df = group_lichen_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for pie chart
 
+nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(
+        table_with_nb_lichen_df, lichen_df, merged_lichen_species_df
+    )
+
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
 observation_with_deg_pollution_df = calc_degrees_pollution(merged_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df)
 observation_with_vdl_df = calc_vdl(merged_table_with_nb_lichen_df)
@@ -104,13 +108,10 @@ def update_dashboard_observation(clickData, date_range):
         (merged_observation_df['date_obs'] >= start_date) &
         (merged_observation_df['date_obs'] <= end_date)
     ]
-    filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[
-        (merged_table_with_nb_lichen_df['date_obs'] >= start_date) &
-        (merged_table_with_nb_lichen_df['date_obs'] <= end_date)
-    ]
-    filtered_nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(
-        filtered_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df
-    )
+    # filtered_table_with_nb_lichen_df = merged_table_with_nb_lichen_df[
+    #     (merged_table_with_nb_lichen_df['date_obs'] >= start_date) &
+    #     (merged_table_with_nb_lichen_df['date_obs'] <= end_date)
+    # ]
 
     lat_clicked = clickData['points'][0]['lat']
     lon_clicked = clickData['points'][0]['lon']
@@ -135,8 +136,8 @@ def update_dashboard_observation(clickData, date_range):
     deg_pollution_acid_clicked = observation_clicked['deg_pollution_acid']
     deg_pollution_azote_clicked = observation_clicked['deg_pollution_azote']
 
-    filtered_nb_lichen_per_lichen_id_df = filtered_nb_lichen_per_lichen_id_df[
-        filtered_nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked
+    filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[
+        nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked
     ]
     # filtered_grouped_table_by_observation_and_species_df = grouped_table_by_observation_and_species_df[
     #     grouped_table_by_observation_and_species_df['observation_id'] == observation_id_clicked
@@ -149,11 +150,11 @@ def update_dashboard_observation(clickData, date_range):
     gauge_chart2_acide = create_gauge_chart(deg_pollution_acid_clicked, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
     gauge_chart3_azote = create_gauge_chart(deg_pollution_azote_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
 
-    hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
-    pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
-
     hist1_nb_species = create_hist1_nb_species(filtered_observation_df, nb_species_clicked)
     hist2_vdl = create_hist2_vdl(filtered_observation_df, vdl_clicked)
+
+    hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
+    pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
 
     return gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist3_species, pie_thallus, hist1_nb_species, hist2_vdl
 
@@ -438,11 +439,7 @@ species_layout = dmc.Grid(
     [
         title_and_tooltip(
             title="Espèces les plus observées",
-            tooltip_text="Distribution des espèces observées, sur l'ensemble des sites"
-        ),
-        title_and_tooltip(
-            title="Espèces les plus observées",
-            tooltip_text="Distribution des espèces observées, sur l'ensemble des sites"
+            tooltip_text="Distribution des espèces observées sur l'ensemble des sites"
             ),
         html.Div(
             [

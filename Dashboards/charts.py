@@ -129,7 +129,7 @@ def create_hist3(lichen_frequency_df):
 
     hist3 = px.bar(
         lichen_frequency_df,
-        x="nb_lichen",
+        x="nb_lichen_ratio",
         y="unique_name",
         orientation="h",
         color_discrete_sequence=BASE_COLOR_PALETTE,
@@ -137,23 +137,29 @@ def create_hist3(lichen_frequency_df):
 
     hist3.update_layout(
         **PLOTLY_LAYOUT,
-        xaxis_title="Nombre",
+        xaxis_title="% de quadrats",
         yaxis_title="",
         xaxis_showgrid=True,
+        xaxis_tickformat=".0%",
+        xaxis=dict(
+            range=[0, 1.1],
+            dtick=0.25  # Set x-axis ticks every 25%
+        )
     )
 
     # Update hover template
     hist3.update_traces(
         hovertemplate=(
             "<b>%{y}</b><br><br>"
-            "<b>Nombre:</b> %{x}<br>"
-            "<b>Nord:</b> %{customdata[0]:<2}<br>"
-            "<b>Sud:</b> %{customdata[1]:<2}<br>"
-            "<b>Ouest:</b> %{customdata[2]:<2}<br>"
-            "<b>Est:</b> %{customdata[3]:<2}<br>"
+            "<b>Pourcentage:</b> %{x}<br>"
+            "<b>Nombre:</b> %{customdata[0]}<br>"
+            "<b>Nord:</b> %{customdata[1]}<br>"
+            "<b>Sud:</b> %{customdata[2]}<br>"
+            "<b>Ouest:</b> %{customdata[3]}<br>"
+            "<b>Est:</b> %{customdata[4]}<br>"
             "<extra></extra>"
         ),
-        customdata=lichen_frequency_df[['nb_lichen_N', 'nb_lichen_S', 'nb_lichen_O', 'nb_lichen_E']].values
+        customdata=lichen_frequency_df[['nb_lichen','nb_lichen_N', 'nb_lichen_S', 'nb_lichen_O', 'nb_lichen_E']].values
     )
 
     return hist3
