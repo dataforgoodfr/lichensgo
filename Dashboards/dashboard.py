@@ -39,6 +39,7 @@ merged_observation_df = merged_observation_df.merge(observation_with_vdl_df, on=
 
 # For tab on species
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, merged_lichen_species_df)
+observation_with_selected_species_col_df = observation_df.copy()
 
 # For the lichen images
 current_dir = os.path.dirname(__file__)
@@ -54,12 +55,12 @@ map_column_selected = list(MAP_SETTINGS.keys())[0]
 
 # First callback to update the dashboard based on date and map selection
 @callback(
-    Output('species-map', 'figure'),
+    Output('map-nb_species-vdl', 'figure'),
     Output('hist1-nb_species', 'figure'),
     Output('hist2-vdl', 'figure'),
     Input('date-picker-range', 'value'),
     Input('map-column-select', 'value'),
-    State('species-map', 'relayoutData')
+    State('map-nb_species-vdl', 'relayoutData')
 )
 def update_dashboard_map(date_range, map_column_selected, relayoutData):
     if None in date_range:
@@ -93,7 +94,7 @@ def update_dashboard_map(date_range, map_column_selected, relayoutData):
     Output('pie-thallus', 'figure'),
     Output('hist1-nb_species', 'figure', allow_duplicate=True),
     Output('hist2-vdl', 'figure', allow_duplicate=True),
-    Input('species-map', 'clickData'),
+    Input('map-nb_species-vdl', 'clickData'),
     Input('date-picker-range', 'value'),
     prevent_initial_call=True
 )
@@ -155,21 +156,36 @@ def update_dashboard_observation(clickData, date_range):
 ## Dashboard on species tab
 # Define callback to update the bar chart based on selected species
 @callback(
+    Output(component_id='map-species_present', component_property='figure'),
     Output(component_id='hist4-species', component_property='figure'),
     Output(component_id='lichen-image', component_property='src'),
-    Input(component_id='species-dropdown', component_property='value')
+    Input(component_id='species-dropdown', component_property='value'),
+    State('map-species_present', 'relayoutData')
 )
-def update_dashboard2(species_id_selected):
+def update_dashboard2(species_id_selected, relayoutData):
 
     hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected)
 
-    # filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
-    # species_name_selected = filtered_nb_lichen_per_species_df['name']
+    # Create a column indicating for each observation if the selected species is present or not
+    observation_with_selected_species_col_df['selected_species_present'] = observation_df['observation_id'].isin(
+        lichen_df.loc[lichen_df['species_id'] == species_id_selected, 'observation_id']
+    )
+
+
+    if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
+        current_zoom = relayoutData["mapbox.zoom"]
+        current_center = relayoutData["mapbox.center"]
+    else:
+        current_zoom = 4.8
+        current_center = {"lat": observation_with_selected_species_col_df['localisation_lat'].mean() + 0.5, "lon": observation_with_selected_species_col_df['localisation_long'].mean()}
+
+
+    fig_map = create_map(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center)
 
     lichen_img = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected]['picture'].iloc[0]
     lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
 
-    return hist4_species, lichen_img_path
+    return fig_map, hist4_species, lichen_img_path
 
 
 def title_and_tooltip(title, tooltip_text):
@@ -210,7 +226,8 @@ sites_layout = [
                 children=[
                     # Divider for the map title and selector
                     html.Div(
-                        style={"display": "flex", "align-items": "center", "gap": "10px",},
+                        style={"display": "flex",
+                               "align-items": "center", "gap": "10px", },
                         children=[
                             dmc.Title(
                                 "Carte des observations",
@@ -223,8 +240,9 @@ sites_layout = [
                                 id="map-column-select",
                                 value=list(MAP_SETTINGS.keys())[0],
                                 data=[
-                                    {"label": MAP_SETTINGS[col]["title"], "value": col}
-                                    for col in MAP_SETTINGS
+                                    {"label": MAP_SETTINGS[col]
+                                        ["title"], "value": col}
+                                    for col in ["nb_species_cat", "VDL_cat"]
                                 ],
                                 transitionDuration=500,
                             ),
@@ -235,7 +253,7 @@ sites_layout = [
                             dmc.Card(
                                 children=[
                                     dcc.Graph(
-                                        id="species-map",
+                                        id="map-nb_species-vdl",
                                         figure=blank_fig,
                                         config={
                                             "displaylogo": False,  # Remove plotly logo
@@ -244,13 +262,15 @@ sites_layout = [
                                 ],
                                 withBorder=True,
                                 shadow="sm",
-                                style={"padding": "0"}, # Remove padding between the card and the map
+                                # Remove padding between the card and the map
+                                style={"padding": "0"},
                             ),
                         ],
                     ),
                     # Divider for the gauge charts, with 3 columns each
                     html.Div(
-                        style={"display": "flex", "gap": "10px", "padding-top": "10px"},
+                        style={"display": "flex", "gap": "10px",
+                               "padding-top": "10px"},
                         children=[
                             html.Div(
                                 style={"flex": "1"},
@@ -266,17 +286,19 @@ sites_layout = [
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False, # Remove plotly tool bar
+                                                    "displayModeBar": False,  # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
+                                        # Reduce padding between the card and the gauge
+                                        style={
+                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
                                     ),
                                 ],
                             ),
-                                                        html.Div(
+                            html.Div(
                                 style={"flex": "1"},
                                 children=[
                                     dmc.Card(
@@ -290,13 +312,15 @@ sites_layout = [
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False, # Remove plotly tool bar
+                                                    "displayModeBar": False,  # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                         style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
+                                        # Reduce padding between the card and the gauge
+                                        style={
+                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
                                     ),
                                 ],
                             ),
@@ -314,13 +338,15 @@ sites_layout = [
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False, # Remove plotly tool bar
+                                                    "displayModeBar": False,  # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                         style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
+                                        # Reduce padding between the card and the gauge
+                                        style={
+                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
                                     ),
                                 ],
                             ),
@@ -331,8 +357,8 @@ sites_layout = [
             # Divider for the second column with histograms
             html.Div(
                 style={"flex": "5",
-                    "padding": "5px",
-                },
+                       "padding": "5px",
+                       },
                 children=[
                     dmc.Grid(
                         gutter="md",
@@ -388,14 +414,14 @@ sites_layout = [
                                                 title="Espèces observées sur le site sélectionné",
                                                 tooltip_text="Distribution des espèces observées sur le site sélectionné"
                                             ),
-                                        dcc.Graph(
-                                            id="hist3-species",
-                                            figure=blank_fig,
-                                            style={"height": "300px"},
-                                            config={
-                                                "displaylogo": False,  # Remove plotly logo
-                                            },
-                                        ),
+                                            dcc.Graph(
+                                                id="hist3-species",
+                                                figure=blank_fig,
+                                                style={"height": "300px"},
+                                                config={
+                                                    "displaylogo": False,  # Remove plotly logo
+                                                },
+                                            ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
@@ -429,48 +455,108 @@ sites_layout = [
 ]
 
 # Layout for the "Espèces" tab
-species_layout = dmc.Grid(
-    [
-        title_and_tooltip(
-            title="Espèces les plus observées",
-            tooltip_text="Distribution des espèces observées sur l'ensemble des sites"
-            ),
+species_layout = html.Div(  # Divider for 2 columns
+    style={"display": "flex", "gap": "20px"},
+    children=[
+        # Divider for the first column with selector and map
         html.Div(
-            [
-                html.Label(
-                    "Sélectionner une espèce:",
+            style={"flex": "5"},
+            children=[
+                html.Div(
+                    [
+                        html.Label(
+                            "Sélectionner une espèce:",
+                            style={
+                                "margin-right": "10px",
+                            },
+                        ),
+                        dcc.Dropdown(
+                            id="species-dropdown",
+                            options=species_options,
+                            value=species_id_selected,
+                            clearable=False,
+                            style={"width": "400px"},
+                        ),
+                    ],
                     style={
-                        "margin-right": "10px",
+                        "display": "flex",
+                        "align-items": "center",
+                        "justify-content": "left",
+                        "margin-left": "20px",
                     },
                 ),
-                dcc.Dropdown(
-                    id="species-dropdown",
-                    options=species_options,
-                    value=species_id_selected,
-                    clearable=False,
-                    style={"width": "400px"},
+                dmc.Title(
+                    "Carte de présence de l'espèce sélectionnée",
+                    order=4,
+                    className="graph-title",
+                    style={"padding": "0px"},
+                ),
+                html.Div(
+                    children=[
+                        dmc.Card(
+                            children=[
+                                dcc.Graph(
+                                    id="map-species_present",
+                                    figure=blank_fig,
+                                    config={
+                                        "displaylogo": False,  # Remove plotly logo
+                                    },
+                                ),
+                            ],
+                            withBorder=True,
+                            shadow="sm",
+                            # Remove padding between the card and the map
+                            style={"padding": "0"},
+                        ),
+                    ],
                 ),
             ],
-            style={
-                "display": "flex",
-                "align-items": "center",
-                "justify-content": "left",
-                "margin-left": "20px",
-            },
         ),
-        dcc.Graph(
-            id="hist4-species",
-            figure=blank_fig,
-            config={
-                "displaylogo": False,  # Remove plotly logo
-            },
-        ),
-        dmc.Image(
-            id="lichen-image",
-            radius="md",
-            src=None,
-            h=200,
-            fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
+        # Divider for the second column
+        html.Div(
+            style={"flex": "5"},
+            children=[
+                dmc.Grid(
+                    gutter="md",
+                    align="stretch",
+                    children=[
+                        dmc.GridCol(
+                            span=8,
+                            children=[
+                                dmc.Card([
+                                    dmc.Title("Carte d'identité de l'espèce sélectionnée", order=4, className="graph-title"),
+                                    dmc.Image(
+                                        id="lichen-image",
+                                        radius="md",
+                                        src=None,
+                                        h=150,
+                                        fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
+                                    ),
+                                ],
+                                    withBorder=True,
+                                )
+                            ],
+                        ),
+                        dmc.GridCol(
+                            span=10,
+                            children=[
+                                title_and_tooltip(
+                                    title="Espèces les plus observées",
+                                    tooltip_text="Distribution des espèces observées sur l'ensemble des sites"
+                                ),
+                                dcc.Graph(
+                                    id="hist4-species",
+                                    figure=blank_fig,
+                                    config={
+                                        "displaylogo": False,  # Remove plotly logo
+                                    },
+                                ),
+                            ],
+                        ),
+
+                    ],
+                ),
+            ],
         ),
     ],
 )

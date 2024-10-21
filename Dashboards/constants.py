@@ -75,8 +75,14 @@ MAP_SETTINGS = {
     "VDL_cat": {
         "title": "VDL",
         "color_map": {'<25': 'red', '25-50': 'orange', '50-75': 'yellow', '>75': 'green'}
-    }
+    },
+    "selected_species_present":
+        {
+            "title": "Espèce sélectionnée présente",
+            "color_map": {True: BASE_COLOR_PALETTE[0], False: BASE_COLOR_PALETTE[-1]}
+        },
 }
+
 
 # Define the plotly style for hover labels
 PLOTLY_HOVER_STYLE = {
