@@ -39,6 +39,7 @@ merged_observation_df = merged_observation_df.merge(observation_with_vdl_df, on=
 
 # For tab on species
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, merged_lichen_species_df)
+observation_with_selected_species_col_df = observation_df.copy()
 
 # For the lichen images
 current_dir = os.path.dirname(__file__)
@@ -54,12 +55,12 @@ map_column_selected = list(MAP_SETTINGS.keys())[0]
 
 # First callback to update the dashboard based on date and map selection
 @callback(
-    Output('species-map', 'figure'),
+    Output('map-nb_species-vdl', 'figure'),
     Output('hist1-nb_species', 'figure'),
     Output('hist2-vdl', 'figure'),
     Input('date-picker-range', 'value'),
     Input('map-column-select', 'value'),
-    State('species-map', 'relayoutData')
+    State('map-nb_species-vdl', 'relayoutData')
 )
 def update_dashboard_map(date_range, map_column_selected, relayoutData):
     if None in date_range:
@@ -93,7 +94,7 @@ def update_dashboard_map(date_range, map_column_selected, relayoutData):
     Output('pie-thallus', 'figure'),
     Output('hist1-nb_species', 'figure', allow_duplicate=True),
     Output('hist2-vdl', 'figure', allow_duplicate=True),
-    Input('species-map', 'clickData'),
+    Input('map-nb_species-vdl', 'clickData'),
     Input('date-picker-range', 'value'),
     prevent_initial_call=True
 )
@@ -155,21 +156,36 @@ def update_dashboard_observation(clickData, date_range):
 ## Dashboard on species tab
 # Define callback to update the bar chart based on selected species
 @callback(
+    Output(component_id='map-species_present', component_property='figure'),
     Output(component_id='hist4-species', component_property='figure'),
     Output(component_id='lichen-image', component_property='src'),
-    Input(component_id='species-dropdown', component_property='value')
+    Input(component_id='species-dropdown', component_property='value'),
+    State('map-species_present', 'relayoutData')
 )
-def update_dashboard2(species_id_selected):
+def update_dashboard2(species_id_selected, relayoutData):
 
     hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected)
 
-    # filtered_nb_lichen_per_species_df = nb_lichen_per_species_df[nb_lichen_per_species_df['species_id'] == species_id_selected].iloc[0]
-    # species_name_selected = filtered_nb_lichen_per_species_df['name']
+    # Create a column indicating for each observation if the selected species is present or not
+    observation_with_selected_species_col_df['selected_species_present'] = observation_df['observation_id'].isin(
+        lichen_df.loc[lichen_df['species_id'] == species_id_selected, 'observation_id']
+    )
+
+
+    if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
+        current_zoom = relayoutData["mapbox.zoom"]
+        current_center = relayoutData["mapbox.center"]
+    else:
+        current_zoom = 4.8
+        current_center = {"lat": observation_with_selected_species_col_df['localisation_lat'].mean() + 0.5, "lon": observation_with_selected_species_col_df['localisation_long'].mean()}
+
+
+    fig_map = create_map(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center)
 
     lichen_img = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected]['picture'].iloc[0]
     lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
 
-    return hist4_species, lichen_img_path
+    return fig_map, hist4_species, lichen_img_path
 
 
 def title_and_tooltip(title, tooltip_text):
@@ -224,7 +240,7 @@ sites_layout = [
                                 value=list(MAP_SETTINGS.keys())[0],
                                 data=[
                                     {"label": MAP_SETTINGS[col]["title"], "value": col}
-                                    for col in MAP_SETTINGS
+                                    for col in ["nb_species_cat", "VDL_cat"]
                                 ],
                                 transitionDuration=500,
                             ),
@@ -235,7 +251,7 @@ sites_layout = [
                             dmc.Card(
                                 children=[
                                     dcc.Graph(
-                                        id="species-map",
+                                        id="map-nb_species-vdl",
                                         figure=blank_fig,
                                         config={
                                             "displaylogo": False,  # Remove plotly logo
@@ -431,10 +447,6 @@ sites_layout = [
 # Layout for the "Espèces" tab
 species_layout = dmc.Grid(
     [
-        title_and_tooltip(
-            title="Espèces les plus observées",
-            tooltip_text="Distribution des espèces observées sur l'ensemble des sites"
-            ),
         html.Div(
             [
                 html.Label(
@@ -458,6 +470,28 @@ species_layout = dmc.Grid(
                 "margin-left": "20px",
             },
         ),
+        html.Div(
+        children=[
+            dmc.Card(
+                children=[
+                    dcc.Graph(
+                        id="map-species_present",
+                        figure=blank_fig,
+                        config={
+                            "displaylogo": False,  # Remove plotly logo
+                        },
+                    ),
+                ],
+                withBorder=True,
+                shadow="sm",
+                style={"padding": "0"}, # Remove padding between the card and the map
+            ),
+        ],
+    ),
+                title_and_tooltip(
+            title="Espèces les plus observées",
+            tooltip_text="Distribution des espèces observées sur l'ensemble des sites"
+            ),
         dcc.Graph(
             id="hist4-species",
             figure=blank_fig,

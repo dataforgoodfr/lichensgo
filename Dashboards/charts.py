@@ -47,6 +47,7 @@ def create_map(filtered_df, selected_map_column, zoom, center):
 
     return fig_map
 
+
 def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
     hist1 = px.histogram(
         observation_with_vdl_df,
