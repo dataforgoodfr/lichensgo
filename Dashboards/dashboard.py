@@ -445,66 +445,103 @@ sites_layout = [
 ]
 
 # Layout for the "Espèces" tab
-species_layout = dmc.Grid(
-    [
+species_layout = html.Div(  # Divider for 2 columns
+    style={"display": "flex", "gap": "20px"},
+    children=[
+        # Divider for the first column with selector and map
         html.Div(
-            [
-                html.Label(
-                    "Sélectionner une espèce:",
+            style={"flex": "5"},
+            children=[
+                html.Div(
+                    [
+                        html.Label(
+                            "Sélectionner une espèce:",
+                            style={
+                                "margin-right": "10px",
+                            },
+                        ),
+                        dcc.Dropdown(
+                            id="species-dropdown",
+                            options=species_options,
+                            value=species_id_selected,
+                            clearable=False,
+                            style={"width": "400px"},
+                        ),
+                    ],
                     style={
-                        "margin-right": "10px",
+                        "display": "flex",
+                        "align-items": "center",
+                        "justify-content": "left",
+                        "margin-left": "20px",
                     },
                 ),
-                dcc.Dropdown(
-                    id="species-dropdown",
-                    options=species_options,
-                    value=species_id_selected,
-                    clearable=False,
-                    style={"width": "400px"},
+                dmc.Title(
+                    "Carte de présence de l'espèce sélectionnée",
+                    order=4,
+                    className="graph-title",
+                    style={"padding": "0px"},
+                ),
+                html.Div(
+                    children=[
+                        dmc.Card(
+                            children=[
+                                dcc.Graph(
+                                    id="map-species_present",
+                                    figure=blank_fig,
+                                    config={
+                                        "displaylogo": False,  # Remove plotly logo
+                                    },
+                                ),
+                            ],
+                            withBorder=True,
+                            shadow="sm",
+                            # Remove padding between the card and the map
+                            style={"padding": "0"},
+                        ),
+                    ],
                 ),
             ],
-            style={
-                "display": "flex",
-                "align-items": "center",
-                "justify-content": "left",
-                "margin-left": "20px",
-            },
         ),
+        # Divider for the second column with histograms
         html.Div(
-        children=[
-            dmc.Card(
-                children=[
-                    dcc.Graph(
-                        id="map-species_present",
-                        figure=blank_fig,
-                        config={
-                            "displaylogo": False,  # Remove plotly logo
-                        },
-                    ),
-                ],
-                withBorder=True,
-                shadow="sm",
-                style={"padding": "0"}, # Remove padding between the card and the map
-            ),
-        ],
-    ),
-                title_and_tooltip(
-            title="Espèces les plus observées",
-            tooltip_text="Distribution des espèces observées sur l'ensemble des sites"
-            ),
-        dcc.Graph(
-            id="hist4-species",
-            figure=blank_fig,
-            config={
-                "displaylogo": False,  # Remove plotly logo
-            },
-        ),
-        dmc.Image(
-            id="lichen-image",
-            radius="md",
-            src=None,
-            h=200,
-            fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
+            style={"flex": "5"},
+            children=[
+                dmc.Grid(
+                    gutter="md",
+                    align="stretch",
+                    children=[
+                        dmc.GridCol(
+                            span=4,
+                            children=[
+                                dmc.Image(
+                                    id="lichen-image",
+                                    radius="md",
+                                    src=None,
+                                    h=200,
+                                    fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
+                                ),
+                            ],
+                        ),
+                        dmc.GridCol(
+                            span=10,
+                            children=[
+                                title_and_tooltip(
+                                    title="Espèces les plus observées",
+                                    tooltip_text="Distribution des espèces observées sur l'ensemble des sites"
+                                ),
+                                dcc.Graph(
+                                    id="hist4-species",
+                                    figure=blank_fig,
+                                    config={
+                                        "displaylogo": False,  # Remove plotly logo
+                                    },
+                                ),
+                            ],
+                        ),
+
+                    ],
+                ),
+            ],
         ),
     ],
 )
