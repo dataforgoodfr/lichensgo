@@ -226,7 +226,8 @@ sites_layout = [
                 children=[
                     # Divider for the map title and selector
                     html.Div(
-                        style={"display": "flex", "align-items": "center", "gap": "10px",},
+                        style={"display": "flex",
+                               "align-items": "center", "gap": "10px", },
                         children=[
                             dmc.Title(
                                 "Carte des observations",
@@ -239,7 +240,8 @@ sites_layout = [
                                 id="map-column-select",
                                 value=list(MAP_SETTINGS.keys())[0],
                                 data=[
-                                    {"label": MAP_SETTINGS[col]["title"], "value": col}
+                                    {"label": MAP_SETTINGS[col]
+                                        ["title"], "value": col}
                                     for col in ["nb_species_cat", "VDL_cat"]
                                 ],
                                 transitionDuration=500,
@@ -260,13 +262,15 @@ sites_layout = [
                                 ],
                                 withBorder=True,
                                 shadow="sm",
-                                style={"padding": "0"}, # Remove padding between the card and the map
+                                # Remove padding between the card and the map
+                                style={"padding": "0"},
                             ),
                         ],
                     ),
                     # Divider for the gauge charts, with 3 columns each
                     html.Div(
-                        style={"display": "flex", "gap": "10px", "padding-top": "10px"},
+                        style={"display": "flex", "gap": "10px",
+                               "padding-top": "10px"},
                         children=[
                             html.Div(
                                 style={"flex": "1"},
@@ -282,17 +286,19 @@ sites_layout = [
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False, # Remove plotly tool bar
+                                                    "displayModeBar": False,  # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                        style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
+                                        # Reduce padding between the card and the gauge
+                                        style={
+                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
                                     ),
                                 ],
                             ),
-                                                        html.Div(
+                            html.Div(
                                 style={"flex": "1"},
                                 children=[
                                     dmc.Card(
@@ -306,13 +312,15 @@ sites_layout = [
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False, # Remove plotly tool bar
+                                                    "displayModeBar": False,  # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                         style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
+                                        # Reduce padding between the card and the gauge
+                                        style={
+                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
                                     ),
                                 ],
                             ),
@@ -330,13 +338,15 @@ sites_layout = [
                                                 figure=blank_fig,
                                                 style={"height": "100px"},
                                                 config={
-                                                    "displayModeBar": False, # Remove plotly tool bar
+                                                    "displayModeBar": False,  # Remove plotly tool bar
                                                 },
                                             ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
-                                         style={"padding-top":"5px", "padding-left":"5px", "padding-right":"5px"}, # Reduce padding between the card and the gauge
+                                        # Reduce padding between the card and the gauge
+                                        style={
+                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
                                     ),
                                 ],
                             ),
@@ -347,8 +357,8 @@ sites_layout = [
             # Divider for the second column with histograms
             html.Div(
                 style={"flex": "5",
-                    "padding": "5px",
-                },
+                       "padding": "5px",
+                       },
                 children=[
                     dmc.Grid(
                         gutter="md",
@@ -404,14 +414,14 @@ sites_layout = [
                                                 title="Espèces observées sur le site sélectionné",
                                                 tooltip_text="Distribution des espèces observées sur le site sélectionné"
                                             ),
-                                        dcc.Graph(
-                                            id="hist3-species",
-                                            figure=blank_fig,
-                                            style={"height": "300px"},
-                                            config={
-                                                "displaylogo": False,  # Remove plotly logo
-                                            },
-                                        ),
+                                            dcc.Graph(
+                                                id="hist3-species",
+                                                figure=blank_fig,
+                                                style={"height": "300px"},
+                                                config={
+                                                    "displaylogo": False,  # Remove plotly logo
+                                                },
+                                            ),
                                         ],
                                         withBorder=True,
                                         shadow="sm",
@@ -502,7 +512,7 @@ species_layout = html.Div(  # Divider for 2 columns
                 ),
             ],
         ),
-        # Divider for the second column with histograms
+        # Divider for the second column
         html.Div(
             style={"flex": "5"},
             children=[
@@ -511,15 +521,20 @@ species_layout = html.Div(  # Divider for 2 columns
                     align="stretch",
                     children=[
                         dmc.GridCol(
-                            span=4,
+                            span=8,
                             children=[
-                                dmc.Image(
-                                    id="lichen-image",
-                                    radius="md",
-                                    src=None,
-                                    h=200,
-                                    fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
-                                ),
+                                dmc.Card([
+                                    dmc.Title("Carte d'identité de l'espèce sélectionnée", order=4, className="graph-title"),
+                                    dmc.Image(
+                                        id="lichen-image",
+                                        radius="md",
+                                        src=None,
+                                        h=150,
+                                        fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
+                                    ),
+                                ],
+                                    withBorder=True,
+                                )
                             ],
                         ),
                         dmc.GridCol(
