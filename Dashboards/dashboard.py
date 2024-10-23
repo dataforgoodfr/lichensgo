@@ -84,9 +84,9 @@ def update_dashboard_map(date_range, map_column_selected, relayoutData):
 
     filtered_observation_df = merged_observation_df[(merged_observation_df['date_obs'] >= start_date) & (merged_observation_df['date_obs'] <= end_date)]
 
-    if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
-        current_zoom = relayoutData["mapbox.zoom"]
-        current_center = relayoutData["mapbox.center"]
+    if relayoutData and "map.zoom" in relayoutData and "map.center" in relayoutData:
+        current_zoom = relayoutData["map.zoom"]
+        current_center = relayoutData["map.center"]
     else:
         current_zoom = 4.8
         current_center = {"lat": filtered_observation_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_df['localisation_long'].mean()}
@@ -246,196 +246,182 @@ species_id_selected = species_options[0]['value'] # Default to the first species
 
 
 # Layout for the sites (observations)
-sites_layout = [
-    # Divider for the 2 columns
-    html.Div(
-        style={"display": "flex", "gap": "10px"},
-        children=[
-            # Divider for the first column with map and gauge
-            html.Div(
-                style={"flex": "5"},
-                children=[
-                    dmc.Group(
-                        [
-                            DashIconify(
-                                icon="mdi:calendar",
-                                width=26,
-                                height=26,
-                            ),
-                            dmc.DatePicker(
-                                id="date-picker-range",
-                                # description="Sélectionner une plage de dates",
-                                minDate=merged_observation_df["date_obs"].min(),
-                                maxDate=datetime.now().date(),
-                                type="range",
-                                value=[
-                                    merged_observation_df["date_obs"].min(),
-                                    datetime.now().date(),
-                                ],
-                                valueFormat="DD/MM/YYYY",
-                                w=170  # width
-                            ),
-                            dmc.Button(
-                                id="reset-date-button",
-                                children="✖",
-                                variant="outline",
-                                color="red",
-                                size="xs",
-                            )
-                        ],
-                        align="center",
-                        gap="xs",
-                    ),
-                    # Divider for the map title and selector
-                    dmc.Group(
-                        style={
-                            #"display": "flex",
-                               "align-items": "center", "gap": "10px" },
-                        children=[
-                            dmc.Title(
-                                "Carte des observations",
-                                order=4,
-                                className="graph-title",
-                                style={"padding": "0px"},
-                            ),
-                            # Selector for the map column
-                            dmc.SegmentedControl(
-                                id="map-column-select",
-                                value=list(MAP_SETTINGS.keys())[0],
-                                data=[
-                                    {"label": MAP_SETTINGS[col]
-                                        ["title"], "value": col}
-                                    for col in ["nb_species_cat", "VDL_cat"]
-                                ],
-                                transitionDuration=500,
-                            ),
-                        ],
-                    ),
-                    html.Div(
-                        children=[
-                            dmc.Card(
-                                children=[
-                                    dcc.Graph(
-                                        id="map-nb_species-vdl",
-                                        figure=blank_fig,
-                                        config={
-                                            "displaylogo": False,  # Remove plotly logo
-                                        },
-                                    ),
-                                ],
-                                withBorder=True,
-                                shadow="sm",
-                                # Remove padding between the card and the map
-                                style={"padding": "0"},
-                            ),
-                        ],
-                    ),
-                    # Divider for the gauge charts, with 3 columns each
-                    html.Div(
-                        style={"display": "flex", "gap": "10px",
-                               "padding-top": "10px"},
-                        children=[
-                            html.Div(
-                                style={"flex": "1"},
-                                children=[
-                                    dmc.Card(
-                                        children=[
-                                            title_and_tooltip(
-                                                title="% Espèces toxitolérantes",
-                                                tooltip_text="Pourcentage d'espèces toxitolérantes sur le site sélectionné",
-                                            ),
-                                            dcc.Graph(
-                                                id="gauge-chart1-artif",
-                                                figure=blank_fig,
-                                                style={"height": "100px"},
-                                                config={
-                                                    "displayModeBar": False,  # Remove plotly tool bar
-                                                },
-                                            ),
-                                        ],
-                                        withBorder=True,
-                                        shadow="sm",
-                                        # Reduce padding between the card and the gauge
-                                        style={
-                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                style={"flex": "1"},
-                                children=[
-                                    dmc.Card(
-                                        children=[
-                                            title_and_tooltip(
-                                                title="% Espèces eutophes",
-                                                tooltip_text="Pourcentage d'espèces eutrophes sur le site sélectionné"
-                                            ),
-                                            dcc.Graph(
-                                                id="gauge-chart3-azote",
-                                                figure=blank_fig,
-                                                style={"height": "100px"},
-                                                config={
-                                                    "displayModeBar": False,  # Remove plotly tool bar
-                                                },
-                                            ),
-                                        ],
-                                        withBorder=True,
-                                        shadow="sm",
-                                        # Reduce padding between the card and the gauge
-                                        style={
-                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
-                                    ),
-                                ],
-                            ),
-                            html.Div(
-                                style={"flex": "1"},
-                                children=[
-                                    dmc.Card(
-                                        children=[
-                                            title_and_tooltip(
-                                                title="% Espèces acidophiles",
-                                                tooltip_text="Pourcentage d'espèces acidophiles sur le site sélectionné"
-                                            ),
-                                            dcc.Graph(
-                                                id="gauge-chart2-acide",
-                                                figure=blank_fig,
-                                                style={"height": "100px"},
-                                                config={
-                                                    "displayModeBar": False,  # Remove plotly tool bar
-                                                },
-                                            ),
-                                        ],
-                                        withBorder=True,
-                                        shadow="sm",
-                                        # Reduce padding between the card and the gauge
-                                        style={
-                                            "padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
-                                    ),
-                                ],
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-            # Divider for the second column with histograms
-            html.Div(
-                style={"flex": "5",
-                       "padding": "5px",
-                       },
-                children=[
-                    dmc.Grid(
-                        gutter="md",
-                        align="stretch",
-                        children=[
-                            # Column for hist1
-                            dmc.GridCol(
-                                span=6,
-                                children=[
-                                    title_and_tooltip(
-                                        title="Distribution du nombre d'espèces",
-                                        tooltip_text="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge."
-                                    ),
-                                    dmc.Card(
+sites_layout = html.Div( # Divider for the 2 columns
+    style={"display": "flex", "gap": "10px"},
+    children=[
+        # Divider for the first column with map and gauge
+        html.Div(
+            style={"flex-grow": "1", "flex-basis": "auto"},
+            children=[
+                dmc.Group(
+                    [
+                        DashIconify(
+                            icon="mdi:calendar",
+                            width=26,
+                            height=26,
+                        ),
+                        dmc.DatePicker(
+                            id="date-picker-range",
+                            # description="Sélectionner une plage de dates",
+                            minDate=merged_observation_df["date_obs"].min(),
+                            maxDate=datetime.now().date(),
+                            type="range",
+                            value=[
+                                merged_observation_df["date_obs"].min(),
+                                datetime.now().date(),
+                            ],
+                            valueFormat="DD/MM/YYYY",
+                            w=170  # width
+                        ),
+                        dmc.Button(
+                            id="reset-date-button",
+                            children="✖",
+                            variant="outline",
+                            color="red",
+                            size="xs",
+                        )
+                    ],
+                    align="center",
+                    gap="xs",
+                ),
+                dmc.Title(
+                    "Carte des observations",
+                    order=4,
+                    className="graph-title",
+                ),
+                # Selector for the map column
+                dmc.SegmentedControl(
+                    id="map-column-select",
+                    value=list(MAP_SETTINGS.keys())[0],
+                    data=[
+                        {"label": MAP_SETTINGS[col]
+                         ["title"], "value": col}
+                        for col in ["nb_species_cat", "VDL_cat", "deg_pollution_acid_cat", "deg_pollution_azote_cat", "deg_artif_cat"]
+                    ],
+                    transitionDuration=600,
+                    transitionTimingFunction="ease-in-out",
+                ),
+                html.Div(
+                    children=[
+                        dmc.Card(
+                            children=[
+                                dcc.Graph(
+                                    id="map-nb_species-vdl",
+                                    figure=blank_fig,
+                                    style={"height": "469px"},  # play on that parameter to align all graphs
+                                    config={
+                                        "displaylogo": False,  # Remove plotly logo
+                                    },
+                                ),
+                            ],
+                            withBorder=True,
+                            shadow="sm",
+                            # Remove padding between the card and the map
+                            style={"padding": "0"},
+                        ),
+                    ],
+                ),
+                # Divider for the gauge charts, with 3 columns each
+                html.Div(
+                    style={"display": "flex", "gap": "10px", "padding-top": "10px"},
+                    children=[
+                        html.Div(
+                            style={"flex": "1"},
+                            children=[
+                                dmc.Card(
+                                    children=[
+                                        title_and_tooltip(
+                                            title="% Espèces toxitolérantes",
+                                            tooltip_text="Pourcentage d'espèces toxitolérantes sur le site sélectionné",
+                                        ),
+                                        dcc.Graph(
+                                            id="gauge-chart1-artif",
+                                            figure=blank_fig,
+                                            style={"height": "100px"},
+                                            config={
+                                                "displayModeBar": False,  # Remove plotly tool bar
+                                            },
+                                        ),
+                                    ],
+                                    withBorder=True,
+                                    shadow="sm",
+                                    # Reduce padding between the card and the gauge
+                                    style={"padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
+                                ),
+                            ],
+                        ),
+                        html.Div(
+                            style={"flex": "1"},
+                            children=[
+                                dmc.Card(
+                                    children=[
+                                        title_and_tooltip(
+                                            title="% Espèces eutrophes",
+                                            tooltip_text="Pourcentage d'espèces eutrophes sur le site sélectionné"
+                                        ),
+                                        dcc.Graph(
+                                            id="gauge-chart3-azote",
+                                            figure=blank_fig,
+                                            style={"height": "100px"},
+                                            config={
+                                                "displayModeBar": False,  # Remove plotly tool bar
+                                            },
+                                        ),
+                                    ],
+                                    withBorder=True,
+                                    shadow="sm",
+                                    # Reduce padding between the card and the gauge
+                                    style={"padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
+                                ),
+                            ],
+                        ),
+                        html.Div(
+                            style={"flex": "1"},
+                            children=[
+                                dmc.Card(
+                                    children=[
+                                        title_and_tooltip(
+                                            title="% Espèces acidophiles",
+                                            tooltip_text="Pourcentage d'espèces acidophiles sur le site sélectionné"
+                                        ),
+                                        dcc.Graph(
+                                            id="gauge-chart2-acide",
+                                            figure=blank_fig,
+                                            style={"height": "100px"},
+                                            config={
+                                                "displayModeBar": False,  # Remove plotly tool bar
+                                            },
+                                        ),
+                                    ],
+                                    withBorder=True,
+                                    shadow="sm",
+                                    # Reduce padding between the card and the gauge
+                                    style={"padding-top": "5px", "padding-left": "5px", "padding-right": "5px"},
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+        ),
+        # Divider for the second column with histograms
+        html.Div(
+            style={"flex-grow": "1", "flex-basis": "auto"},
+            children=[
+                dmc.Grid(
+                    gutter="md",
+                    align="stretch",
+                    children=[
+                        # Column for hist1
+                        dmc.GridCol(
+                            span=6,
+                            children=[
+                                dmc.Card(
+                                    children=[
+                                        title_and_tooltip(
+                                            title="Distribution du nombre d'espèces",
+                                            tooltip_text="Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge."
+                                        ),
                                         dcc.Graph(
                                             id="hist1-nb_species",
                                             figure=blank_fig,
@@ -444,78 +430,98 @@ sites_layout = [
                                                 "displaylogo": False,  # Remove plotly logo
                                             },
                                         ),
-                                        withBorder=True,
-                                        shadow="sm",
-                                    )
-                                ],
-                            ),
-                            # Column for hist2
-                            dmc.GridCol(
-                                span=6,
-                                children=[
-                                    title_and_tooltip(
-                                        title="Distribution de VDL",
-                                        tooltip_text="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge."
-                                    ),
-                                    dcc.Graph(
-                                        id="hist2-vdl",
-                                        figure=blank_fig,
-                                        style={"height": "300px"},
-                                        config={
-                                            "displaylogo": False,  # Remove plotly logo
-                                        },
-                                    ),
-                                ],
-                            ),
-                            # Column for hist3
-                            dmc.GridCol(
-                                span=8,
-                                children=[
-                                    dmc.Card(
-                                        children=[
-                                            title_and_tooltip(
-                                                title="Espèces observées sur le site sélectionné",
-                                                tooltip_text="Distribution des espèces observées sur le site sélectionné"
-                                            ),
-                                            dcc.Graph(
-                                                id="hist3-species",
-                                                figure=blank_fig,
-                                                style={"height": "300px"},
-                                                config={
-                                                    "displaylogo": False,  # Remove plotly logo
-                                                },
-                                            ),
-                                        ],
-                                        withBorder=True,
-                                        shadow="sm",
-                                    ),
-                                ],
-                            ),
-                            # Column for pie chart
-                            dmc.GridCol(
-                                span=4,
-                                children=[
-                                    title_and_tooltip(
-                                        title="Morphologie du site sélectionné",
-                                        tooltip_text="Distribution des thalles sur le site sélectionné"
-                                    ),
-                                    dcc.Graph(
-                                        id="pie-thallus",
-                                        figure=blank_fig,
-                                        style={"height": "250px"},
-                                        config={
-                                            "displaylogo": False,  # Remove plotly logo
-                                        },
-                                    ),
-                                ],
-                            ),
-                        ],
-                    )
-                ],
-            ),
-        ],
-    ),
-]
+                                    ],
+                                    withBorder=True,
+                                    shadow="sm",
+                                    pt="xs",
+                                    pb="xs",
+                                ),
+                            ],
+                        ),
+                        # Column for hist2
+                        dmc.GridCol(
+                            span=6,
+                            children=[
+                                dmc.Card(
+                                    children=[
+                                        title_and_tooltip(
+                                            title="Distribution de VDL",
+                                            tooltip_text="Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge."
+                                        ),
+                                        dcc.Graph(
+                                            id="hist2-vdl",
+                                            figure=blank_fig,
+                                            style={"height": "300px"},
+                                            config={
+                                                "displaylogo": False,  # Remove plotly logo
+                                            },
+                                        ),
+                                    ],
+                                    withBorder=True,
+                                    shadow="sm",
+                                    pt="xs",
+                                    pb="xs",
+                                ),
+                            ],
+                        ),
+                        # Column for hist3
+                        dmc.GridCol(
+                            span=7,
+                            children=[
+                                dmc.Card(
+                                    children=[
+                                        title_and_tooltip(
+                                            title="Espèces observées sur le site sélectionné",
+                                            tooltip_text="Distribution des espèces observées sur le site sélectionné"
+                                        ),
+                                        dcc.Graph(
+                                            id="hist3-species",
+                                            figure=blank_fig,
+                                            style={"height": "300px"},
+                                            config={
+                                                "displaylogo": False,  # Remove plotly logo
+                                            },
+                                        ),
+                                    ],
+                                    withBorder=True,
+                                    shadow="sm",
+                                    pt="xs",
+                                    pb="xs",
+                                ),
+                            ],
+                        ),
+                        # Column for pie chart
+                        dmc.GridCol(
+                            span=5,
+                            children=[
+                                dmc.Card(
+                                    children=[
+                                        title_and_tooltip(
+                                            title="Morphologie du site sélectionné",
+                                            tooltip_text="Distribution des thalles sur le site sélectionné"
+                                        ),
+                                        dcc.Graph(
+                                            id="pie-thallus",
+                                            figure=blank_fig,
+                                            style={"height": "300px"},
+                                            config={
+                                                "displaylogo": False,  # Remove plotly logo
+                                            },
+                                        ),
+                                    ],
+                                    withBorder=True,
+                                    shadow="sm",
+                                    pt="xs",
+                                    pb="xs",
+                                ),
+                            ],
+                        ),
+                    ],
+                )
+            ],
+        ),
+    ],
+)
 
 # Layout for the "Espèces" tab
 species_layout = html.Div(  # Divider for 2 columns
@@ -712,18 +718,14 @@ dashboards_layout = dmc.Box(
                                 children=[
                                     DashIconify(
                                         icon="tabler:map-pin",
-                                        height=20,
+                                        height=25,
                                         color=BASE_COLOR_PALETTE[0]
                                     ),
-                                    dmc.Title("Sites", order=3),
                                     dmc.Tooltip(
                                         label="Cliquez sur un site pour découvrir ce que les lichens peuvent nous apprendre",
                                         position="right",
                                         withArrow=True,
-                                        children=DashIconify(
-                                            icon="material-symbols:info-outline",
-                                            className="info-icon",
-                                        )
+                                        children=dmc.Title("Sites", order=3)
                                     ),
                                 ],
                                 align="center",

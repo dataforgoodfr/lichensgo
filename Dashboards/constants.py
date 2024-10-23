@@ -76,6 +76,19 @@ MAP_SETTINGS = {
         "title": "VDL",
         "color_map": {'<25': 'red', '25-50': 'orange', '50-75': 'yellow', '>75': 'green'}
     },
+    "deg_pollution_acid_cat": {
+        "title": "Dégré pollution acide",
+        "color_map": {'0-25%': 'red', '25-50%': 'orange', '50-75%': 'yellow', '75-100%': 'green'}
+    },
+    "deg_pollution_azote_cat": {
+        "title": "Dégré pollution azote",
+        "color_map": {'0-25%': 'green', '25-50%': 'yellow', '50-75%': 'orange', '75-100%': 'red'}
+    },
+    "deg_artif_cat":
+    {
+        "title": "Dégré artificialisation",
+        "color_map": {'0-25%': 'green', '25-50%': 'yellow', '50-75%': 'orange', '75-100%': 'red'}
+    },
     "selected_species_present":
         {
             "title": "Espèce sélectionnée présente",

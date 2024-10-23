@@ -109,7 +109,7 @@ def unique_lichen_name(nb_lichen_per_lichen_id_df):
 
 
 
-# Count the number of lichen (species) for each observation
+# Count the number of lichen species for each observation
 def count_species_per_observation(lichen_df, observation_df):
     # Count the number of different lichen (=lines in the df) per observation
     count_species_per_observation_df = lichen_df['observation_id'].value_counts().to_frame().rename(columns={"count":"nb_species"})
@@ -200,11 +200,16 @@ def calc_degrees_pollution(merged_table_with_nb_lichen_df, lichen_df, merged_lic
 
     # Calculate the ratio of resistant nb_lichen to total nb_lichen
     merged_df['deg_artif'] = merged_df['nb_lichen_resistant'] / merged_df['nb_lichen']
+        # Add a categorical column based on the number of lichen
 
     # Calculate the degree of acid pollution
     merged_df['deg_pollution_acid'] = merged_df['nb_lichen_acid'] / merged_df['nb_lichen']
 
     # Calculate the degree of nitrogen (azote in french) pollution
     merged_df['deg_pollution_azote'] = merged_df['nb_lichen_eutrophic'] / merged_df['nb_lichen']
+
+    # Add categorical columns
+    for col in ['deg_artif', 'deg_pollution_acid', 'deg_pollution_azote']:
+        merged_df[col + '_cat'] = pd.cut(merged_df[col], bins=[-0.1, 0.25, 0.5, 0.75, np.inf], labels=["0-25%", "25-50%", "50-75%", "75-100%"])
 
     return merged_df

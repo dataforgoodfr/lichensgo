@@ -20,22 +20,22 @@ def blank_figure():
     return fig
 
 def create_map(filtered_df, selected_map_column, zoom, center):
-    fig_map = px.scatter_mapbox(
+    fig_map = px.scatter_map(
         filtered_df,
         lat="localisation_lat",
         lon="localisation_long",
         color=selected_map_column,
         hover_name="date_obs",
         hover_data=["localisation_lat", "localisation_long"],
-        mapbox_style="open-street-map",
+        map_style="open-street-map",
         color_discrete_map=MAP_SETTINGS[selected_map_column]["color_map"],
     )
 
     fig_map.update_layout(
         PLOTLY_LAYOUT,
         margin=dict(l=0, r=0, t=0, b=0),
-        mapbox_zoom=zoom,
-        mapbox_center=center,
+        map_zoom=zoom,
+        map_center=center,
         legend=dict(
             x=0.02,  # Position the legend on the map
             y=0.02,
