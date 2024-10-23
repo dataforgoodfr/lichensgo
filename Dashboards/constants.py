@@ -101,3 +101,17 @@ PLOTLY_LAYOUT = {
     "plot_bgcolor": "rgba(0, 0, 0, 0)",  # Transparent plot background
     "paper_bgcolor": "rgba(0, 0, 0, 0)",  # Transparent paper background
 }
+
+TRANSLATIONS_EN_FR = {
+    "unknown": "inconnu",
+    "acidophilous": "acidophile",
+    "neutrophilous": "neutrophile",
+    "basophilous": "basophile",
+    "oligotrophic": "oligotrophe",
+    "mesotrophic": "mésotrophe",
+    "eutrophic": "eutrophe",
+    "sensitive": "sensible",
+    "intermediate": "intermédiaire",
+    "tolerant": "tolérant",
+    "resistant": "résistant",
+}

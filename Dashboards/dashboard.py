@@ -11,7 +11,7 @@ from datetime import datetime
 from Dashboards.my_data.datasets import get_useful_data
 from Dashboards.my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
 from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
-from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE
+from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, TRANSLATIONS_EN_FR
 
 _dash_renderer._set_react_version("18.2.0")
 
@@ -159,6 +159,10 @@ def update_dashboard_observation(clickData, date_range):
     Output(component_id='map-species_present', component_property='figure'),
     Output(component_id='hist4-species', component_property='figure'),
     Output(component_id='lichen-image', component_property='src'),
+    Output(component_id='acid-badge', component_property='children'),
+    Output(component_id='eutro-badge', component_property='children'),
+    Output(component_id='poleo-badge', component_property='children'),
+    Output(component_id='thallus-badge', component_property='children'),
     Input(component_id='species-dropdown', component_property='value'),
     State('map-species_present', 'relayoutData')
 )
@@ -182,10 +186,24 @@ def update_dashboard2(species_id_selected, relayoutData):
 
     fig_map = create_map(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center)
 
-    lichen_img = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected]['picture'].iloc[0]
-    lichen_img_path = os.path.join(lichen_img_dir, lichen_img)
+    # Filter on the selected species
+    species_selected = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected].iloc[0]
 
-    return fig_map, hist4_species, lichen_img_path
+    species_img =  species_selected['picture']
+    species_img_path = os.path.join(lichen_img_dir, species_img)
+
+    species_acid = species_selected['pH']
+    species_eutro = species_selected['eutrophication']
+    species_poleo = species_selected['poleotolerance']
+    species_thallus = species_selected['thallus']
+
+    # Translate with the dictionary
+    species_acid = TRANSLATIONS_EN_FR.get(species_acid, species_acid)
+    species_eutro = TRANSLATIONS_EN_FR.get(species_eutro, species_eutro)
+    species_poleo = TRANSLATIONS_EN_FR.get(species_poleo, species_poleo)
+    species_thallus = TRANSLATIONS_EN_FR.get(species_thallus, species_thallus)
+
+    return fig_map, hist4_species, species_img_path, species_acid, species_eutro, species_poleo, species_thallus
 
 
 def title_and_tooltip(title, tooltip_text):
@@ -521,17 +539,38 @@ species_layout = html.Div(  # Divider for 2 columns
                     align="stretch",
                     children=[
                         dmc.GridCol(
-                            span=8,
+                            span=6,
                             children=[
                                 dmc.Card([
-                                    dmc.Title("Carte d'identité de l'espèce sélectionnée", order=4, className="graph-title"),
-                                    dmc.Image(
-                                        id="lichen-image",
-                                        radius="md",
-                                        src=None,
-                                        h=150,
-                                        fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
-                                    ),
+                                    dmc.Title(
+                                        "Carte d'identité de l'espèce sélectionnée", order=4, className="graph-title"),
+                                    dmc.Grid(
+                                        children=[
+                                            dmc.GridCol(
+                                                dmc.Image(
+                                                    id="lichen-image",
+                                                    radius="md",
+                                                    src=None,
+                                                    h=150,
+                                                    fallbackSrc="https://placehold.co/600x400?text=No%20image%20found",
+                                                ),
+                                                span=8),
+                                            dmc.GridCol(
+                                                dmc.Stack(
+                                                    [
+                                                        dmc.Badge(id="acid-badge"),
+                                                        dmc.Badge(id="eutro-badge", variant="light"),
+                                                        dmc.Badge(id="poleo-badge", variant="outline"),
+                                                        dmc.Badge(id="thallus-badge", variant="light"),
+                                                    ],
+                                                    align="center",
+                                                    gap="md",
+                                                ),
+                                                span=4)
+                                        ],
+                                        gutter="md",
+                                        grow=False,
+                                    )
                                 ],
                                     withBorder=True,
                                 )
