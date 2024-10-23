@@ -57,10 +57,11 @@ map_column_selected = list(MAP_SETTINGS.keys())[0]
     Output('date-picker-range', 'value'),
     Input('reset-date-button', 'n_clicks'),
     State('date-picker-range', 'minDate'),
-    State('date-picker-range', 'maxDate')
+    State('date-picker-range', 'maxDate'),
+    State('date-picker-range', 'value')
 )
-def reset_date_range(n_clicks, min_date, max_date):
-    if n_clicks is None:
+def reset_date_range(n_clicks, min_date, max_date, date_range):
+    if n_clicks is None or date_range == [min_date, max_date]:
         raise PreventUpdate
 
     return [min_date, max_date]
@@ -262,25 +263,26 @@ sites_layout = [
                                 height=26,
                             ),
                             dmc.DatePicker(
-                            id="date-picker-range",
-                            # description="Sélectionner une plage de dates",
-                            minDate=merged_observation_df["date_obs"].min(),
-                            maxDate=datetime.now().date(),
-                            type="range",
-                            value=[
-                                merged_observation_df["date_obs"].min(),
-                                datetime.now().date(),
-                            ],
-                            valueFormat="DD/MM/YYYY",
-                            w=170  # width
-                        ),
+                                id="date-picker-range",
+                                # description="Sélectionner une plage de dates",
+                                minDate=merged_observation_df["date_obs"].min(),
+                                maxDate=datetime.now().date(),
+                                type="range",
+                                value=[
+                                    merged_observation_df["date_obs"].min(),
+                                    datetime.now().date(),
+                                ],
+                                valueFormat="DD/MM/YYYY",
+                                w=170  # width
+                            ),
                             dmc.Button(
-                            id="reset-date-button",
-                            children="✖",
-                            variant="outline",
-                            color="red",
-                            size="xs",
-                        )],
+                                id="reset-date-button",
+                                children="✖",
+                                variant="outline",
+                                color="red",
+                                size="xs",
+                            )
+                        ],
                         align="center",
                         gap="xs",
                     ),
@@ -653,7 +655,12 @@ theme_toggle = dmc.ActionIcon(
     variant="transparent",
     id="color-scheme-toggle",
     size="lg",
-    ms="auto",
+    style={
+        "position": "fixed",
+        "top": "21px",
+        "right": "21px",
+        "zIndex": 1000
+    }
 )
 
 
@@ -689,13 +696,6 @@ app = Dash(__name__,
            title="Lichens GO"
     )
 
-
-sidebar = dmc.Box(
-    children=[
-        theme_toggle,
-    ],
-    style={"width": "120px", "padding": "10px"},
-)
 
 dashboards_layout = dmc.Box(
     children=[
@@ -768,9 +768,9 @@ app.layout = dmc.MantineProvider(
     children=[
         dmc.Group(
             children=[
-                sidebar,
-                dmc.Divider(orientation="vertical"),
+                # dmc.Divider(orientation="vertical"),
                 dashboards_layout,
+                theme_toggle,
             ],
             align="start",
         )
