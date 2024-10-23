@@ -52,6 +52,18 @@ blank_fig = blank_figure()
 date_range = [merged_observation_df["date_obs"].min(), datetime.now().date()]
 map_column_selected = list(MAP_SETTINGS.keys())[0]
 
+# Callback to reset the date range
+@callback(
+    Output('date-picker-range', 'value'),
+    Input('reset-date-button', 'n_clicks'),
+    State('date-picker-range', 'minDate'),
+    State('date-picker-range', 'maxDate')
+)
+def reset_date_range(n_clicks, min_date, max_date):
+    if n_clicks is None:
+        raise PreventUpdate
+
+    return [min_date, max_date]
 
 # First callback to update the dashboard based on date and map selection
 @callback(
@@ -242,10 +254,41 @@ sites_layout = [
             html.Div(
                 style={"flex": "5"},
                 children=[
+                    dmc.Group(
+                        [
+                            DashIconify(
+                                icon="mdi:calendar",
+                                width=26,
+                                height=26,
+                            ),
+                            dmc.DatePicker(
+                            id="date-picker-range",
+                            # description="Sélectionner une plage de dates",
+                            minDate=merged_observation_df["date_obs"].min(),
+                            maxDate=datetime.now().date(),
+                            type="range",
+                            value=[
+                                merged_observation_df["date_obs"].min(),
+                                datetime.now().date(),
+                            ],
+                            valueFormat="DD/MM/YYYY",
+                            w=170  # width
+                        ),
+                            dmc.Button(
+                            id="reset-date-button",
+                            children="✖",
+                            variant="outline",
+                            color="red",
+                            size="xs",
+                        )],
+                        align="center",
+                        gap="xs",
+                    ),
                     # Divider for the map title and selector
-                    html.Div(
-                        style={"display": "flex",
-                               "align-items": "center", "gap": "10px", },
+                    dmc.Group(
+                        style={
+                            #"display": "flex",
+                               "align-items": "center", "gap": "10px" },
                         children=[
                             dmc.Title(
                                 "Carte des observations",
@@ -650,19 +693,6 @@ app = Dash(__name__,
 sidebar = dmc.Box(
     children=[
         theme_toggle,
-        dmc.DatePicker(
-            id="date-picker-range",
-            label="Sélectionner une plage de dates",
-            minDate=merged_observation_df["date_obs"].min(),
-            maxDate=datetime.now().date(),
-            type="range",
-            value=[
-                merged_observation_df["date_obs"].min(),
-                datetime.now().date(),
-            ],
-            valueFormat="DD/MM/YYYY",
-            w=110,  # width
-        ),
     ],
     style={"width": "120px", "padding": "10px"},
 )
