@@ -1,25 +1,9 @@
 BODY_FONT_FAMILY = '"Source Sans Pro", sans-serif'
-PLOTLY_FONT_COLOR = "#495057" # Grey
-
-# Constants for color palettes, font families, etc.
-# BASE_COLOR_PALETTE = [
-#     "#387CA6",
-#     "#1C6C8C",
-#     "#3887A6",
-#     "#ADCCD9",
-#     "#F2F2F2"
-# ]
+PLOTLY_FONT_COLOR = "#868e96" # Grey
 
 
 # Generated with https://omatsuri.app/color-shades-generator
-
 BASE_COLOR_PALETTE = [
-    # "#333D43",
-    # "#37444C",
-    # "#3A4C58",
-    # "#3C5665",
-    # "#3D6176",
-    # "#3C6D8C",
     "#387CA6",
     "#4A86AB",
     "#608FAD",
@@ -30,12 +14,6 @@ BASE_COLOR_PALETTE = [
 ]
 
 PASTEL_COLOR_PALETTE = [
-    # "#c1c4c6",
-    # "#c3c6c9",
-    # "#c3c9cc",
-    # "#c4ccd0",
-    # "#c4cfd5",
-    # "#c4d3dc",
     "#c3d7e4",
     "#c8dae5",
     "#cfdde6",
@@ -97,6 +75,22 @@ MAP_SETTINGS = {
 }
 
 
+# Constants for common styles
+FLEX_COLUMNS_CONTAINER_STYLE = {"display": "flex", "gap": "16px"}
+GRID_STYLE = {"gutter": "md", "align": "stretch"}
+CARD_STYLE = {
+    "pt":"xs",
+    "pb": "cs",
+    "shadow": "sm",
+    "withBorder": True
+    }
+
+MAP_STYLE = {
+    "withBorder": True,
+    "p": 0,
+}
+
+
 # Define the plotly style for hover labels
 PLOTLY_HOVER_STYLE = {
         "font": dict(
@@ -106,7 +100,10 @@ PLOTLY_HOVER_STYLE = {
 
 # Define the plotly layout for all plots
 PLOTLY_LAYOUT = {
-    "font": dict(family=BODY_FONT_FAMILY, color=PLOTLY_FONT_COLOR),
+    "font": dict(family=BODY_FONT_FAMILY,
+                 color="grey",
+                 #color=PLOTLY_FONT_COLOR
+                 ),
     "template": "plotly_white",
     "margin": dict(l=0, r=0, t=10, b=10),
     "barcornerradius": "30%",
