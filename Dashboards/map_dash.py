@@ -198,8 +198,6 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
         nb_species_clicked = observation_clicked['count']
         vdl_clicked = observation_clicked['VDL_value']
 
-        print(observation_clicked)
-
 
         fig_hist_nb_species.add_shape(
             go.layout.Shape(
