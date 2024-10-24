@@ -3,7 +3,6 @@ from dash.dependencies import State
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-import random 
 import numpy as np
 import my_data.datasets as df
 
@@ -18,7 +17,7 @@ lichen_observes = lichen_observes['observation_id'].value_counts().to_frame()
 
 observations = observations.merge(lichen_observes, how = 'left', left_on = 'id', right_on = 'observation_id')
 
-observations["number_species"] = pd.cut(observations["count"], bins = [0, 6, 11, 15,999], labels = ["<7", "7-10", "11-14", ">14"])
+observations["number_species"] = pd.cut(observations["count"], bins = [0, 7, 11, 15, np.inf], labels = ["<7", "7-10", "11-14", ">14"], right = False)
 
 # Dictionnaire de couleurs à utiliser pour la carte
 color_dict = {'<7': 'red', '7-10': 'orange', '11-14': 'yellow', '>14': 'green'}
@@ -48,13 +47,13 @@ observations_table = observations_table[cols]
 observations_table = observations_table.groupby('observation_id').sum()
 observations_table['sum_nb_observations'] = observations_table.sum(axis=1)
 
-observations_table['VDL_value'] = observations_table['sum_nb_observations']/15 # /5 pour le nombre de carrés par grille, /3 pour le nombre d'arbre par observation
-observations_table["VDL"] = pd.cut(observations_table["VDL_value"], bins = [0, 5, 10, 15,999], labels = ["<5", "5-10", "10-15", ">15"])
+observations_table['VDL_value'] = np.round(observations_table['sum_nb_observations']/3,1) # /3 pour le nombre d'arbre par observation
+observations_table["VDL"] = pd.cut(observations_table["VDL_value"], bins = [0, 25, 50, 75,np.inf], labels = ["<25", "25-50", "50-75", ">75"], right = False)
 
 observations = observations.merge(observations_table, left_on = 'id', right_on = 'observation_id', how = 'left')
 
-# Dictionnaire de couleurs pour la VDL (A CONFIRMER AVEC HUGO)
-color_dict_vdl = {'<5': 'red', '5-10': 'orange', '10-15': 'yellow', '>15': 'green'}
+# Dictionnaire de couleurs pour la VDL
+color_dict_vdl = {'<25': 'red', '25-50': 'orange', '50-75': 'yellow', '>75': 'green'}
 
 
 ###################################################
@@ -111,12 +110,12 @@ app.layout = html.Div([
         # Histogramme
         dcc.Graph(
             id='species-hist',
-            style={'height': '800px', 'width': '48%', 'display': 'inline-block'}
+            style={'height': '800px', 'width': '23%', 'display': 'inline-block'}
         ),
 
         dcc.Graph(
             id='vdl-hist',
-            style={'height': '800px', 'width': '48%', 'display': 'inline-block'}
+            style={'height': '800px', 'width': '23%', 'display': 'inline-block'}
         ),
     ], style={'display': 'flex', 'justify-content': 'space-around'})
 ])
@@ -142,6 +141,7 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
     
     # Filtrer le dataframe pour correspondre aux dates sélectionnées
     filtered_df = observations[(observations['date_obs'] >= start_date) & (observations['date_obs'] <= end_date)]
+    filtered_df = filtered_df.reset_index(drop=True)
 
     # Si le zoom et la position actuels sont disponibles, les utiliser, sinon définir des valeurs par défaut
     if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
@@ -155,11 +155,26 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
     # Afficher la carte
     fig_map = px.scatter_mapbox(filtered_df, lat='localisation_lat', lon='localisation_long', 
                                 color=selected_column, 
-                                hover_name='date_obs', hover_data=['localisation_lat', 'localisation_long'],
-                                mapbox_style="open-street-map",
+                                hover_name='date_obs', 
+                                hover_data={
+                                    'localisation_lat': True, 
+                                    'localisation_long': True, 
+                                    'count': True, 
+                                    'VDL_value': True,
+                                    'number_species': False,
+                                    'VDL': False,
+                                },
+                                labels={
+                                    'count': 'Nombre d\'espèces', 
+                                    'VDL_value': 'Valeur de Diversité Lichénique',
+                                    'localisation_lat': 'Latitude',
+                                    'localisation_long': 'Longitude',
+                                    'date_obs': 'Date d\'observation',
+                                },
+                                mapbox_style='open-street-map',
                                 color_discrete_map=color_palette[selected_column],) 
     
-    fig_map.update_layout(mapbox_zoom=current_zoom, mapbox_center=current_center)
+    fig_map.update_layout(mapbox_zoom=current_zoom, mapbox_center=current_center)     
 
 
     # Afficher les histogrammes
@@ -171,8 +186,19 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
     if clickData is not None:
         lat_clicked = clickData['points'][0]['lat']
         lon_clicked = clickData['points'][0]['lon']
-        nb_species_clicked = filtered_df[(filtered_df['localisation_lat'] == lat_clicked) & (filtered_df['localisation_long'] == lon_clicked)]['count'].values[0]
-        vdl_clicked = filtered_df[(filtered_df['localisation_lat'] == lat_clicked) & (filtered_df['localisation_long'] == lon_clicked)]['VDL_value'].values[0]
+
+        # Récupérer l'observation correspondant au point cliqué
+        # Peut-il y avoir plusieurs observations aux mêmes coordonnées GPS ?
+        observation_clicked = filtered_df[(filtered_df['localisation_lat'] == lat_clicked) & 
+                                          (filtered_df['localisation_long'] == lon_clicked)]\
+                                            .copy().\
+                                            reset_index(drop=True)\
+                                            .loc[0]
+
+        nb_species_clicked = observation_clicked['count']
+        vdl_clicked = observation_clicked['VDL_value']
+
+        print(observation_clicked)
 
 
         fig_hist_nb_species.add_shape(
@@ -192,6 +218,37 @@ def update_map(start_date, end_date, selected_column, clickData, relayoutData):
                 y0=0, y1=1,
                 xref='x', yref='paper',
                 line=dict(color="red", width=2, dash="dot")
+            )
+        )
+
+
+        # Récupérer la couleur du point sélectionné pour l'ajouter à la carte
+        point_color = filtered_df[
+            (filtered_df['localisation_lat'] == lat_clicked) & 
+            (filtered_df['localisation_long'] == lon_clicked)
+        ][selected_column].iloc[0]
+
+        color = color_palette[selected_column].get(point_color, None)  
+
+        # Ajouter un marker différent pour le point sélectionné
+        fig_map.add_trace(
+            go.Scattermapbox(
+                lat=[lat_clicked],
+                lon=[lon_clicked],
+                mode='markers',
+                marker=go.scattermapbox.Marker(
+                    size=20,  
+                    color=color,  
+                    symbol='circle',
+                ),
+                name='Site sélectionné',
+                # Ajouter les mêmes info en hover que sur la carte :
+                hoverinfo='text',
+                hovertext=f"{observation_clicked['date_obs']} <br><br>"+
+                                f"Latitude={lat_clicked} <br>"+
+                                f"Longitude={lon_clicked} <br>"+
+                                f"Nombre d'espèces={nb_species_clicked} <br>"+
+                                f"Valeur de Diversité Lichénique={vdl_clicked}",
             )
         )
 
