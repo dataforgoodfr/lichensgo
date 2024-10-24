@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from Dashboards.constants import SQUARE_COLUMNS, ORIENTATIONS
+from dashboard.constants import SQUARE_COLUMNS, ORIENTATIONS
 
 # Merge table_df with lichen_df, lichen_species_df and observation_df
 def merge_tables(table_df, lichen_df, observation_df):
@@ -128,7 +128,7 @@ def count_species_per_observation(lichen_df, observation_df):
     return observation_with_species_count_df
 
 
-# Group by species' type and count them (but only count there presence in the table, not the frequency in each observation)
+# Group by species' type and count them (but only count their presence in the table, not the frequency in each observation)
 def count_lichen_per_species(lichen_df, lichen_species_df):
 
     # Group by species' type and count them

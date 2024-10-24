@@ -121,7 +121,7 @@ def get_lichen_ecology():
 def get_lichen_ecology_csv():
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    lichen_ecology_csv_path = os.path.join(parent_dir, 'assets', 'lichen_species_ecology.csv')
+    lichen_ecology_csv_path = os.path.join(parent_dir, 'dashboard', 'assets', 'lichen_species_ecology.csv')
     lichen_ecology_df = pd.read_csv(lichen_ecology_csv_path, delimiter=';')
 
     return lichen_ecology_df
