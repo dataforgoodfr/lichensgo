@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import dash_mantine_components as dmc
 
-from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
+from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback, no_update
 from dash.dependencies import State
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
@@ -250,26 +250,36 @@ def title_and_tooltip(title, tooltip_text):
             ),
         ],
         align="center",
-        gap="xs",
+        gap=2,
     )
 
 # Reusable component for gauge cards
-def gauge_card(title, tooltip_text, graph_id, height="100px"):
+def gauge_card(title, tooltip_text, graph_id, max_height="200px"):
     return dmc.Card(
         children=[
             title_and_tooltip(title, tooltip_text),
             dcc.Graph(
                 id=graph_id,
                 figure=blank_fig,
-                style={"height": height},
+                style={
+                    "height": "100px",
+                    "width": "100%",
+                },
                 config={"displayModeBar": False},
             ),
         ],
-        **CARD_STYLE
+        style={
+            "display": "flex",
+            "flexDirection": "column",
+            "justifyContent": "space-between",
+            "flexGrow": 1,
+            "maxHeight": max_height
+        },
+                **CARD_STYLE
     )
 
 # Reusable component for histogram cards
-def histogram_card(title, tooltip_text, graph_id, height="300px"):
+def histogram_card(title, tooltip_text, graph_id, height="330px"):
     return dmc.Card(
         children=[
             title_and_tooltip(title, tooltip_text),
@@ -289,7 +299,7 @@ sites_layout = html.Div(
     children=[
         # First column with map and gauge
         html.Div(
-            style={"flex-grow": "1", "flex-basis": "auto"},
+            style={"flex-grow": "1", "flex-basis": "50%"},
             children=[
                 dmc.Group(
                     [
@@ -349,29 +359,48 @@ sites_layout = html.Div(
                         ),
                     ],
                     **CARD_STYLE,
-                    mb="xs",
+                    mb="md",
                 ),
                 dmc.Grid(
                     **GRID_STYLE,
                     children=[
-                        dmc.GridCol(gauge_card("% Espèces toxitolérantes", "Pourcentage d'espèces toxitolérantes sur le site sélectionné", "gauge-chart1-artif"),
-                            span=4.2,
+                        dmc.GridCol(
+                            gauge_card(
+                                "% Espèces toxitolérantes",
+                                "Pourcentage d'espèces toxitolérantes sur le site sélectionné",
+                                "gauge-chart1-artif",
+                            ),
+                            span=4,
+                            style={"display": "flex",
+                                   "flexDirection": "column"}
                         ),
                         dmc.GridCol(
-                            gauge_card("% Espèces eutrophes", "Pourcentage d'espèces eutrophes sur le site sélectionné", "gauge-chart3-azote"),
-                            span=3.9,
+                            gauge_card(
+                                "% Espèces eutrophes",
+                                "Pourcentage d'espèces eutrophes sur le site sélectionné",
+                                "gauge-chart3-azote",
+                            ),
+                            span=4,
+                            style={"display": "flex",
+                                   "flexDirection": "column"}
                         ),
                         dmc.GridCol(
-                            gauge_card("% Espèces acidophiles", "Pourcentage d'espèces acidophiles sur le site sélectionné", "gauge-chart2-acide"),
-                            span=3.9,
+                            gauge_card(
+                                "% Espèces acidophiles",
+                                "Pourcentage d'espèces acidophiles sur le site sélectionné",
+                                "gauge-chart2-acide",
+                            ),
+                            span=4,
+                            style={"display": "flex",
+                                   "flexDirection": "column"}
                         ),
                     ],
-                ),
+                )
             ],
         ),
         # Second column with histograms
         html.Div(
-            style={"flex-grow": "1", "flex-basis": "auto"},
+            style={"flex-grow": "1", "flex-basis": "50%"},
             children=[
                 dmc.Grid(
                     **GRID_STYLE,
@@ -544,10 +573,11 @@ species_layout = html.Div(
                                             config={
                                                 "displaylogo": False,  # Remove plotly logo
                                             },
-                                            style={"height": "588px"},
+                                            style={"height": "578px"},
                                         ),
                                     ],
                                     **MAP_STYLE,
+                                    mt="xs",
                                 ),
                             ],
                             **CARD_STYLE,
@@ -625,6 +655,7 @@ app = Dash(__name__,
 dashboards_layout = dmc.Box(
     children=[
         dmc.Accordion(
+            id="accordion",
             disableChevronRotation=True,
             chevronPosition="left",
             variant="contained",
@@ -633,28 +664,31 @@ dashboards_layout = dmc.Box(
                 dmc.AccordionItem(
                     children=[
                         dmc.AccordionControl(
-                            dmc.Group(
-                                children=[
-                                    DashIconify(
-                                        icon="tabler:map-pin",
-                                        height=25,
-                                        color=BASE_COLOR_PALETTE[0]
-                                    ),
-                                    dmc.Tooltip(
-                                        label="Cliquez sur un site pour découvrir ce que les lichens peuvent nous apprendre",
-                                        position="right",
-                                        withArrow=True,
-                                        children=dmc.Title("Sites", order=3)
-                                    ),
-                                ],
-                                align="center",
-                            ),
-                            ),
-                            dmc.AccordionPanel(sites_layout),
-                        ],
-                        value="sites",
-                    ),
-                    dmc.AccordionItem(
+                            [
+                                dmc.Group(
+                                    children=[
+                                        DashIconify(
+                                            icon="tabler:map-pin",
+                                            height=25,
+                                            color=BASE_COLOR_PALETTE[0]
+                                        ),
+                                        dmc.Tooltip(
+                                            label="Cliquez sur un site pour découvrir ce que les lichens peuvent nous apprendre",
+                                            position="right",
+                                            withArrow=True,
+                                            children=dmc.Title(
+                                                "Sites", order=3)
+                                        ),
+                                    ],
+                                    align="center",
+                                ),
+                            ],
+                        ),
+                        dmc.AccordionPanel(sites_layout),
+                    ],
+                    value="sites",
+                ),
+                dmc.AccordionItem(
                     children=[
                         dmc.AccordionControl(
                             dmc.Group(
