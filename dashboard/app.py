@@ -647,6 +647,7 @@ app = Dash(__name__,
            title="Lichens GO"
     )
 
+server = app.server # For Heroku deployment
 
 dashboards_layout = dmc.Box(
     children=[
