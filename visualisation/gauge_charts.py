@@ -3,7 +3,7 @@ from pathlib import Path
 from dash import Dash, html, dcc, Output, Input
 from my_data.datasets import get_lichen_data, get_lichen_species_data, get_observation_data, get_table_data, get_tree_species, get_lichen_ecology
 from my_data.computed_datasets import df_frequency
-from Dashboards.charts import create_gauge_chart
+from dashboard.charts import create_gauge_chart
 
 chemin_dossier_parent = Path(__file__).parent.parent
 sys.path.append(str(chemin_dossier_parent))

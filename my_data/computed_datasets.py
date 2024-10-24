@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from Dashboards.constants import SQUARE_COLUMNS, ORIENTATIONS
+from dashboard.constants import SQUARE_COLUMNS, ORIENTATIONS
 
 # Merge table_df with lichen_df, lichen_species_df and observation_df
 def merge_tables(table_df, lichen_df, observation_df):

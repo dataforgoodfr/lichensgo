@@ -1,6 +1,6 @@
 from sqlalchemy import Column, BigInteger, Integer, String, ForeignKey, ARRAY, Boolean, Date, Text, Float
 from sqlalchemy.orm import declarative_base, relationship
-from Dashboards.my_data.db_connect import engine
+from my_data.db_connect import engine
 
 Base = declarative_base()
 

@@ -8,10 +8,10 @@ from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 from datetime import datetime
 
-from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
-from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
-from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, TRANSLATIONS_EN_FR, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
+from my_data.datasets import get_useful_data
+from my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
+from dashboard.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
+from dashboard.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, TRANSLATIONS_EN_FR, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
 
 _dash_renderer._set_react_version("18.2.0")
 
