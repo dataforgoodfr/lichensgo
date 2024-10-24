@@ -128,7 +128,7 @@ def count_species_per_observation(lichen_df, observation_df):
     return observation_with_species_count_df
 
 
-# Group by species' type and count them (but only count there presence in the table, not the frequency in each observation)
+# Group by species' type and count them (but only count their presence in the table, not the frequency in each observation)
 def count_lichen_per_species(lichen_df, lichen_species_df):
 
     # Group by species' type and count them

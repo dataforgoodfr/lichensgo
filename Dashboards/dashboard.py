@@ -226,10 +226,6 @@ def update_dashboard2(species_id_selected, relayoutData):
     species_poleo = TRANSLATIONS_EN_FR.get(species_poleo, species_poleo)
     species_thallus = TRANSLATIONS_EN_FR.get(species_thallus, species_thallus)
 
-    # Pluralize the thallus
-    if not species_thallus.endswith("x") or species_thallus.endswith("s"):
-        species_thallus += "s"
-
     return fig_map, hist4_species, species_name, species_img_path, species_acid, species_eutro, species_poleo, species_thallus, species_rarity
 
 
@@ -472,19 +468,19 @@ species_card = dmc.Card(
         ),
         dmc.Text(
             children=[
-                "Ce lichen fait partie de la famille des ",
+                "Ce lichen ",
                 dmc.Text(
                     id="species-thallus",
                     c="blue",
                     style={"display": "inline"},
                 ),
-                " et est classé comme ",
+                " est ",
                 dmc.Text(
                     id="species-rarity",
                     c="blue",
                     style={"display": "inline"},
                 ),
-                ".",
+                " en milieu urbain.",
             ],
             mt="sm",
             c="dimmed",
