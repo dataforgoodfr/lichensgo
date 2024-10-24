@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import dash_mantine_components as dmc
 
-from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback, no_update
+from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash.dependencies import State
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
@@ -275,7 +275,7 @@ def gauge_card(title, tooltip_text, graph_id, max_height="200px"):
             "flexGrow": 1,
             "maxHeight": max_height
         },
-                **CARD_STYLE
+        **CARD_STYLE
     )
 
 # Reusable component for histogram cards
