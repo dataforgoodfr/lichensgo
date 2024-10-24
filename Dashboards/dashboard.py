@@ -51,11 +51,11 @@ blank_fig = blank_figure()
 # Initialize the options and selections
 date_range = [merged_observation_df["date_obs"].min(), datetime.now().date()]
 map_column_selected = list(MAP_SETTINGS.keys())[0]
-species_options = [
-    {"label": row["name"], "value": row["species_id"]}
-    for _, row in nb_lichen_per_species_df.sort_values(by="name").iterrows()
-]
-species_id_selected = species_options[0]['value'] # Default to the first species ID
+
+
+# Convert DataFrame to list of dictionaries
+species_options = [{"value": str(row["species_id"]), "label": row["name"]} for _, row in merged_lichen_species_df.sort_values(by="name").iterrows()]
+species_id_selected = species_options[0]["value"] # Default to the first species ID
 
 # Callback to reset the date range
 @callback(
@@ -185,6 +185,8 @@ def update_dashboard_observation(clickData, date_range):
     State('map-species_present', 'relayoutData')
 )
 def update_dashboard2(species_id_selected, relayoutData):
+    if isinstance(species_id_selected, str):
+        species_id_selected = int(species_id_selected)
 
     hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected)
 
@@ -296,7 +298,7 @@ sites_layout = html.Div(
     children=[
         # First column with map and gauge
         html.Div(
-            style={"flex-grow": "1", "flex-basis": "auto", "flex-shrink": "1"},
+            style={"flex-grow": "1", "flex-basis": "auto"},
             children=[
                 dmc.Group(
                     [
@@ -370,7 +372,7 @@ sites_layout = html.Div(
         ),
         # Second column with histograms
         html.Div(
-            style={"flex-grow": "1", "flex-basis": "auto", "flex-shrink": "1"},
+            style={"flex-grow": "1", "flex-basis": "auto"},
             children=[
                 dmc.Grid(
                     **GRID_STYLE,
@@ -430,28 +432,17 @@ species_layout = html.Div(
         html.Div(
             style={"flex": "5"},
             children=[
-                html.Div(
-                    [
-                        html.Label(
-                            "Sélectionner une espèce:",
-                            style={
-                                "margin-right": "10px",
-                            },
-                        ),
-                        dcc.Dropdown(
-                            id="species-dropdown",
-                            options=species_options,
-                            value=species_id_selected,
-                            clearable=False,
-                            style={"width": "400px"},
-                        ),
-                    ],
-                    style={
-                        "display": "flex",
-                        "align-items": "center",
-                        "justify-content": "left",
-                        "margin-left": "20px",
-                    },
+                dmc.Select(
+                    id="species-dropdown",
+                    label="Espèce",
+                    description="Sélectionnez une espèce pour afficher les informations",
+                    value=species_id_selected,
+                    data=species_options,
+                    # withCheckIcon=True,
+                    clearable=False,
+                    allowDeselect=False,
+                    searchable=True,
+                    w=400,
                 ),
                 dmc.Title(
                     "Carte de présence de l'espèce sélectionnée",
