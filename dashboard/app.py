@@ -2,16 +2,16 @@ import pandas as pd
 import os
 import dash_mantine_components as dmc
 
-from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback, no_update
+from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
 from dash.dependencies import State
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 from datetime import datetime
 
-from Dashboards.my_data.datasets import get_useful_data
-from Dashboards.my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
-from Dashboards.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
-from Dashboards.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, TRANSLATIONS_EN_FR, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
+from my_data.datasets import get_useful_data
+from my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
+from dashboard.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
+from dashboard.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, TRANSLATIONS_EN_FR, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
 
 _dash_renderer._set_react_version("18.2.0")
 
@@ -226,10 +226,6 @@ def update_dashboard2(species_id_selected, relayoutData):
     species_poleo = TRANSLATIONS_EN_FR.get(species_poleo, species_poleo)
     species_thallus = TRANSLATIONS_EN_FR.get(species_thallus, species_thallus)
 
-    # Pluralize the thallus
-    if not species_thallus.endswith("x") or species_thallus.endswith("s"):
-        species_thallus += "s"
-
     return fig_map, hist4_species, species_name, species_img_path, species_acid, species_eutro, species_poleo, species_thallus, species_rarity
 
 
@@ -275,7 +271,7 @@ def gauge_card(title, tooltip_text, graph_id, max_height="200px"):
             "flexGrow": 1,
             "maxHeight": max_height
         },
-                **CARD_STYLE
+        **CARD_STYLE
     )
 
 # Reusable component for histogram cards
@@ -472,19 +468,19 @@ species_card = dmc.Card(
         ),
         dmc.Text(
             children=[
-                "Ce lichen fait partie de la famille des ",
+                "Ce lichen ",
                 dmc.Text(
                     id="species-thallus",
                     c="blue",
                     style={"display": "inline"},
                 ),
-                " et est classé comme ",
+                " est ",
                 dmc.Text(
                     id="species-rarity",
                     c="blue",
                     style={"display": "inline"},
                 ),
-                ".",
+                " en milieu urbain.",
             ],
             mt="sm",
             c="dimmed",

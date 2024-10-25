@@ -1,6 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
-from Dashboards.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_SETTINGS
+from dashboard.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_SETTINGS
 
 
 """
