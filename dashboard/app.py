@@ -11,13 +11,16 @@ from datetime import datetime
 from my_data.datasets import get_useful_data
 from my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
 from dashboard.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
-from dashboard.constants import MAP_SETTINGS, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, TRANSLATIONS_EN_FR, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
+from dashboard.constants import MAP_COLOR_PALETTES, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
+from dashboard.utils.translations import get_translation
 
 _dash_renderer._set_react_version("18.2.0")
 
+# Set the language (could be dynamically set based on user preference)
+lang = 'fr'
 
 # Get the datasets
-print("Fetching data...")
+print(get_translation('fetching_data', lang))
 lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df = get_useful_data()
 
 
@@ -50,7 +53,7 @@ blank_fig = blank_figure()
 
 # Initialize the options and selections
 date_range = [merged_observation_df["date_obs"].min(), datetime.now().date()]
-map_column_selected = list(MAP_SETTINGS.keys())[0]
+map_column_selected = list(MAP_COLOR_PALETTES.keys())[0]
 
 
 # Convert DataFrame to list of dictionaries
@@ -105,9 +108,9 @@ def update_dashboard_map(date_range, map_column_selected, relayoutData):
 
 # Second callback to update the dashboard based on observation click
 @callback(
-    Output('gauge-chart1-artif', 'figure'),
-    Output('gauge-chart2-acide', 'figure'),
-    Output('gauge-chart3-azote', 'figure'),
+    Output('gauge-chart-toxitolerance', 'figure'),
+    Output('gauge-chart-eutrophication', 'figure'),
+    Output('gauge-chart-acidity', 'figure'),
     Output('hist3-species', 'figure'),
     Output('pie-thallus', 'figure'),
     Output('hist1-nb_species', 'figure', allow_duplicate=True),
@@ -147,9 +150,9 @@ def update_dashboard_observation(clickData, date_range):
     observation_id_clicked = observation_clicked['observation_id']
     nb_species_clicked = observation_clicked['nb_species']
     vdl_clicked = observation_clicked['VDL']
-    deg_artif_clicked = observation_clicked['deg_artif']
-    deg_pollution_acid_clicked = observation_clicked['deg_pollution_acid']
-    deg_pollution_azote_clicked = observation_clicked['deg_pollution_azote']
+    deg_toxitolerance_clicked = observation_clicked['deg_toxitolerance']
+    deg_acidity_clicked = observation_clicked['deg_acidity']
+    deg_eutrophication_clicked = observation_clicked['deg_eutrophication']
 
     filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[
         nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked
@@ -159,9 +162,9 @@ def update_dashboard_observation(clickData, date_range):
         grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
     ]
 
-    gauge_chart1_artif = create_gauge_chart(deg_artif_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
-    gauge_chart2_acide = create_gauge_chart(deg_pollution_acid_clicked, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
-    gauge_chart3_azote = create_gauge_chart(deg_pollution_azote_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart_toxitolerance = create_gauge_chart(deg_toxitolerance_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart_acidity = create_gauge_chart(deg_acidity_clicked, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
+    gauge_chart_eutrophication = create_gauge_chart(deg_eutrophication_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
 
     hist1_nb_species = create_hist1_nb_species(filtered_observation_df, nb_species_clicked)
     hist2_vdl = create_hist2_vdl(filtered_observation_df, vdl_clicked)
@@ -169,7 +172,7 @@ def update_dashboard_observation(clickData, date_range):
     hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
     pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
 
-    return gauge_chart1_artif, gauge_chart2_acide, gauge_chart3_azote, hist3_species, pie_thallus, hist1_nb_species, hist2_vdl
+    return gauge_chart_toxitolerance, gauge_chart_eutrophication, gauge_chart_acidity, hist3_species, pie_thallus, hist1_nb_species, hist2_vdl
 
 ## Dashboard on species tab
 # Define callback to update the bar chart based on selected species
@@ -180,7 +183,7 @@ def update_dashboard_observation(clickData, date_range):
     Output(component_id='species-image', component_property='src'),
     Output(component_id='acid-badge', component_property='children'),
     Output(component_id='eutro-badge', component_property='children'),
-    Output(component_id='poleo-badge', component_property='children'),
+    Output(component_id='toxitolerance-badge', component_property='children'),
     Output(component_id='species-thallus', component_property='children'),
     Output(component_id='species-rarity', component_property='children'),
     Input(component_id='species-dropdown', component_property='value'),
@@ -214,20 +217,20 @@ def update_dashboard2(species_id_selected, relayoutData):
     species_img = species_selected['picture']
     species_img_path = os.path.join(lichen_img_dir, species_img)
 
-    species_acid = species_selected['pH']
-    species_eutro = species_selected['eutrophication']
-    species_poleo = species_selected['poleotolerance']
+    species_acidity = species_selected['pH']
+    species_eutrophication = species_selected['eutrophication']
+    species_toxitolerance = species_selected['poleotolerance']
     species_thallus = species_selected['thallus']
     species_rarity = species_selected['rarity']
 
     # Translate with the dictionary
-    species_acid = TRANSLATIONS_EN_FR.get(species_acid, species_acid)
-    species_eutro = TRANSLATIONS_EN_FR.get(species_eutro, species_eutro)
-    species_poleo = TRANSLATIONS_EN_FR.get(species_poleo, species_poleo)
-    species_thallus = TRANSLATIONS_EN_FR.get(species_thallus, species_thallus)
+    species_acidity = get_translation(species_acidity, lang)
+    species_eutrophication = get_translation(species_eutrophication, lang)
+    species_toxitolerance = get_translation(species_toxitolerance, lang)
+    species_thallus = get_translation(species_thallus, lang)
+    species_rarity = get_translation(species_rarity, lang)
 
-    return fig_map, hist4_species, species_name, species_img_path, species_acid, species_eutro, species_poleo, species_thallus, species_rarity
-
+    return fig_map, hist4_species, species_name, species_img_path, species_acidity, species_eutrophication, species_toxitolerance, species_thallus, species_rarity
 
 
 # Reusable component for title and tooltip
@@ -243,6 +246,8 @@ def title_and_tooltip(title, tooltip_text):
                 label=tooltip_text,
                 withArrow=True,
                 position="top",
+                maw="50%", # max width
+                style={"white-space": "normal", "word-wrap": "break-word"}, # Wrap text on multiple lines
             ),
         ],
         align="center",
@@ -326,13 +331,16 @@ sites_layout = html.Div(
                 ),
                 dmc.Card(
                     children=[
-                        dmc.Title("Carte des observations", order=4),
+                        title_and_tooltip(
+                            title=get_translation("map_title", lang),
+                            tooltip_text=get_translation("map_tooltip", lang)
+                        ),
                         dmc.SegmentedControl(
                             id="map-column-select",
-                            value=list(MAP_SETTINGS.keys())[0],
+                            value=list(MAP_COLOR_PALETTES.keys())[0],
                             data=[
-                                {"label": MAP_SETTINGS[col]["title"], "value": col}
-                                for col in ["nb_species_cat", "VDL_cat", "deg_pollution_acid_cat", "deg_pollution_azote_cat", "deg_artif_cat"]
+                                {"label": get_translation(col, lang), "value": col}
+                                for col in ["nb_species_cat", "VDL_cat", "deg_toxitolerance_cat", "deg_eutrophication_cat", "deg_acidity_cat"]
                             ],
                             transitionDuration=600,
                             transitionTimingFunction="ease-in-out",
@@ -362,9 +370,9 @@ sites_layout = html.Div(
                     children=[
                         dmc.GridCol(
                             gauge_card(
-                                "% Espèces toxitolérantes",
-                                "Pourcentage d'espèces toxitolérantes sur le site sélectionné",
-                                "gauge-chart1-artif",
+                                title=get_translation("toxitolerance_gauge_title", lang),
+                                tooltip_text=get_translation("toxitolerance_gauge_tooltip", lang),
+                                graph_id="gauge-chart-toxitolerance",
                             ),
                             span=4,
                             style={"display": "flex",
@@ -372,9 +380,9 @@ sites_layout = html.Div(
                         ),
                         dmc.GridCol(
                             gauge_card(
-                                "% Espèces eutrophes",
-                                "Pourcentage d'espèces eutrophes sur le site sélectionné",
-                                "gauge-chart3-azote",
+                                title=get_translation("eutrophication_gauge_title", lang),
+                                tooltip_text=get_translation("eutrophication_gauge_tooltip", lang),
+                                graph_id="gauge-chart-eutrophication",
                             ),
                             span=4,
                             style={"display": "flex",
@@ -382,9 +390,9 @@ sites_layout = html.Div(
                         ),
                         dmc.GridCol(
                             gauge_card(
-                                "% Espèces acidophiles",
-                                "Pourcentage d'espèces acidophiles sur le site sélectionné",
-                                "gauge-chart2-acide",
+                                title=get_translation("acidity_gauge_title", lang),
+                                tooltip_text=get_translation("acidity_gauge_tooltip", lang),
+                                graph_id="gauge-chart-acidity",
                             ),
                             span=4,
                             style={"display": "flex",
@@ -405,9 +413,9 @@ sites_layout = html.Div(
                             span=6,
                             children=[
                                 histogram_card(
-                                    "Distribution du nombre d'espèces",
-                                    "Distribution du nombre d'espèces par site. Si vous cliquez sur un site sur la carte, son nombre d'espèce sera affiché en trait pointillé rouge.",
-                                    "hist1-nb_species",
+                                    title=get_translation("species_number_distribution_hist1_title", lang),
+                                    tooltip_text=get_translation("species_number_distribution_hist1_tooltip", lang),
+                                    graph_id="hist1-nb_species",
                                 ),
                             ],
                         ),
@@ -415,9 +423,9 @@ sites_layout = html.Div(
                             span=6,
                             children=[
                                 histogram_card(
-                                    "Distribution de VDL",
-                                    "Distribution des valeurs de Diversité Lichénique (VDL) sur l'ensemble des sites. Si vous cliquez sur un site sur la carte, sa VDL sera affichée en trait pointillé rouge.",
-                                    "hist2-vdl",
+                                    title=get_translation("vdl_distribution_hist2_title", lang),
+                                    tooltip_text=get_translation("vdl_distribution_hist2_tooltip", lang),
+                                    graph_id="hist2-vdl",
                                 ),
                             ],
                         ),
@@ -425,9 +433,9 @@ sites_layout = html.Div(
                             span=7,
                             children=[
                                 histogram_card(
-                                    "Espèces observées sur le site sélectionné",
-                                    "Distribution des espèces observées sur le site sélectionné",
-                                    "hist3-species",
+                                    title=get_translation("species_distribution_hist3_title", lang),
+                                    tooltip_text=get_translation("species_distribution_hist3_tooltip", lang),
+                                    graph_id="hist3-species",
                                 ),
                             ],
                         ),
@@ -435,9 +443,9 @@ sites_layout = html.Div(
                             span=5,
                             children=[
                                 histogram_card(
-                                    "Morphologie du site sélectionné",
-                                    "Distribution des thalles sur le site sélectionné",
-                                    "pie-thallus",
+                                    title=get_translation("thallus_pie_chart_title", lang),
+                                    tooltip_text=get_translation("thallus_pie_chart_tooltip", lang),
+                                    graph_id="pie-thallus",
                                 ),
                             ],
                         ),
@@ -460,7 +468,11 @@ species_card = dmc.Card(
     children=[
         dmc.CardSection(
             children=[
-                dmc.Text(id="species-name", size="lg"),
+                dmc.Text(
+                    id="species-name",
+                    size="lg",
+                    style={"fontStyle": "italic", "fontWeight": "bold"},
+                    ),
             ],
             withBorder=True,
             inheritPadding=True,
@@ -468,19 +480,24 @@ species_card = dmc.Card(
         ),
         dmc.Text(
             children=[
-                "Ce lichen ",
+                get_translation("species_description1", lang),
+                " ",
                 dmc.Text(
                     id="species-thallus",
                     c="blue",
                     style={"display": "inline"},
                 ),
-                " est ",
+                " ",
+                get_translation("species_description2", lang),
+                " ",
                 dmc.Text(
                     id="species-rarity",
                     c="blue",
                     style={"display": "inline"},
                 ),
-                " en milieu urbain.",
+                " ",
+                get_translation("species_description3", lang),
+                ".",
             ],
             mt="sm",
             c="dimmed",
@@ -500,20 +517,20 @@ species_card = dmc.Card(
                     [
                         dmc.Group(
                             [
-                                "Acidité",
-                                dmc.Badge(id="acid-badge", variant="light"),
+                                get_translation("toxitolerance_badge", lang),
+                                dmc.Badge(id="toxitolerance-badge", variant="light"),
                             ]
                         ),
                         dmc.Group(
                             [
-                                "Eutrophisation",
+                                get_translation("eutrophication_badge", lang),
                                 dmc.Badge(id="eutro-badge", variant="light"),
                             ]
                         ),
                         dmc.Group(
                             [
-                                "Poléotolérance",
-                                dmc.Badge(id="poleo-badge", variant="light"),
+                                get_translation("acidity_badge", lang),
+                                dmc.Badge(id="acid-badge", variant="light"),
                             ]
                         ),
                     ],
@@ -538,8 +555,8 @@ species_layout = html.Div(
     children=[
         dmc.Select(
             id="species-dropdown",
-            label="Espèce",
-            description="Sélectionnez une espèce pour afficher les informations",
+            label=get_translation("species_dropdown_label", lang),
+            description=get_translation("species_dropdown_description", lang),
             value=species_id_selected,
             data=species_options,
             clearable=False,
@@ -558,8 +575,8 @@ species_layout = html.Div(
                         dmc.Card(
                             children=[
                                 title_and_tooltip(
-                                    title="Carte de présence de l'espèce sélectionnée",
-                                    tooltip_text="Carte de présence de l'espèce sélectionnée"
+                                    title=get_translation("species_presence_map_title", lang),
+                                    tooltip_text=get_translation("species_presence_map_tooltip", lang)
                                 ),
                                 dmc.Card(
                                     children=[
@@ -584,9 +601,9 @@ species_layout = html.Div(
                     style={"flex-basis": "40%", "flex-grow": "1"},
                     children=[
                         histogram_card(
-                            "Espèces les plus observées",
-                            "Distribution des espèces observées sur l'ensemble des sites",
-                            "hist4-species",
+                            title=get_translation("species_distribution_hist4_title", lang),
+                            tooltip_text=get_translation("species_distribution_hist4_tooltip", lang),
+                            graph_id="hist4-species",
                             height="590px",
                         ),
                     ],
@@ -644,7 +661,7 @@ app = Dash(__name__,
                dmc.styles.DATES,
               "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap"
            ],
-           title="Lichens GO"
+           title=get_translation("app_title", lang),
     )
 
 
@@ -666,14 +683,16 @@ dashboards_layout = dmc.Box(
                                         DashIconify(
                                             icon="tabler:map-pin",
                                             height=25,
-                                            color=BASE_COLOR_PALETTE[0]
+                                            color=BASE_COLOR_PALETTE[0],
                                         ),
                                         dmc.Tooltip(
-                                            label="Cliquez sur un site pour découvrir ce que les lichens peuvent nous apprendre",
+                                            label=get_translation("observation_tab_tooltip", lang),
                                             position="right",
                                             withArrow=True,
                                             children=dmc.Title(
-                                                "Sites", order=3)
+                                                get_translation("observation_tab_title", lang),
+                                                order=3,
+                                            ),
                                         ),
                                     ],
                                     align="center",
@@ -692,15 +711,17 @@ dashboards_layout = dmc.Box(
                                     DashIconify(
                                         icon="ph:plant",
                                         height=25,
-                                        color=BASE_COLOR_PALETTE[0]
+                                        color=BASE_COLOR_PALETTE[0],
                                     ),
                                     dmc.Title(
-                                        "Espèces", order=3)
+                                        get_translation("species_tab_title", lang),
+                                        order=3,
+                                    ),
                                 ],
                                 align="bottom",
                             ),
                         ),
-                        dmc.AccordionPanel(species_layout)
+                        dmc.AccordionPanel(species_layout),
                     ],
                     value="species",
                 ),

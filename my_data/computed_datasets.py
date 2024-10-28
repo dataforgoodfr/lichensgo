@@ -199,17 +199,16 @@ def calc_degrees_pollution(merged_table_with_nb_lichen_df, lichen_df, merged_lic
     merged_df = merged_df.fillna(0)
 
     # Calculate the ratio of resistant nb_lichen to total nb_lichen
-    merged_df['deg_artif'] = merged_df['nb_lichen_resistant'] / merged_df['nb_lichen']
-        # Add a categorical column based on the number of lichen
+    merged_df['deg_toxitolerance'] = merged_df['nb_lichen_resistant'] / merged_df['nb_lichen']
 
     # Calculate the degree of acid pollution
-    merged_df['deg_pollution_acid'] = merged_df['nb_lichen_acid'] / merged_df['nb_lichen']
+    merged_df['deg_acidity'] = merged_df['nb_lichen_acid'] / merged_df['nb_lichen']
 
     # Calculate the degree of nitrogen (azote in french) pollution
-    merged_df['deg_pollution_azote'] = merged_df['nb_lichen_eutrophic'] / merged_df['nb_lichen']
+    merged_df['deg_eutrophication'] = merged_df['nb_lichen_eutrophic'] / merged_df['nb_lichen']
 
     # Add categorical columns
-    for col in ['deg_artif', 'deg_pollution_acid', 'deg_pollution_azote']:
+    for col in ['deg_toxitolerance', 'deg_acidity', 'deg_eutrophication']:
         merged_df[col + '_cat'] = pd.cut(merged_df[col], bins=[-0.1, 0.25, 0.5, 0.75, np.inf], labels=["0-25%", "25-50%", "50-75%", "75-100%"])
 
     return merged_df

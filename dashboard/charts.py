@@ -1,6 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
-from dashboard.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_SETTINGS
+from dashboard.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_COLOR_PALETTES
 
 
 """
@@ -28,7 +28,7 @@ def create_map(filtered_df, selected_map_column, zoom, center):
         hover_name="date_obs",
         hover_data=["localisation_lat", "localisation_long"],
         map_style="open-street-map",
-        color_discrete_map=MAP_SETTINGS[selected_map_column]["color_map"],
+        color_discrete_map=MAP_COLOR_PALETTES[selected_map_column],
     )
 
     fig_map.update_layout(
