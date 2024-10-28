@@ -664,6 +664,7 @@ app = Dash(__name__,
            title=get_translation("app_title", lang),
     )
 
+server = app.server # For Heroku deployment
 
 dashboards_layout = dmc.Box(
     children=[
