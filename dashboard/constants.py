@@ -45,33 +45,13 @@ ORIENTATIONS_MAPPING = {
 
 ORIENTATIONS = list(ORIENTATIONS_MAPPING.keys())
 
-MAP_SETTINGS = {
-    "nb_species_cat": {
-        "title": "Nombre d'espèces",
-        "color_map": {'<7': 'red', '7-10': 'orange', '11-14': 'yellow', '>14': 'green'}
-    },
-    "VDL_cat": {
-        "title": "VDL",
-        "color_map": {'<25': 'red', '25-50': 'orange', '50-75': 'yellow', '>75': 'green'}
-    },
-    "deg_pollution_acid_cat": {
-        "title": "Dégré pollution acide",
-        "color_map": {'0-25%': 'red', '25-50%': 'orange', '50-75%': 'yellow', '75-100%': 'green'}
-    },
-    "deg_pollution_azote_cat": {
-        "title": "Dégré pollution azote",
-        "color_map": {'0-25%': 'green', '25-50%': 'yellow', '50-75%': 'orange', '75-100%': 'red'}
-    },
-    "deg_artif_cat":
-    {
-        "title": "Dégré artificialisation",
-        "color_map": {'0-25%': 'green', '25-50%': 'yellow', '50-75%': 'orange', '75-100%': 'red'}
-    },
-    "selected_species_present":
-        {
-            "title": "Espèce sélectionnée présente",
-            "color_map": {True: BASE_COLOR_PALETTE[0], False: BASE_COLOR_PALETTE[-1]}
-        },
+MAP_COLOR_PALETTES = {
+    "nb_species_cat": {'<7': 'red', '7-10': 'orange', '11-14': 'yellow', '>14': 'green'},
+    "VDL_cat": {'<25': 'red', '25-50': 'orange', '50-75': 'yellow', '>75': 'green'},
+    "deg_acidity_cat": {'0-25%': 'red', '25-50%': 'orange', '50-75%': 'yellow', '75-100%': 'green'},
+    "deg_eutrophication_cat":  {'0-25%': 'green', '25-50%': 'yellow', '50-75%': 'orange', '75-100%': 'red'},
+    "deg_toxitolerance_cat": {'0-25%': 'green', '25-50%': 'yellow', '50-75%': 'orange', '75-100%': 'red'},
+    "selected_species_present": {True: BASE_COLOR_PALETTE[0], False: BASE_COLOR_PALETTE[-1]},
 }
 
 
@@ -110,18 +90,4 @@ PLOTLY_LAYOUT = {
     "hoverlabel": PLOTLY_HOVER_STYLE,
     "plot_bgcolor": "rgba(0, 0, 0, 0)",  # Transparent plot background
     "paper_bgcolor": "rgba(0, 0, 0, 0)",  # Transparent paper background
-}
-
-TRANSLATIONS_EN_FR = {
-    "unknown": "inconnu",
-    "acidophilous": "acidophile",
-    "neutrophilous": "neutrophile",
-    "basophilous": "basophile",
-    "oligotrophic": "oligotrophe",
-    "mesotrophic": "mésotrophe",
-    "eutrophic": "eutrophe",
-    "sensitive": "sensible",
-    "intermediate": "intermédiaire",
-    "tolerant": "tolérant",
-    "resistant": "résistant",
 }
