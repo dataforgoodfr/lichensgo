@@ -23,10 +23,10 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center):
 
     fig_map = px.scatter_map(
         filtered_df,
-        lat="localisation_lat",
-        lon="localisation_long",
+        lat='localisation_lat',
+        lon='localisation_long',
         color=map_column_selected,
-        hover_name="date_obs",
+        hover_name='date_obs',
         hover_data={
             'localisation_lat': True,
             'localisation_long': True,
