@@ -10,7 +10,7 @@ from datetime import datetime
 
 from my_data.datasets import get_useful_data
 from my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
-from dashboard.charts import blank_figure, create_map, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
+from dashboard.charts import blank_figure, create_map_observations, create_map_species_present, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
 from dashboard.constants import MAP_COLOR_PALETTES, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
 from dashboard.utils.translations import get_translation
 
@@ -79,48 +79,18 @@ def reset_date_range(n_clicks, min_date, max_date, date_range):
     Output('map-nb_species-vdl', 'figure'),
     Output('hist1-nb_species', 'figure'),
     Output('hist2-vdl', 'figure'),
-    Input('date-picker-range', 'value'),
-    Input('map-column-select', 'value'),
-    State('map-nb_species-vdl', 'relayoutData')
-)
-def update_dashboard_map(date_range, map_column_selected, relayoutData):
-    if None in date_range:
-        raise PreventUpdate
-
-    start_date = pd.to_datetime(date_range[0]).date()
-    end_date = pd.to_datetime(date_range[1]).date()
-
-    filtered_observation_df = merged_observation_df[(merged_observation_df['date_obs'] >= start_date) & (merged_observation_df['date_obs'] <= end_date)]
-
-    if relayoutData and "map.zoom" in relayoutData and "map.center" in relayoutData:
-        current_zoom = relayoutData["map.zoom"]
-        current_center = relayoutData["map.center"]
-    else:
-        current_zoom = 4.8
-        current_center = {"lat": filtered_observation_df['localisation_lat'].mean() + 0.5, "lon": filtered_observation_df['localisation_long'].mean()}
-
-    fig_map = create_map(filtered_observation_df, map_column_selected, current_zoom, current_center)
-
-    hist1_nb_species = create_hist1_nb_species(filtered_observation_df, None)
-    hist2_vdl = create_hist2_vdl(filtered_observation_df, None)
-
-    return fig_map, hist1_nb_species, hist2_vdl
-
-# Second callback to update the dashboard based on observation click
-@callback(
     Output('gauge-chart-toxitolerance', 'figure'),
     Output('gauge-chart-eutrophication', 'figure'),
     Output('gauge-chart-acidity', 'figure'),
     Output('hist3-species', 'figure'),
     Output('pie-thallus', 'figure'),
-    Output('hist1-nb_species', 'figure', allow_duplicate=True),
-    Output('hist2-vdl', 'figure', allow_duplicate=True),
-    Input('map-nb_species-vdl', 'clickData'),
     Input('date-picker-range', 'value'),
-    prevent_initial_call=True
+    Input('map-column-select', 'value'),
+    Input('map-nb_species-vdl', 'clickData'),
+    State('map-nb_species-vdl', 'relayoutData')
 )
-def update_dashboard_observation(clickData, date_range):
-    if None in date_range or clickData is None:
+def update_dashboard(date_range, map_column_selected, clickData, relayoutData):
+    if None in date_range:
         raise PreventUpdate
 
     start_date = pd.to_datetime(date_range[0]).date()
@@ -131,6 +101,20 @@ def update_dashboard_observation(clickData, date_range):
         (merged_observation_df['date_obs'] <= end_date)
     ]
 
+    if relayoutData and 'map.zoom' in relayoutData and 'map.center' in relayoutData:
+        current_zoom = relayoutData['map.zoom']
+        current_center = relayoutData['map.center']
+    else:
+        current_zoom = 4.8
+        current_center = {'lat': filtered_observation_df['localisation_lat'].mean() + 0.5, 'lon': filtered_observation_df['localisation_long'].mean()}
+
+    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center)
+    hist1_nb_species = create_hist1_nb_species(filtered_observation_df, None)
+    hist2_vdl = create_hist2_vdl(filtered_observation_df, None)
+
+    if clickData is None:
+        return fig_map, hist1_nb_species, hist2_vdl, blank_fig, blank_fig, blank_fig, blank_fig, blank_fig
+
     lat_clicked = clickData['points'][0]['lat']
     lon_clicked = clickData['points'][0]['lon']
 
@@ -140,10 +124,9 @@ def update_dashboard_observation(clickData, date_range):
     ]
 
     if observation_clicked.empty:
+        print('No observation found')
         return (
-            blank_fig, blank_fig, blank_fig, blank_fig, blank_fig,
-            create_hist1_nb_species(filtered_observation_df, None),
-            create_hist2_vdl(filtered_observation_df, None)
+            fig_map, hist1_nb_species, hist2_vdl, blank_fig, blank_fig, blank_fig, blank_fig, blank_fig
         )
 
     observation_clicked = observation_clicked.iloc[0]
@@ -168,11 +151,11 @@ def update_dashboard_observation(clickData, date_range):
 
     hist1_nb_species = create_hist1_nb_species(filtered_observation_df, nb_species_clicked)
     hist2_vdl = create_hist2_vdl(filtered_observation_df, vdl_clicked)
-
     hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df)
     pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df)
 
-    return gauge_chart_toxitolerance, gauge_chart_eutrophication, gauge_chart_acidity, hist3_species, pie_thallus, hist1_nb_species, hist2_vdl
+    return fig_map, hist1_nb_species, hist2_vdl, gauge_chart_toxitolerance, gauge_chart_eutrophication, gauge_chart_acidity, hist3_species, pie_thallus
+
 
 ## Dashboard on species tab
 # Define callback to update the bar chart based on selected species
@@ -201,14 +184,14 @@ def update_dashboard2(species_id_selected, relayoutData):
     )
 
 
-    if relayoutData and "mapbox.zoom" in relayoutData and "mapbox.center" in relayoutData:
-        current_zoom = relayoutData["mapbox.zoom"]
-        current_center = relayoutData["mapbox.center"]
+    if relayoutData and 'mapbox.zoom' in relayoutData and 'mapbox.center' in relayoutData:
+        current_zoom = relayoutData['mapbox.zoom']
+        current_center = relayoutData['mapbox.center']
     else:
         current_zoom = 4.8
-        current_center = {"lat": observation_with_selected_species_col_df['localisation_lat'].mean() + 0.5, "lon": observation_with_selected_species_col_df['localisation_long'].mean()}
+        current_center = {'lat': observation_with_selected_species_col_df['localisation_lat'].mean() + 0.5, "lon": observation_with_selected_species_col_df['localisation_long'].mean()}
 
-    fig_map = create_map(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center)
+    fig_map = create_map_species_present(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center)
 
     # Filter on the selected species
     species_selected = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected].iloc[0]

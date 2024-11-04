@@ -19,16 +19,87 @@ def blank_figure():
 
     return fig
 
-def create_map(filtered_df, selected_map_column, zoom, center):
+def create_map_observations(filtered_df, map_column_selected, zoom, center):
+
     fig_map = px.scatter_map(
         filtered_df,
         lat="localisation_lat",
         lon="localisation_long",
-        color=selected_map_column,
+        color=map_column_selected,
         hover_name="date_obs",
-        hover_data=["localisation_lat", "localisation_long"],
-        map_style="open-street-map",
-        color_discrete_map=MAP_COLOR_PALETTES[selected_map_column],
+        hover_data={
+            'localisation_lat': True,
+            'localisation_long': True,
+            'nb_species': True,
+            'nb_species_cat': False,
+            'VDL': True,
+            'VDL_cat': False,
+            'deg_toxitolerance': True,
+            'deg_toxitolerance_cat': False,
+            'deg_eutrophication': True,
+            'deg_eutrophication_cat': False,
+            'deg_acidity': True,
+            'deg_acidity_cat': False,
+        },
+        labels={
+            'date_obs': 'Date d\'observation',
+            'localisation_lat': 'Latitude ',
+            'localisation_long': 'Longitude ',
+            'nb_species': 'Nombre d\'espèces ',
+            'nb_species_cat': 'Nombre d\'espèces ',
+            'VDL': 'Valeur de Diversité Lichénique ',
+            'VDL_cat': 'Valeur de Diversité Lichénique ',
+            'deg_toxitolerance': 'Espèces toxitolérantes (%) ',
+            'deg_toxitolerance_cat': 'Espèces toxitolérantes',
+            'deg_eutrophication': 'Espèces eutrophes (%) ',
+            'deg_eutrophication_cat': 'Espèces eutrophes ',
+            'deg_acidity' : 'Espèces acidophiles (%) ',
+            'deg_acidity_cat' : 'Espèces acidophiles',
+        },
+        map_style='open-street-map',
+        color_discrete_map=MAP_COLOR_PALETTES[map_column_selected],
+        category_orders={map_column_selected: list(MAP_COLOR_PALETTES[map_column_selected].keys())}, # order the legend in the same order as the color palette
+    )
+
+    print(MAP_COLOR_PALETTES[map_column_selected])
+
+    fig_map.update_layout(
+        PLOTLY_LAYOUT,
+        margin=dict(l=0, r=0, t=0, b=0),
+        map_zoom=zoom,
+        map_center=center,
+        legend=dict(
+            x=0.02,  # Position the legend on the map
+            y=0.02,
+            bgcolor='rgba(255, 255, 255, 0.7)',  # Semi-transparent background
+            bordercolor='grey',
+            borderwidth=1.5,
+        ),
+    )
+
+    return fig_map
+
+def create_map_species_present(filtered_df, map_column_selected, zoom, center):
+
+    fig_map = px.scatter_map(
+        filtered_df,
+        lat='localisation_lat',
+        lon='localisation_long',
+        color=map_column_selected,
+        hover_name='date_obs',
+        hover_data={
+            'localisation_lat': True,
+            'localisation_long': True,
+            'selected_species_present': True,
+        },
+        labels={
+            'date_obs': 'Date d\'observation',
+            'localisation_lat': 'Latitude',
+            'localisation_long': 'Longitude',
+            'selected_species_present': 'Espèce présente',
+        },
+        map_style='open-street-map',
+        color_discrete_map=MAP_COLOR_PALETTES[map_column_selected],
     )
 
     fig_map.update_layout(
@@ -39,13 +110,14 @@ def create_map(filtered_df, selected_map_column, zoom, center):
         legend=dict(
             x=0.02,  # Position the legend on the map
             y=0.02,
-            bgcolor="rgba(255, 255, 255, 0.7)",  # Semi-transparent background
-            bordercolor="grey",
+            bgcolor='rgba(255, 255, 255, 0.7)',  # Semi-transparent background
+            bordercolor='grey',
             borderwidth=1.5,
         ),
     )
 
     return fig_map
+
 
 
 def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
@@ -57,7 +129,7 @@ def create_hist1_nb_species(observation_with_vdl_df, nb_species_clicked):
 
     hist1.update_layout(
         **PLOTLY_LAYOUT,
-        xaxis_title="Nombre d'espèces",
+        xaxis_title="Nombre d\'espèces",
         yaxis_title="Nombre de sites",
         yaxis_showgrid=True,
         bargap=0.1,
