@@ -86,10 +86,11 @@ def reset_date_range(n_clicks, min_date, max_date, date_range):
     Output('pie-thallus', 'figure'),
     Input('date-picker-range', 'value'),
     Input('map-column-select', 'value'),
+    Input('map-style-dropdown', 'value'),
     Input('map-nb_species-vdl', 'clickData'),
     State('map-nb_species-vdl', 'relayoutData')
 )
-def update_dashboard(date_range, map_column_selected, clickData, relayoutData):
+def update_dashboard(date_range, map_column_selected, map_style, clickData, relayoutData):
     if None in date_range:
         raise PreventUpdate
 
@@ -108,7 +109,7 @@ def update_dashboard(date_range, map_column_selected, clickData, relayoutData):
         current_zoom = 4.8
         current_center = {'lat': filtered_observation_df['localisation_lat'].mean() + 0.5, 'lon': filtered_observation_df['localisation_long'].mean()}
 
-    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center)
+    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center, map_style)
     hist1_nb_species = create_hist1_nb_species(filtered_observation_df, None)
     hist2_vdl = create_hist2_vdl(filtered_observation_df, None)
 
@@ -145,7 +146,7 @@ def update_dashboard(date_range, map_column_selected, clickData, relayoutData):
         grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
     ]
 
-    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center, observation_clicked)
+    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center, map_style, observation_clicked)
 
     gauge_chart_toxitolerance = create_gauge_chart(deg_toxitolerance_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
     gauge_chart_acidity = create_gauge_chart(deg_acidity_clicked, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
@@ -172,9 +173,10 @@ def update_dashboard(date_range, map_column_selected, clickData, relayoutData):
     Output(component_id='species-thallus', component_property='children'),
     Output(component_id='species-rarity', component_property='children'),
     Input(component_id='species-dropdown', component_property='value'),
+    Input('map-species-style-dropdown', 'value'),
     State('map-species_present', 'relayoutData')
 )
-def update_dashboard2(species_id_selected, relayoutData):
+def update_dashboard2(species_id_selected, map_style, relayoutData):
     if isinstance(species_id_selected, str):
         species_id_selected = int(species_id_selected)
 
@@ -185,7 +187,6 @@ def update_dashboard2(species_id_selected, relayoutData):
         lichen_df.loc[lichen_df['species_id'] == species_id_selected, 'observation_id']
     )
 
-
     if relayoutData and 'mapbox.zoom' in relayoutData and 'mapbox.center' in relayoutData:
         current_zoom = relayoutData['mapbox.zoom']
         current_center = relayoutData['mapbox.center']
@@ -193,7 +194,7 @@ def update_dashboard2(species_id_selected, relayoutData):
         current_zoom = 4.8
         current_center = {'lat': observation_with_selected_species_col_df['localisation_lat'].mean() + 0.5, "lon": observation_with_selected_species_col_df['localisation_long'].mean()}
 
-    fig_map = create_map_species_present(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center)
+    fig_map = create_map_species_present(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center, map_style)
 
     # Filter on the selected species
     species_selected = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected].iloc[0]
@@ -335,6 +336,30 @@ sites_layout = html.Div(
                             children=[
                                 dmc.Card(
                                     children=[
+                                        html.Div(
+                                            dcc.Dropdown(
+                                                id='map-style-dropdown',
+                                                options=[
+                                                    {'label': 'OpenStreetMap',
+                                                     'value': 'open-street-map'},
+                                                    {'label': 'Satellite',
+                                                     'value': 'satellite'},
+                                                    {'label': 'Satellite with streets',
+                                                     'value': 'satellite-streets'},
+                                                    {'label': 'Streets',
+                                                     'value': 'streets'},
+                                                ],
+                                                value='open-street-map'  # Default value
+                                            ),
+                                            style={
+                                                'position': 'absolute',
+                                                'top': '15px',
+                                                'left': '15px',
+                                                'zIndex': '1000',
+                                                'width': '200px',
+                                                'opacity': '0.8'
+                                            }
+                                        ),
                                         dcc.Graph(
                                             id="map-nb_species-vdl",
                                             figure=blank_fig,
@@ -565,6 +590,30 @@ species_layout = html.Div(
                                 ),
                                 dmc.Card(
                                     children=[
+                                         html.Div(
+                                            dcc.Dropdown(
+                                                id='map-species-style-dropdown',
+                                                options=[
+                                                    {'label': 'OpenStreetMap',
+                                                     'value': 'open-street-map'},
+                                                    {'label': 'Satellite',
+                                                     'value': 'satellite'},
+                                                    {'label': 'Satellite with streets',
+                                                     'value': 'satellite-streets'},
+                                                    {'label': 'Streets',
+                                                     'value': 'streets'},
+                                                ],
+                                                value='open-street-map'  # Default value
+                                            ),
+                                            style={
+                                                'position': 'absolute',
+                                                'top': '15px',
+                                                'left': '15px',
+                                                'zIndex': '1000',
+                                                'width': '200px',
+                                                'opacity': '0.8'
+                                            }
+                                        ),
                                         dcc.Graph(
                                             id="map-species_present",
                                             figure=blank_fig,

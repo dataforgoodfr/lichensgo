@@ -19,7 +19,7 @@ def blank_figure():
 
     return fig
 
-def create_map_observations(filtered_df, map_column_selected, zoom, center, observation_clicked=None):
+def create_map_observations(filtered_df, map_column_selected, zoom, center, map_style, observation_clicked=None):
 
     fig_map = px.scatter_map(
         filtered_df,
@@ -56,7 +56,7 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, obse
             'deg_acidity' : 'Espèces acidophiles (%) ',
             'deg_acidity_cat' : 'Espèces acidophiles',
         },
-        map_style='open-street-map',
+        map_style=map_style,
         color_discrete_map=MAP_COLOR_PALETTES[map_column_selected],
         category_orders={map_column_selected: list(MAP_COLOR_PALETTES[map_column_selected].keys())}, # order the legend in the same order as the color palette
     )
@@ -71,10 +71,11 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, obse
                 lon=[observation_clicked['localisation_long']],
                 mode='markers',
                 marker=go.scattermap.Marker(
-                    size=15,
+                    size=13,
                     color=observation_clicked_color,
                 ),
-                hoverinfo='skip',  # Hide the hover info
+                hoverinfo='skip',  # Hide the hover info, to use the one from the main trace
+                showlegend=False
             )
         )
 
@@ -92,11 +93,9 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, obse
         ),
     )
 
-
-
     return fig_map
 
-def create_map_species_present(filtered_df, map_column_selected, zoom, center):
+def create_map_species_present(filtered_df, map_column_selected, zoom, center, map_style):
 
     fig_map = px.scatter_map(
         filtered_df,
@@ -115,7 +114,7 @@ def create_map_species_present(filtered_df, map_column_selected, zoom, center):
             'localisation_long': 'Longitude',
             'selected_species_present': 'Espèce présente',
         },
-        map_style='open-street-map',
+        map_style=map_style,
         color_discrete_map=MAP_COLOR_PALETTES[map_column_selected],
     )
 
