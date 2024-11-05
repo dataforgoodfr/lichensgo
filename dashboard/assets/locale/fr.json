@@ -46,5 +46,9 @@
   "sensitive": "sensible",
   "intermediate": "intermédiaire",
   "tolerant": "tolérant",
-  "resistant": "résistant"
+  "resistant": "résistant",
+  "True": "oui",
+  "False": "non",
+  "true": "oui",
+  "false": "non"
 }

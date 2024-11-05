@@ -1,7 +1,8 @@
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dashboard.constants import BASE_COLOR_PALETTE, PASTEL_COLOR_PALETTE, PLOTLY_LAYOUT, MAP_COLOR_PALETTES
-
+from dashboard.utils.translations import get_translation
 
 """
 Create a blank figure for initialisation
@@ -21,44 +22,36 @@ def blank_figure():
 
 def create_map_observations(filtered_df, map_column_selected, zoom, center, map_style, observation_clicked=None):
 
+    filtered_df['date_obs'] = pd.to_datetime(filtered_df['date_obs']).dt.strftime('%d/%m/%Y')
+
     fig_map = px.scatter_map(
         filtered_df,
         lat='localisation_lat',
         lon='localisation_long',
         color=map_column_selected,
         hover_name='date_obs',
-        hover_data={
-            'localisation_lat': True,
-            'localisation_long': True,
-            'nb_species': True,
-            'nb_species_cat': False,
-            'VDL': True,
-            'VDL_cat': False,
-            'deg_toxitolerance': True,
-            'deg_toxitolerance_cat': False,
-            'deg_eutrophication': True,
-            'deg_eutrophication_cat': False,
-            'deg_acidity': True,
-            'deg_acidity_cat': False,
-        },
-        labels={
-            'date_obs': 'Date d\'observation',
-            'localisation_lat': 'Latitude ',
-            'localisation_long': 'Longitude ',
-            'nb_species': 'Nombre d\'espèces ',
-            'nb_species_cat': 'Nombre d\'espèces ',
-            'VDL': 'Valeur de Diversité Lichénique ',
-            'VDL_cat': 'Valeur de Diversité Lichénique ',
-            'deg_toxitolerance': 'Espèces toxitolérantes (%) ',
+        labels={  # Rename the columns for the legend
+            'nb_species_cat': 'Nombre d\'espèces',
+            'VDL_cat': 'Valeur de Diversité Lichénique',
             'deg_toxitolerance_cat': 'Espèces toxitolérantes',
-            'deg_eutrophication': 'Espèces eutrophes (%) ',
-            'deg_eutrophication_cat': 'Espèces eutrophes ',
-            'deg_acidity' : 'Espèces acidophiles (%) ',
-            'deg_acidity_cat' : 'Espèces acidophiles',
+            'deg_eutrophication_cat': 'Espèces eutrophes',
+            'deg_acidity_cat': 'Espèces acidophiles',
         },
+        custom_data=['nb_species', 'VDL', 'deg_toxitolerance', 'deg_eutrophication', 'deg_acidity'],
         map_style=map_style,
         color_discrete_map=MAP_COLOR_PALETTES[map_column_selected],
-        category_orders={map_column_selected: list(MAP_COLOR_PALETTES[map_column_selected].keys())}, # order the legend in the same order as the color palette
+        category_orders={map_column_selected: list(MAP_COLOR_PALETTES[map_column_selected].keys())},  # order the legend in the same order as the color palette
+    )
+
+    fig_map.update_traces(
+        hovertemplate='<b>Date d\'observation</b>: %{hovertext}<br>'
+                    '<b>Latitude</b>: %{lat}<br>'
+                    '<b>Longitude</b>: %{lon}<br>'
+                    '<b>Nombre d\'espèces</b>: %{customdata[0]}<br>'
+                    '<b>Valeur de Diversité Lichénique</b>: %{customdata[1]:.1f}<br>'
+                    '<b>Espèces toxitolérantes</b>: %{customdata[2]:.1%}<br>'
+                    '<b>Espèces eutrophes</b>: %{customdata[3]:.1%}<br>'
+                    '<b>Espèces acidophiles</b>: %{customdata[4]:.1%}<br>'
     )
 
     if observation_clicked is not None:
@@ -97,26 +90,33 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
 
 def create_map_species_present(filtered_df, map_column_selected, zoom, center, map_style):
 
+    filtered_df['date_obs'] = pd.to_datetime(filtered_df['date_obs']).dt.strftime('%d/%m/%Y')
+    filtered_df['selected_species_present_translated'] = filtered_df['selected_species_present'].apply(lambda x: get_translation(str(x)))
+
     fig_map = px.scatter_map(
         filtered_df,
         lat='localisation_lat',
         lon='localisation_long',
         color=map_column_selected,
         hover_name='date_obs',
-        hover_data={
-            'localisation_lat': True,
-            'localisation_long': True,
-            'selected_species_present': True,
-        },
-        labels={
-            'date_obs': 'Date d\'observation',
-            'localisation_lat': 'Latitude',
-            'localisation_long': 'Longitude',
+        labels={ # Rename the columns for the legend
             'selected_species_present': 'Espèce présente',
         },
+        custom_data=['selected_species_present_translated'],
         map_style=map_style,
         color_discrete_map=MAP_COLOR_PALETTES[map_column_selected],
     )
+
+    fig_map.update_traces(
+        hovertemplate='<b>Date d\'observation</b>: %{hovertext}<br>' +
+        '<b>Latitude</b>: %{lat}<br>' +
+        '<b>Longitude</b>: %{lon}<br>' +
+        '<b>Espèce présente</b>: %{customdata[0]}<br>'
+    )
+
+    # Apply the translated names to the legend
+    for trace in fig_map.data:
+        trace.name = get_translation(trace.name)
 
     fig_map.update_layout(
         PLOTLY_LAYOUT,
