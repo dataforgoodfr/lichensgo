@@ -87,7 +87,7 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
         legend=dict(
             x=0.02,  # Position the legend on the map
             y=0.02,
-            bgcolor='rgba(255, 255, 255, 0.7)',  # Semi-transparent background
+            bgcolor='rgba(255, 255, 255, 0.8)',  # Semi-transparent background
             bordercolor='grey',
             borderwidth=1.5,
         ),
@@ -126,7 +126,7 @@ def create_map_species_present(filtered_df, map_column_selected, zoom, center, m
         legend=dict(
             x=0.02,  # Position the legend on the map
             y=0.02,
-            bgcolor='rgba(255, 255, 255, 0.7)',  # Semi-transparent background
+            bgcolor='rgba(255, 255, 255, 0.8)',  # Semi-transparent background
             bordercolor='grey',
             borderwidth=1.5,
         ),

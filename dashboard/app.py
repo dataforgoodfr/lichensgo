@@ -336,21 +336,22 @@ sites_layout = html.Div(
                             children=[
                                 dmc.Card(
                                     children=[
-                                        html.Div(
-                                            dcc.Dropdown(
-                                                id='map-style-dropdown',
-                                                options=[
-                                                    {'label': 'OpenStreetMap',
-                                                     'value': 'open-street-map'},
-                                                    {'label': 'Satellite',
-                                                     'value': 'satellite'},
-                                                    {'label': 'Satellite with streets',
-                                                     'value': 'satellite-streets'},
-                                                    {'label': 'Streets',
-                                                     'value': 'streets'},
-                                                ],
-                                                value='open-street-map'  # Default value
-                                            ),
+                                        dmc.Select(
+                                            id='map-style-dropdown',
+                                            value='open-street-map',  # Default value
+                                            data=[
+                                                {'label': 'OpenStreetMap',
+                                                 'value': 'open-street-map'},
+                                                {'label': 'Satellite',
+                                                 'value': 'satellite'},
+                                                {'label': 'Satellite with streets',
+                                                 'value': 'satellite-streets'},
+                                                {'label': 'Streets',
+                                                 'value': 'streets'},
+                                            ],
+                                            clearable=False,
+                                            allowDeselect=False,
+                                            searchable=False,
                                             style={
                                                 'position': 'absolute',
                                                 'top': '15px',
@@ -590,21 +591,22 @@ species_layout = html.Div(
                                 ),
                                 dmc.Card(
                                     children=[
-                                         html.Div(
-                                            dcc.Dropdown(
-                                                id='map-species-style-dropdown',
-                                                options=[
-                                                    {'label': 'OpenStreetMap',
-                                                     'value': 'open-street-map'},
-                                                    {'label': 'Satellite',
-                                                     'value': 'satellite'},
-                                                    {'label': 'Satellite with streets',
-                                                     'value': 'satellite-streets'},
-                                                    {'label': 'Streets',
-                                                     'value': 'streets'},
-                                                ],
-                                                value='open-street-map'  # Default value
-                                            ),
+                                        dmc.Select(
+                                            id='map-species-style-dropdown',
+                                            value='open-street-map',  # Default value
+                                            data=[
+                                                {'label': 'OpenStreetMap',
+                                                 'value': 'open-street-map'},
+                                                {'label': 'Satellite',
+                                                 'value': 'satellite'},
+                                                {'label': 'Satellite with streets',
+                                                 'value': 'satellite-streets'},
+                                                {'label': 'Streets',
+                                                 'value': 'streets'},
+                                            ],
+                                            clearable=False,
+                                            allowDeselect=False,
+                                            searchable=False,
                                             style={
                                                 'position': 'absolute',
                                                 'top': '15px',
