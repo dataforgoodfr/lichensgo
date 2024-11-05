@@ -19,7 +19,7 @@ def blank_figure():
 
     return fig
 
-def create_map_observations(filtered_df, map_column_selected, zoom, center):
+def create_map_observations(filtered_df, map_column_selected, zoom, center, observation_clicked=None):
 
     fig_map = px.scatter_map(
         filtered_df,
@@ -61,7 +61,22 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center):
         category_orders={map_column_selected: list(MAP_COLOR_PALETTES[map_column_selected].keys())}, # order the legend in the same order as the color palette
     )
 
-    print(MAP_COLOR_PALETTES[map_column_selected])
+    if observation_clicked is not None:
+
+        observation_clicked_color = MAP_COLOR_PALETTES[map_column_selected][observation_clicked[map_column_selected]]
+
+        fig_map.add_trace(
+            go.Scattermap(
+                lat=[observation_clicked['localisation_lat']],
+                lon=[observation_clicked['localisation_long']],
+                mode='markers',
+                marker=go.scattermap.Marker(
+                    size=15,
+                    color=observation_clicked_color,
+                ),
+                hoverinfo='skip',  # Hide the hover info
+            )
+        )
 
     fig_map.update_layout(
         PLOTLY_LAYOUT,
@@ -76,6 +91,8 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center):
             borderwidth=1.5,
         ),
     )
+
+
 
     return fig_map
 

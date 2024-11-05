@@ -145,6 +145,8 @@ def update_dashboard(date_range, map_column_selected, clickData, relayoutData):
         grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
     ]
 
+    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center, observation_clicked)
+
     gauge_chart_toxitolerance = create_gauge_chart(deg_toxitolerance_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
     gauge_chart_acidity = create_gauge_chart(deg_acidity_clicked, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE)
     gauge_chart_eutrophication = create_gauge_chart(deg_eutrophication_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE)
