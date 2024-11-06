@@ -7,7 +7,6 @@ from dashboard.constants import SQUARE_COLUMNS, ORIENTATIONS
 def merge_tables(table_df, lichen_df, observation_df):
 
     merged_df = table_df.merge(lichen_df, on='lichen_id', suffixes=('', '_l'), how='left')
-    # merged_df = merged_df.merge(lichen_species_df, on='species_id', how='left')
     merged_df = merged_df.merge(observation_df, on='observation_id', how ='left')
 
     return merged_df
@@ -48,7 +47,7 @@ def calc_vdl(table_with_nb_lichen_df):
     # Sum over all lichen per observation
     vdl_df = avg_nb_lichen_per_tree.groupby('observation_id').sum().reset_index().rename(columns={'nb_lichen': 'VDL'})
 
-    vdl_df["VDL_cat"] = pd.cut(vdl_df["VDL"], bins=[-1, 25, 50, 75, np.inf], labels=["<25", "25-50", "50-75", ">75"])
+    vdl_df['VDL_cat'] = pd.cut(vdl_df['VDL'], bins=[-1, 25, 50, 75, np.inf], labels=['< 25', '25 - 50', '50 - 75', '> 75'])
 
     return vdl_df
 
@@ -108,7 +107,6 @@ def unique_lichen_name(nb_lichen_per_lichen_id_df):
     return merged_df
 
 
-
 # Count the number of lichen species for each observation
 def count_species_per_observation(lichen_df, observation_df):
     # Count the number of different lichen (=lines in the df) per observation
@@ -118,10 +116,10 @@ def count_species_per_observation(lichen_df, observation_df):
     observation_with_species_count_df = observation_df.merge(count_species_per_observation_df, how='left', on='observation_id')
 
     # Add a categorical column based on the number of lichen
-    observation_with_species_count_df["nb_species_cat"] = pd.cut(
-        observation_with_species_count_df["nb_species"],
+    observation_with_species_count_df['nb_species_cat'] = pd.cut(
+        observation_with_species_count_df['nb_species'],
         bins=[0, 7, 10.5, 15, np.inf],
-        labels = ["<7", "7-10", "11-14", ">14"],
+        labels = ['< 7', '7 - 10', '11 - 14', '> 14'],
         right=False
     )
 
@@ -134,7 +132,7 @@ def count_lichen_per_species(lichen_df, lichen_species_df):
     # Group by species' type and count them
     count_lichen_per_species_df = (
         lichen_df
-        .groupby("species_id", as_index=False)
+        .groupby('species_id', as_index=False)
         .size()
         .rename(columns={'size': 'count'})
     )
@@ -209,6 +207,7 @@ def calc_degrees_pollution(merged_table_with_nb_lichen_df, lichen_df, merged_lic
 
     # Add categorical columns
     for col in ['deg_toxitolerance', 'deg_acidity', 'deg_eutrophication']:
-        merged_df[col + '_cat'] = pd.cut(merged_df[col], bins=[-0.1, 0.25, 0.5, 0.75, np.inf], labels=["0-25%", "25-50%", "50-75%", "75-100%"])
+        merged_df[col + '_cat'] = pd.cut(merged_df[col], bins=[-0.1, 0.25, 0.5, 0.75, np.inf], labels=[
+                                         '0 - 25%', '25 - 50%', '50 - 75%', '75 - 100%'])
 
     return merged_df
