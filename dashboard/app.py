@@ -244,23 +244,51 @@ def update_dashboard2(species_id_selected, map_style, relayoutData):
 
 # Reusable component for title and tooltip
 def title_and_tooltip(title, tooltip_text):
-    return dmc.Group(
+    # Split the title into all words
+    words = title.split()
+
+     # Check if the last word ends with a parenthesis pattern
+    if len(words) > 1 and words[-1].startswith("(") and words[-1].endswith(")"):
+        # If the last word is in parentheses, keep it with the previous word
+        main_text = ' '.join(words[:-2]) # All words except the last two
+        last_word = ' '.join(words[-2:])   # Combine the last two words
+    else:
+        # Otherwise, split as usual
+        if len(words) > 1:
+            main_text = ' '.join(words[:-1])  # All words except the last one
+            last_word = words[-1]             # Last word
+        else:
+            main_text = ''
+            last_word = words[0]              # If only one word, set it as last_word
+
+    return html.Div(
         children=[
-            dmc.Title(title, order=4),
-            dmc.Tooltip(
-                children=DashIconify(
-                    icon='material-symbols:info-outline',
-                    height=15,
-                ),
-                label=tooltip_text,
-                withArrow=True,
-                position='top',
-                maw='50%', # max width
-                style={'white-space': 'normal', 'word-wrap': 'break-word'}, # Wrap text on multiple lines
-            ),
+            # Main part of the title (only if main_text is not empty)
+            dmc.Title(main_text, order=4, pr='5px') if main_text else None,
+            # Last word and tooltip grouped together
+            dmc.Group(
+                children=[
+                    dmc.Title(last_word, order=4),
+                    dmc.Tooltip(
+                        children=DashIconify(
+                            icon='material-symbols:info-outline',
+                            height=15,
+                        ),
+                        label=tooltip_text,
+                        withArrow=True,
+                        position='top',
+                        maw='50%',  # max width
+                        # Wrap text on multiple lines
+                            style={'white-space': 'normal',
+                                   'word-wrap': 'break-word'},
+                    ),
+                ],
+                align='center',
+                gap=2,
+            )
         ],
-        align='center',
-        gap=2,
+        style={'margin': 0, 'padding': 0,
+               'display': 'flex', 'flex-wrap': 'wrap'}
     )
 
 # Reusable component for gauge cards
@@ -368,16 +396,18 @@ sites_layout = html.Div(
                                     children=[
                                         dmc.Select(
                                             id='map-style-dropdown',
-                                            value='open-street-map',  # Default value
+                                            value='streets',  # Default value
                                             data=[
+                                                {'label': 'Streets',
+                                                 'value': 'streets'},
                                                 {'label': 'OpenStreetMap',
                                                  'value': 'open-street-map'},
                                                 {'label': 'Satellite',
                                                  'value': 'satellite'},
                                                 {'label': 'Satellite with streets',
                                                  'value': 'satellite-streets'},
-                                                {'label': 'Streets',
-                                                 'value': 'streets'},
+                                                {'label': 'Dark',
+                                                 'value': 'dark'},
                                             ],
                                             clearable=False,
                                             allowDeselect=False,
@@ -623,16 +653,18 @@ species_layout = html.Div(
                                     children=[
                                         dmc.Select(
                                             id='map-species-style-dropdown',
-                                            value='open-street-map',  # Default value
+                                            value='streets',  # Default value
                                             data=[
+                                                {'label': 'Streets',
+                                                 'value': 'streets'},
                                                 {'label': 'OpenStreetMap',
                                                  'value': 'open-street-map'},
                                                 {'label': 'Satellite',
                                                  'value': 'satellite'},
                                                 {'label': 'Satellite with streets',
                                                  'value': 'satellite-streets'},
-                                                {'label': 'Streets',
-                                                 'value': 'streets'},
+                                                {'label': 'Dark',
+                                                 'value': 'dark'},
                                             ],
                                             clearable=False,
                                             allowDeselect=False,
