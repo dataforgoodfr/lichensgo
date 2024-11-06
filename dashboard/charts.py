@@ -66,6 +66,7 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
                 marker=go.scattermap.Marker(
                     size=13,
                     color=observation_clicked_color,
+                    opacity=0.5,
                 ),
                 hoverinfo='skip',  # Hide the hover info, to use the one from the main trace
                 showlegend=False,
@@ -85,8 +86,6 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
             borderwidth=1.5,
         ),
     )
-
-
 
     return fig_map
 
