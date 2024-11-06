@@ -96,7 +96,7 @@ def unique_lichen_name(nb_lichen_per_lichen_id_df):
     suffix = (grouped + 1).astype(str)
 
     # Create a new column 'unique_name' by concatenating the original name with the suffix
-    non_unique_lichen['unique_name'] = (non_unique_lichen['name'] + " " + suffix)
+    non_unique_lichen['unique_name'] = (non_unique_lichen['name'] + ' ' + suffix)
 
     # Merge unique names with original df
     merged_df = nb_lichen_per_lichen_id_df.merge(non_unique_lichen[['lichen_id', 'unique_name']], on='lichen_id', how='left')
@@ -110,7 +110,7 @@ def unique_lichen_name(nb_lichen_per_lichen_id_df):
 # Count the number of lichen species for each observation
 def count_species_per_observation(lichen_df, observation_df):
     # Count the number of different lichen (=lines in the df) per observation
-    count_species_per_observation_df = lichen_df['observation_id'].value_counts().to_frame().rename(columns={"count":"nb_species"})
+    count_species_per_observation_df = lichen_df['observation_id'].value_counts().to_frame().rename(columns={'count':'nb_species'})
 
     # Merge with observation_df
     observation_with_species_count_df = observation_df.merge(count_species_per_observation_df, how='left', on='observation_id')
