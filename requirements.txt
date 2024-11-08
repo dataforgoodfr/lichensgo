@@ -39,9 +39,8 @@ filelock==3.16.1
 Flask==3.0.3
 fonttools==4.54.1
 fqdn==1.5.1
-geographiclib==2.0
-geopy==2.4.1
 greenlet==3.1.1
+gunicorn==23.0.0
 h11==0.14.0
 httpcore==1.0.6
 httpx==0.27.2
@@ -106,6 +105,7 @@ pytest==7.4.4
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-json-logger==2.0.7
+-e git+ssh://git@github.com/dataforgoodfr/lichensgo.git@94f09bd4cd4f516ddfd9acc05d369f6864be75c0#egg=python_template
 pytz==2024.2
 PyYAML==6.0.2
 pyzmq==26.2.0
