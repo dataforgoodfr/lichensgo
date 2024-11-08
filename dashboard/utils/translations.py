@@ -14,9 +14,11 @@ def load_translations(lang):
         print(f"Error decoding JSON from translation file for language '{lang}'.")
         return {}
 
-def get_translation(key, lang='fr'):
+def get_translation(key, lang):
     try:
         translations = load_translations(lang)
+        if key not in translations:
+            print(f"Translation for key '{key}' not found in language '{lang}'")
         return translations.get(key, key)
     except Exception as e:
         print(f"Error getting translation for key '{key}' in language '{lang}': {e}")
