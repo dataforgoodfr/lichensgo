@@ -105,7 +105,6 @@ pytest==7.4.4
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-json-logger==2.0.7
--e git+ssh://git@github.com/dataforgoodfr/lichensgo.git@94f09bd4cd4f516ddfd9acc05d369f6864be75c0#egg=python_template
 pytz==2024.2
 PyYAML==6.0.2
 pyzmq==26.2.0
