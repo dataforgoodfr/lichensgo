@@ -42,7 +42,7 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
 
     fig_map.update_traces(
         opacity=0.7,
-        cluster=dict(enabled=True, maxzoom=8, size=[3, 10, 20, 30], step=[2, 8, 15, 20], opacity=0.7),
+        # cluster=dict(enabled=True, maxzoom=8, size=[3, 10, 20, 30], step=[2, 8, 15, 20], opacity=0.7),
         hovertemplate= f"<b>{get_translation('observation_date', lang=lang).capitalize()}</b>: %{{hovertext}}<br>"
         f"<b>{get_translation('latitude', lang=lang).capitalize()}</b>: %{{lat}}<br>"
         f"<b>{get_translation('longitude', lang=lang).capitalize()}</b>: %{{lon}}<br>"
