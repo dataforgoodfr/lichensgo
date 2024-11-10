@@ -1,68 +1,67 @@
-import pandas as pd
 import os
-import dash_mantine_components as dmc
+from datetime import datetime
 
-from dash import Dash, _dash_renderer, html, dcc, Output, Input, callback
+import pandas as pd
+from dash import Dash, html, dcc, Output, Input, _dash_renderer, callback
 from dash.dependencies import State
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
-from datetime import datetime
+import dash_mantine_components as dmc
 
 from my_data.datasets import get_useful_data
-from my_data.computed_datasets import merge_tables, calc_degrees_pollution, calc_vdl, count_lichen, count_lichen_per_species, count_species_per_observation, count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
-from dashboard.charts import blank_figure, create_map_observations, create_map_species_present, create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus, create_hist4, create_gauge_chart
-from dashboard.constants import MAP_COLOR_PALETTES, BASE_COLOR_PALETTE, BODY_FONT_FAMILY, POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, GRID_STYLE, CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
+from my_data.computed_datasets import (
+    merge_tables, calc_degrees_pollution, calc_vdl, count_lichen,
+    count_lichen_per_species, count_species_per_observation,
+    count_lichen_per_lichen_id, group_lichen_by_observation_and_thallus
+)
+from dashboard.charts import (
+    blank_figure, create_map_observations, create_map_species_present,
+    create_hist1_nb_species, create_hist2_vdl, create_hist3, create_pie_thallus,
+    create_hist4, create_gauge_chart
+)
+from dashboard.constants import (
+    MAP_COLOR_PALETTES, BASE_COLOR_PALETTE, BODY_FONT_FAMILY,
+    POSITIVE_GAUGE_COLOR_PALETTE, NEGATIVE_GAUGE_COLOR_PALETTE, GRID_STYLE,
+    CARD_STYLE, MAP_STYLE, FLEX_COLUMNS_CONTAINER_STYLE
+)
 from dashboard.utils.translations import get_translation
 from dashboard.utils.location import get_address_from_lat_lon
 
-_dash_renderer._set_react_version('18.2.0')
+# Constants
+CURRENT_DIR = os.path.dirname(__file__)
+LICHEN_IMG_DIR = os.path.join('assets', 'img')
+BLANK_FIG = blank_figure()
 
-# Set the language (could be dynamically set based on user preference)
-lang = 'fr' # allowed values: 'en', 'fr'
+lang = 'fr'
 
-# Get the datasets
+# Fetch datasets
 print("Fetching data...")
 lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df = get_useful_data()
 
-# Format the date for the hover labels
+# Format date for hover labels
 observation_df['date_obs_formatted'] = pd.to_datetime(observation_df['date_obs']).dt.strftime('%d/%m/%Y')
 
-# For tab on observations
+# Data processing for observations tab
 table_with_nb_lichen_df = count_lichen(table_df)
 merged_table_with_nb_lichen_df = merge_tables(table_with_nb_lichen_df, lichen_df, observation_df)
-grouped_lichen_by_observation_and_thallus_df = group_lichen_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df) # data for pie chart
-
-nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(
-        table_with_nb_lichen_df, lichen_df, merged_lichen_species_df
-    )
-
+grouped_lichen_by_observation_and_thallus_df = group_lichen_by_observation_and_thallus(merged_table_with_nb_lichen_df, merged_lichen_species_df)
+nb_lichen_per_lichen_id_df = count_lichen_per_lichen_id(table_with_nb_lichen_df, lichen_df, merged_lichen_species_df)
 observation_with_species_count_df = count_species_per_observation(lichen_df, observation_df)
 observation_with_deg_pollution_df = calc_degrees_pollution(merged_table_with_nb_lichen_df, lichen_df, merged_lichen_species_df)
 observation_with_vdl_df = calc_vdl(merged_table_with_nb_lichen_df)
+merged_observation_df = observation_with_species_count_df.merge(observation_with_deg_pollution_df, on='observation_id').merge(observation_with_vdl_df, on='observation_id')
 
-merged_observation_df = observation_with_species_count_df.merge(observation_with_deg_pollution_df, on='observation_id')
-merged_observation_df = merged_observation_df.merge(observation_with_vdl_df, on='observation_id')
-
-# For tab on species
+# Data processing for species tab
 nb_lichen_per_species_df = count_lichen_per_species(lichen_df, merged_lichen_species_df)
 observation_with_selected_species_col_df = observation_df.copy()
 
-# For the lichen images
-current_dir = os.path.dirname(__file__)
-lichen_img_dir = os.path.join('assets', 'img')
-
-# Initialize a blank figure to show during loading
-blank_fig = blank_figure()
-
-# Initialize the options and selections
+# Initialize options and selections
 date_range = [merged_observation_df['date_obs'].min(), datetime.now().date()]
 map_column_selected = list(MAP_COLOR_PALETTES.keys())[0]
-
-# Convert DataFrame to list of dictionaries
 species_options = [{'value': str(row['species_id']), 'label': row['name']} for _, row in merged_lichen_species_df.sort_values(by='name').iterrows()]
-species_id_selected = species_options[0]['value'] # Default to the first species ID
+species_id_selected = species_options[0]['value']
 
-# Callback to reset the date range
+# Callbacks
 @callback(
     Output('date-picker-range', 'value'),
     Input('reset-date-button', 'n_clicks'),
@@ -73,118 +72,132 @@ species_id_selected = species_options[0]['value'] # Default to the first species
 def reset_date_range(n_clicks, min_date, max_date, date_range):
     if n_clicks is None or date_range == [min_date, max_date]:
         raise PreventUpdate
-
     return [min_date, max_date]
 
-# First callback to update the dashboard based on date and map selection
+def get_filtered_observation_df(date_range):
+    start_date = pd.to_datetime(date_range[0]).date()
+    end_date = pd.to_datetime(date_range[1]).date()
+    return merged_observation_df[
+        (merged_observation_df['date_obs'] >= start_date) &
+        (merged_observation_df['date_obs'] <= end_date)
+    ]
+
+def get_observation_clicked(filtered_observation_df, clickData):
+    if clickData is None:
+        return None
+    lat_clicked = clickData['points'][0]['lat']
+    lon_clicked = clickData['points'][0]['lon']
+    observation_clicked = filtered_observation_df[
+        (filtered_observation_df['localisation_lat'] == lat_clicked) &
+        (filtered_observation_df['localisation_long'] == lon_clicked)
+    ]
+    return observation_clicked.iloc[0] if not observation_clicked.empty else None
+
+def get_selected_address(observation_clicked):
+    if observation_clicked is None:
+        return '', {'display': 'none'}
+    selected_address = get_address_from_lat_lon(
+        observation_clicked['localisation_lat'], observation_clicked['localisation_long'], language=lang)
+    selected_address_style = {'display': 'block'} if selected_address else {'display': 'none'}
+    return selected_address, selected_address_style
+
 @callback(
     Output('map-nb_species-vdl', 'figure'),
     Output('selected-address-badge', 'children'),
     Output('selected-address-badge', 'style'),
-    Output('hist1-nb_species', 'figure'),
-    Output('hist2-vdl', 'figure'),
-    Output('gauge-chart-toxitolerance', 'figure'),
-    Output('gauge-chart-eutrophication', 'figure'),
-    Output('gauge-chart-acidity', 'figure'),
-    Output('hist3-species', 'figure'),
-    Output('pie-thallus', 'figure'),
     Input('date-picker-range', 'value'),
     Input('map-column-select', 'value'),
     Input('map-style-dropdown', 'value'),
     Input('map-nb_species-vdl', 'clickData'),
     State('map-nb_species-vdl', 'relayoutData')
 )
-def update_dashboard(date_range, map_column_selected, map_style, clickData, relayoutData):
+def update_map(date_range, map_column_selected, map_style, clickData, relayoutData):
     if None in date_range:
         raise PreventUpdate
 
-    start_date = pd.to_datetime(date_range[0]).date()
-    end_date = pd.to_datetime(date_range[1]).date()
+    filtered_observation_df = get_filtered_observation_df(date_range)
 
-    filtered_observation_df = merged_observation_df[
-        (merged_observation_df['date_obs'] >= start_date) &
-        (merged_observation_df['date_obs'] <= end_date)
-    ]
-
-    if relayoutData and 'map.zoom' in relayoutData and 'map.center' in relayoutData:
-        current_zoom = relayoutData['map.zoom']
-        current_center = relayoutData['map.center']
+    if relayoutData and 'mapbox.zoom' in relayoutData and 'mapbox.center' in relayoutData:
+        current_zoom = relayoutData['mapbox.zoom']
+        current_center = relayoutData['mapbox.center']
     else:
         current_zoom = 4.8
-        current_center = {'lat': filtered_observation_df['localisation_lat'].mean() + 0.5, 'lon': filtered_observation_df['localisation_long'].mean()}
+        current_center = {
+        'lat': filtered_observation_df['localisation_lat'].mean() + 0.5,
+        'lon': filtered_observation_df['localisation_long'].mean()
+        }
 
-    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center, map_style, lang=lang, observation_clicked=None)
-    hist1_nb_species = create_hist1_nb_species(filtered_observation_df, None, lang=lang)
-    hist2_vdl = create_hist2_vdl(filtered_observation_df, None, lang=lang)
+    observation_clicked = get_observation_clicked(filtered_observation_df, clickData)
+    selected_address, selected_address_style = get_selected_address(observation_clicked)
 
-    if clickData is None:
-        selected_adress = ''
-        selected_adress_style = {'display': 'none'}
+    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center, map_style, lang=lang, observation_clicked=observation_clicked)
 
-        return fig_map, selected_adress, selected_adress_style, hist1_nb_species, hist2_vdl, blank_fig, blank_fig, blank_fig, blank_fig, blank_fig
+    return fig_map, selected_address, selected_address_style
 
-    lat_clicked = clickData['points'][0]['lat']
-    lon_clicked = clickData['points'][0]['lon']
+@callback(
+    Output('hist1-nb_species', 'figure'),
+    Output('hist2-vdl', 'figure'),
+    Input('date-picker-range', 'value'),
+    Input('map-nb_species-vdl', 'clickData')
+)
+def update_histograms(date_range, clickData):
+    if None in date_range:
+        raise PreventUpdate
 
-    observation_clicked = filtered_observation_df[
-        (filtered_observation_df['localisation_lat'] == lat_clicked) &
-        (filtered_observation_df['localisation_long'] == lon_clicked)
-    ]
+    filtered_observation_df = get_filtered_observation_df(date_range)
+    observation_clicked = get_observation_clicked(filtered_observation_df, clickData)
 
-    if observation_clicked.empty:
-        print('No observation found')
+    if observation_clicked is None:
+        return create_hist1_nb_species(filtered_observation_df, None, lang=lang), create_hist2_vdl(filtered_observation_df, None, lang=lang)
 
-        selected_adress = ''
-        selected_adress_style = {'display': 'none'}
-
-        return (
-            fig_map, selected_adress, selected_adress_style, hist1_nb_species, hist2_vdl, blank_fig, blank_fig, blank_fig, blank_fig, blank_fig
-        )
-
-    observation_clicked = observation_clicked.iloc[0]
-    observation_id_clicked = observation_clicked['observation_id']
     nb_species_clicked = observation_clicked['nb_species']
     vdl_clicked = observation_clicked['VDL']
-    deg_toxitolerance_clicked = observation_clicked['deg_toxitolerance']
-    deg_acidity_clicked = observation_clicked['deg_acidity']
-    deg_eutrophication_clicked = observation_clicked['deg_eutrophication']
 
-    # Get the location name and address from the latitude and longitude
-    selected_adress = get_address_from_lat_lon(
-        observation_clicked['localisation_lat'], observation_clicked['localisation_long'], language=lang)
+    hist1_nb_species = create_hist1_nb_species(filtered_observation_df, nb_species_clicked, lang=lang)
+    hist2_vdl = create_hist2_vdl(filtered_observation_df, vdl_clicked, lang=lang)
 
-    if selected_adress:
-        selected_adress_style = {'display': 'block'}
-    else:
-        selected_adress = ''
-        selected_adress_style = {'display': 'none'}
+    return hist1_nb_species, hist2_vdl
 
+@callback(
+    Output('gauge-chart-toxitolerance', 'figure'),
+    Output('gauge-chart-eutrophication', 'figure'),
+    Output('gauge-chart-acidity', 'figure'),
+    Output('hist3-species', 'figure'),
+    Output('pie-thallus', 'figure'),
+    Input('date-picker-range', 'value'),
+    Input('map-nb_species-vdl', 'clickData')
+)
+def update_gauge_hist_pie(date_range, clickData):
+    if None in date_range:
+        raise PreventUpdate
 
+    if clickData is None:
+        return [BLANK_FIG] * 5
+
+    filtered_observation_df = get_filtered_observation_df(date_range)
+    observation_clicked = get_observation_clicked(filtered_observation_df, clickData)
+
+    if observation_clicked is None:
+        return [BLANK_FIG] * 5
+
+    observation_id_clicked = observation_clicked['observation_id']
+
+    gauge_chart_toxitolerance = create_gauge_chart(observation_clicked['deg_toxitolerance'], intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE, lang=lang)
+    gauge_chart_acidity = create_gauge_chart(observation_clicked['deg_acidity'], intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE, lang=lang)
+    gauge_chart_eutrophication = create_gauge_chart(observation_clicked['deg_eutrophication'], intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE, lang=lang)
 
     filtered_nb_lichen_per_lichen_id_df = nb_lichen_per_lichen_id_df[
         nb_lichen_per_lichen_id_df['observation_id'] == observation_id_clicked
     ]
+    hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df, lang=lang)
 
     filtered_grouped_lichen_by_observation_and_thallus_df = grouped_lichen_by_observation_and_thallus_df[
         grouped_lichen_by_observation_and_thallus_df['observation_id'] == observation_id_clicked
     ]
-
-    fig_map = create_map_observations(filtered_observation_df, map_column_selected, current_zoom, current_center, map_style, lang=lang, observation_clicked=observation_clicked)
-
-    gauge_chart_toxitolerance = create_gauge_chart(deg_toxitolerance_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE, lang=lang)
-    gauge_chart_acidity = create_gauge_chart(deg_acidity_clicked, intervals=[0, 25, 50, 75, 100], color_scale=POSITIVE_GAUGE_COLOR_PALETTE, lang=lang)
-    gauge_chart_eutrophication = create_gauge_chart(deg_eutrophication_clicked, intervals=[0, 25, 50, 75, 100], color_scale=NEGATIVE_GAUGE_COLOR_PALETTE, lang=lang)
-
-    hist1_nb_species = create_hist1_nb_species(filtered_observation_df, nb_species_clicked, lang=lang)
-    hist2_vdl = create_hist2_vdl(filtered_observation_df, vdl_clicked, lang=lang)
-    hist3_species = create_hist3(filtered_nb_lichen_per_lichen_id_df, lang=lang)
     pie_thallus = create_pie_thallus(filtered_grouped_lichen_by_observation_and_thallus_df, lang=lang)
 
-    return fig_map, selected_adress, selected_adress_style, hist1_nb_species, hist2_vdl, gauge_chart_toxitolerance, gauge_chart_eutrophication, gauge_chart_acidity, hist3_species, pie_thallus
+    return gauge_chart_toxitolerance, gauge_chart_eutrophication, gauge_chart_acidity, hist3_species, pie_thallus
 
-
-## Dashboard on species tab
-# Define callback to update the bar chart based on selected species
 @callback(
     Output(component_id='map-species_present', component_property='figure'),
     Output(component_id='hist4-species', component_property='figure'),
@@ -205,7 +218,6 @@ def update_dashboard2(species_id_selected, map_style, relayoutData):
 
     hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected, lang=lang)
 
-    # Create a column indicating for each observation if the selected species is present or not
     observation_with_selected_species_col_df['selected_species_present'] = observation_df['observation_id'].isin(
         lichen_df.loc[lichen_df['species_id'] == species_id_selected, 'observation_id']
     )
@@ -219,117 +231,73 @@ def update_dashboard2(species_id_selected, map_style, relayoutData):
 
     fig_map = create_map_species_present(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center, map_style, lang=lang)
 
-    # Filter on the selected species
     species_selected = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected].iloc[0]
 
     species_name = species_selected['name']
     species_img = species_selected['picture']
-    species_img_path = os.path.join(lichen_img_dir, species_img)
+    species_img_path = os.path.join(LICHEN_IMG_DIR, species_img)
 
-    species_acidity = species_selected['pH']
-    species_eutrophication = species_selected['eutrophication']
-    species_toxitolerance = species_selected['poleotolerance']
-    species_thallus = species_selected['thallus']
-    species_rarity = species_selected['rarity']
-
-    # Translate with the dictionary
-    species_acidity = get_translation(species_acidity, lang)
-    species_eutrophication = get_translation(species_eutrophication, lang)
-    species_toxitolerance = get_translation(species_toxitolerance, lang)
-    species_thallus = get_translation(species_thallus, lang)
-    species_rarity = get_translation(species_rarity, lang)
+    species_acidity = get_translation(species_selected['pH'], lang)
+    species_eutrophication = get_translation(species_selected['eutrophication'], lang)
+    species_toxitolerance = get_translation(species_selected['poleotolerance'], lang)
+    species_thallus = get_translation(species_selected['thallus'], lang)
+    species_rarity = get_translation(species_selected['rarity'], lang)
 
     return fig_map, hist4_species, species_name, species_img_path, species_acidity, species_eutrophication, species_toxitolerance, species_thallus, species_rarity
 
-
-# Reusable component for title and tooltip
+# Reusable components
 def title_and_tooltip(title, tooltip_text):
-    # Split the title into all words
     words = title.split()
-
-     # Check if the last word ends with a parenthesis pattern
     if len(words) > 1 and words[-1].startswith("(") and words[-1].endswith(")"):
-        # If the last word is in parentheses, keep it with the previous word
-        main_text = ' '.join(words[:-2]) # All words except the last two
-        last_word = ' '.join(words[-2:])   # Combine the last two words
+        main_text = ' '.join(words[:-2])
+        last_word = ' '.join(words[-2:])
     else:
-        # Otherwise, split as usual
-        if len(words) > 1:
-            main_text = ' '.join(words[:-1])  # All words except the last one
-            last_word = words[-1]             # Last word
-        else:
-            main_text = ''
-            last_word = words[0]              # If only one word, set it as last_word
+        main_text = ' '.join(words[:-1]) if len(words) > 1 else ''
+        last_word = words[-1] if len(words) > 0 else ''
 
     return html.Div(
         children=[
-            # Main part of the title (only if main_text is not empty)
             dmc.Title(main_text, order=4, pr='5px') if main_text else None,
-            # Last word and tooltip grouped together
             dmc.Group(
                 children=[
                     dmc.Title(last_word, order=4),
                     dmc.Tooltip(
-                        children=DashIconify(
-                            icon='material-symbols:info-outline',
-                            height=15,
-                        ),
+                        children=DashIconify(icon='material-symbols:info-outline', height=15),
                         label=tooltip_text,
                         withArrow=True,
                         position='top',
-                        maw='50%',  # max width
-                        # Wrap text on multiple lines
-                            style={'white-space': 'normal',
-                                   'word-wrap': 'break-word'},
+                        maw='50%',
+                        style={'white-space': 'normal', 'word-wrap': 'break-word'},
                     ),
                 ],
                 align='center',
                 gap=2,
             )
         ],
-        style={'margin': 0, 'padding': 0,
-               'display': 'flex', 'flex-wrap': 'wrap'}
+        style={'margin': 0, 'padding': 0, 'display': 'flex', 'flex-wrap': 'wrap'}
     )
 
-# Reusable component for gauge cards
 def gauge_card(title, tooltip_text, graph_id, max_height='200px'):
     return dmc.Card(
         children=[
             title_and_tooltip(title, tooltip_text),
-            dcc.Graph(
-                id=graph_id,
-                figure=blank_fig,
-                style={
-                    'height': '100px',
-                    'width': '100%',
-                },
-                config={'displayModeBar': False},
-            ),
+            dcc.Graph(id=graph_id, figure=BLANK_FIG, style={'height': '100px', 'width': '100%'}, config={'displayModeBar': False}),
         ],
-        style={
-            'display': 'flex',
-            'flexDirection': 'column',
-            'justifyContent': 'space-between',
-            'flexGrow': 1,
-            'maxHeight': max_height
-        },
+        style={'display': 'flex', 'flexDirection': 'column', 'justifyContent': 'space-between', 'flexGrow': 1, 'maxHeight': max_height},
         **CARD_STYLE
     )
 
-# Reusable component for histogram cards
 def histogram_card(title, tooltip_text, graph_id, height='330px'):
     return dmc.Card(
         children=[
             title_and_tooltip(title, tooltip_text),
-            dcc.Graph(
-                id=graph_id,
-                figure=blank_fig,
-                style={'height': height},
-                config={'displaylogo': False},
-            ),
+            dcc.Graph(id=graph_id, figure=BLANK_FIG, style={'height': height}, config={'displaylogo': False}),
         ],
         **CARD_STYLE
     )
+
+
+
 
 # Layout for the sites (observations)
 sites_layout = html.Div(
@@ -423,7 +391,7 @@ sites_layout = html.Div(
                                         ),
                                         dcc.Graph(
                                             id='map-nb_species-vdl',
-                                            figure=blank_fig,
+                                            figure=BLANK_FIG,
                                             style={'height': '469px'},
                                             config={'displaylogo': False},
                                         ),
@@ -680,7 +648,7 @@ species_layout = html.Div(
                                         ),
                                         dcc.Graph(
                                             id='map-species_present',
-                                            figure=blank_fig,
+                                            figure=BLANK_FIG,
                                             config={
                                                 'displaylogo': False,  # Remove plotly logo
                                             },
@@ -753,6 +721,7 @@ dmc_theme = {
 
 
 # Initialize the Dash app
+_dash_renderer._set_react_version('18.2.0')
 app = Dash(__name__,
            external_stylesheets=[
                dmc.styles.ALL,
