@@ -50,7 +50,7 @@ ORIENTATIONS = list(ORIENTATIONS_MAPPING.keys())
 MAP_COLOR_PALETTES = {
     'nb_species_cat': OrderedDict([('< 7', 'red'), ('7 - 10', 'orange'), ('11 - 14', 'yellow'), ('> 14', 'green')]),
     'VDL_cat': OrderedDict([('< 25', 'red'), ('25 - 50', 'orange'), ('50 - 75', 'yellow'), ('> 75', 'green')]),
-    'deg_acidity_cat': OrderedDict([('0 - 25%', 'red'), ('25 - 50%', 'orange'), ('50-75%', 'yellow'), ('75 - 100%', 'green')]),
+    'deg_acidity_cat': OrderedDict([('0 - 25%', 'red'), ('25 - 50%', 'orange'), ('50 - 75%', 'yellow'), ('75 - 100%', 'green')]),
     'deg_eutrophication_cat': OrderedDict([('0 - 25%', 'green'), ('25 - 50%', 'yellow'), ('50 - 75%', 'orange'), ('75 - 100%', 'red')]),
     'deg_toxitolerance_cat': OrderedDict([('0 - 25%', 'green'), ('25 - 50%', 'yellow'), ('50 - 75%', 'orange'), ('75 - 100%', 'red')]),
     'selected_species_present': OrderedDict([(True, BASE_COLOR_PALETTE[0]), (False, BASE_COLOR_PALETTE[-1])]),
