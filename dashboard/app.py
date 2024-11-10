@@ -199,24 +199,14 @@ def update_gauge_hist_pie(date_range, clickData):
     return gauge_chart_toxitolerance, gauge_chart_eutrophication, gauge_chart_acidity, hist3_species, pie_thallus
 
 @callback(
-    Output(component_id='map-species_present', component_property='figure'),
-    Output(component_id='hist4-species', component_property='figure'),
-    Output(component_id='species-name', component_property='children'),
-    Output(component_id='species-image', component_property='src'),
-    Output(component_id='acid-badge', component_property='children'),
-    Output(component_id='eutro-badge', component_property='children'),
-    Output(component_id='toxitolerance-badge', component_property='children'),
-    Output(component_id='species-thallus', component_property='children'),
-    Output(component_id='species-rarity', component_property='children'),
-    Input(component_id='species-dropdown', component_property='value'),
+    Output('map-species_present', 'figure'),
+    Input('species-dropdown', 'value'),
     Input('map-species-style-dropdown', 'value'),
     State('map-species_present', 'relayoutData')
 )
-def update_dashboard2(species_id_selected, map_style, relayoutData):
+def update_map(species_id_selected, map_style, relayoutData):
     if isinstance(species_id_selected, str):
         species_id_selected = int(species_id_selected)
-
-    hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected, lang=lang)
 
     observation_with_selected_species_col_df['selected_species_present'] = observation_df['observation_id'].isin(
         lichen_df.loc[lichen_df['species_id'] == species_id_selected, 'observation_id']
@@ -231,6 +221,26 @@ def update_dashboard2(species_id_selected, map_style, relayoutData):
 
     fig_map = create_map_species_present(observation_with_selected_species_col_df, 'selected_species_present', current_zoom, current_center, map_style, lang=lang)
 
+    return fig_map
+
+
+@callback(
+    Output('hist4-species', 'figure'),
+    Output('species-name', 'children'),
+    Output('species-image', 'src'),
+    Output('acid-badge', 'children'),
+    Output('eutro-badge', 'children'),
+    Output('toxitolerance-badge', 'children'),
+    Output('species-thallus', 'children'),
+    Output('species-rarity', 'children'),
+    Input('species-dropdown', 'value')
+)
+def update_species_info(species_id_selected):
+    if isinstance(species_id_selected, str):
+        species_id_selected = int(species_id_selected)
+
+    hist4_species = create_hist4(nb_lichen_per_species_df, species_id_selected, lang=lang)
+
     species_selected = merged_lichen_species_df[merged_lichen_species_df['species_id'] == species_id_selected].iloc[0]
 
     species_name = species_selected['name']
@@ -243,7 +253,7 @@ def update_dashboard2(species_id_selected, map_style, relayoutData):
     species_thallus = get_translation(species_selected['thallus'], lang)
     species_rarity = get_translation(species_selected['rarity'], lang)
 
-    return fig_map, hist4_species, species_name, species_img_path, species_acidity, species_eutrophication, species_toxitolerance, species_thallus, species_rarity
+    return hist4_species, species_name, species_img_path, species_acidity, species_eutrophication, species_toxitolerance, species_thallus, species_rarity
 
 # Reusable components
 def title_and_tooltip(title, tooltip_text):
@@ -295,8 +305,6 @@ def histogram_card(title, tooltip_text, graph_id, height='330px'):
         ],
         **CARD_STYLE
     )
-
-
 
 
 # Layout for the sites (observations)

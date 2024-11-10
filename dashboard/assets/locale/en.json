@@ -77,5 +77,6 @@
   "south": "south",
   "east": "east",
   "west": "west",
-  "count": "count"
+  "count": "count",
+  "indéterminé": "undefined"
 }
