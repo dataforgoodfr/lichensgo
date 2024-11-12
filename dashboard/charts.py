@@ -41,7 +41,7 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
     )
 
     fig_map.update_traces(
-        opacity=0.7,
+        opacity=0.8,
         # cluster=dict(enabled=True, maxzoom=8, size=[3, 10, 20, 30], step=[2, 8, 15, 20], opacity=0.7),
         hovertemplate= f"<b>{get_translation('observation_date', lang=lang).capitalize()}</b>: %{{hovertext}}<br>"
         f"<b>{get_translation('latitude', lang=lang).capitalize()}</b>: %{{lat}}<br>"
@@ -64,9 +64,9 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
                 lon=[observation_clicked['localisation_long']],
                 mode='markers',
                 marker=go.scattermap.Marker(
-                    size=13,
+                    size=14,
                     color=observation_clicked_color,
-                    opacity=0.5,
+                    opacity=0.7,
                 ),
                 hoverinfo='skip',  # Hide the hover info, to use the one from the main trace
                 showlegend=False,
@@ -91,6 +91,7 @@ def create_map_observations(filtered_df, map_column_selected, zoom, center, map_
 
 def create_map_species_present(filtered_df, map_column_selected, zoom, center, map_style, lang):
 
+    # Translate the species present column (yes/no) to the selected language and capitalize the first letter
     filtered_df['selected_species_present_translated'] = filtered_df['selected_species_present'].apply(lambda x: get_translation(str(x), lang=lang).capitalize())
 
     fig_map = px.scatter_map(
