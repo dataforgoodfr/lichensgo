@@ -3,6 +3,7 @@
   "observation_tab_title": "Sites",
   "observation_tab_tooltip": "Zoom and click on a site to discover what lichens can teach us.",
   "species_tab_title": "Species",
+  "map_style_selector": "Map",
   "map_title": "Observation Map",
   "map_tooltip": "Click on a point to display observation details",
   "species_number_distribution_hist1_title": "Species Count Distribution",

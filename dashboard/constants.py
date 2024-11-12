@@ -25,35 +25,28 @@ PASTEL_COLOR_PALETTE = [
     '#ebedef',
 ]
 
+GREEN = 'rgba(34, 139, 34, 1)'
+YELLOW = 'rgba(255, 215, 0, 1)'
+ORANGE = 'rgba(255, 165, 0, 1)'
+RED = 'rgba(255, 0, 0, 1)'
+
 # Color palette for negative gauge, from green to red
-NEGATIVE_GAUGE_COLOR_PALETTE = [
-        'rgba(34, 139, 34, 1)',
-        'rgba(255, 215, 0, 1)',
-        'rgba(255, 140, 0, 1)',
-        'rgba(255, 69, 0, 1)'
-    ]
+NEGATIVE_GAUGE_COLOR_PALETTE = [GREEN, YELLOW, ORANGE, RED]
 
 # Color palette for positive gauge, from red to green
 POSITIVE_GAUGE_COLOR_PALETTE = NEGATIVE_GAUGE_COLOR_PALETTE[::-1]
 
 SQUARE_COLUMNS = [f'sq{i}' for i in range(1, 6)]
 
-ORIENTATIONS_MAPPING = {
-    'N': 'Nord',
-    'E': 'Est',
-    'S': 'Sud',
-    'O': 'Ouest'
-}
-
-ORIENTATIONS = list(ORIENTATIONS_MAPPING.keys())
+ORIENTATIONS = ['N', 'E', 'S', 'O']
 
 MAP_COLOR_PALETTES = {
-    'nb_species_cat': OrderedDict([('< 7', 'red'), ('7 - 10', 'orange'), ('11 - 14', 'yellow'), ('> 14', 'green')]),
-    'VDL_cat': OrderedDict([('< 25', 'red'), ('25 - 50', 'orange'), ('50 - 75', 'yellow'), ('> 75', 'green')]),
-    'deg_acidity_cat': OrderedDict([('0 - 25%', 'red'), ('25 - 50%', 'orange'), ('50 - 75%', 'yellow'), ('75 - 100%', 'green')]),
-    'deg_eutrophication_cat': OrderedDict([('0 - 25%', 'green'), ('25 - 50%', 'yellow'), ('50 - 75%', 'orange'), ('75 - 100%', 'red')]),
-    'deg_toxitolerance_cat': OrderedDict([('0 - 25%', 'green'), ('25 - 50%', 'yellow'), ('50 - 75%', 'orange'), ('75 - 100%', 'red')]),
-    'selected_species_present': OrderedDict([(True, BASE_COLOR_PALETTE[0]), (False, BASE_COLOR_PALETTE[-1])]),
+    'nb_species_cat': OrderedDict([('< 7', RED), ('7 - 10', ORANGE), ('11 - 14', YELLOW), ('> 14', GREEN)]),
+    'VDL_cat': OrderedDict([('< 25', RED), ('25 - 50', ORANGE), ('50 - 75', YELLOW), ('> 75', GREEN)]),
+    'deg_acidity_cat': OrderedDict([('0 - 25%', RED), ('25 - 50%', ORANGE), ('50 - 75%', YELLOW), ('75 - 100%', GREEN)]),
+    'deg_eutrophication_cat': OrderedDict([('0 - 25%', GREEN), ('25 - 50%', YELLOW), ('50 - 75%', ORANGE), ('75 - 100%', RED)]),
+    'deg_toxitolerance_cat': OrderedDict([('0 - 25%', GREEN), ('25 - 50%', YELLOW), ('50 - 75%', ORANGE), ('75 - 100%', RED)]),
+    'selected_species_present': OrderedDict([(True, BASE_COLOR_PALETTE[0]), (False, RED)]),
 }
 
 
