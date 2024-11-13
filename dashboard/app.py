@@ -6,6 +6,7 @@ from dash import Dash, html, dcc, Output, Input, _dash_renderer, callback
 from dash.dependencies import State
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
+from dotenv import load_dotenv
 import dash_mantine_components as dmc
 
 from my_data.datasets import get_useful_data
@@ -32,7 +33,8 @@ CURRENT_DIR = os.path.dirname(__file__)
 LICHEN_IMG_DIR = os.path.join('assets', 'img')
 BLANK_FIG = blank_figure()
 
-lang = 'fr'
+load_dotenv()
+lang = os.getenv('lang', 'fr')
 
 # Fetch datasets
 print("Fetching data...")
