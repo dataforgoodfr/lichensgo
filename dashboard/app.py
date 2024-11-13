@@ -36,6 +36,10 @@ BLANK_FIG = blank_figure()
 load_dotenv()
 lang = os.getenv('lang', 'fr')
 
+if lang not in ['fr', 'en']:
+    raise ValueError('lang must be either "fr" or "en"')
+
+
 # Fetch datasets
 print("Fetching data...")
 lichen_df, merged_lichen_species_df, observation_df, table_df, tree_df = get_useful_data()
