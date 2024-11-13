@@ -257,13 +257,14 @@ def create_hist3(lichen_frequency_df, lang):
 
 def create_pie_thallus(grouped_table_by_observation_and_thallus_df, lang):
 
-    # Capitalize the thallus names
-    capital_grouped_table_by_observation_and_thallus_df = grouped_table_by_observation_and_thallus_df.copy()
-    capital_grouped_table_by_observation_and_thallus_df['thallus'] = grouped_table_by_observation_and_thallus_df['thallus'].str.capitalize()
+    # Translate and capitalize the thallus names
+    grouped_table_by_observation_and_thallus_df = grouped_table_by_observation_and_thallus_df.copy()
+    grouped_table_by_observation_and_thallus_df['thallus_translated'] = grouped_table_by_observation_and_thallus_df['thallus'].apply(lambda x: get_translation(str(x), lang=lang).capitalize())
+
 
     pie_thallus = px.pie(
-        capital_grouped_table_by_observation_and_thallus_df,
-        names='thallus',
+        grouped_table_by_observation_and_thallus_df,
+        names='thallus_translated',
         values='nb_lichen_id',
         color_discrete_sequence=BASE_COLOR_PALETTE[::3],
     )

@@ -358,8 +358,8 @@ sites_layout = html.Div(
                 dmc.Card(
                     children=[
                         title_and_tooltip(
-                            title=get_translation('map_title', lang),
-                            tooltip_text=get_translation('map_tooltip', lang)
+                            title=get_translation('observation_map_title', lang),
+                            tooltip_text=get_translation('observation_map_tooltip', lang)
                         ),
                         dmc.SegmentedControl(
                             id='map-column-select',
