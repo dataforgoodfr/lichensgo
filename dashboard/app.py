@@ -505,14 +505,6 @@ sites_layout = html.Div(
     ],
 )
 
-urls = [
-    'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-1.png',
-    'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-2.png',
-    'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-3.png',
-]
-
-images = [dmc.Image(radius='sm', src=url) for url in urls]
-
 species_card = dmc.Card(
     children=[
         dmc.CardSection(
