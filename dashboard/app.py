@@ -117,7 +117,7 @@ def get_selected_address(observation_clicked):
     Input('map-nb_species-vdl', 'clickData'),
     State('map-nb_species-vdl', 'relayoutData')
 )
-def update_map(date_range, map_column_selected, map_style, clickData, relayoutData):
+def update_observation_map(date_range, map_column_selected, map_style, clickData, relayoutData):
     if None in date_range:
         raise PreventUpdate
 
@@ -210,7 +210,7 @@ def update_gauge_hist_pie(date_range, clickData):
     Input('map-species-style-dropdown', 'value'),
     State('map-species_present', 'relayoutData')
 )
-def update_map(species_id_selected, map_style, relayoutData):
+def update_species_map(species_id_selected, map_style, relayoutData):
     if isinstance(species_id_selected, str):
         species_id_selected = int(species_id_selected)
 
