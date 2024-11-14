@@ -6,6 +6,7 @@ from dash import Dash, html, dcc, Output, Input, _dash_renderer, callback
 from dash.dependencies import State
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
+from dotenv import load_dotenv
 import dash_mantine_components as dmc
 
 from my_data.datasets import get_useful_data
@@ -32,7 +33,12 @@ CURRENT_DIR = os.path.dirname(__file__)
 LICHEN_IMG_DIR = os.path.join('assets', 'img')
 BLANK_FIG = blank_figure()
 
-lang = 'fr'
+load_dotenv()
+lang = os.getenv('lang', 'fr')
+
+if lang not in ['fr', 'en']:
+    raise ValueError('lang must be either "fr" or "en"')
+
 
 # Fetch datasets
 print("Fetching data...")
@@ -111,15 +117,15 @@ def get_selected_address(observation_clicked):
     Input('map-nb_species-vdl', 'clickData'),
     State('map-nb_species-vdl', 'relayoutData')
 )
-def update_map(date_range, map_column_selected, map_style, clickData, relayoutData):
+def update_observation_map(date_range, map_column_selected, map_style, clickData, relayoutData):
     if None in date_range:
         raise PreventUpdate
 
     filtered_observation_df = get_filtered_observation_df(date_range)
 
-    if relayoutData and 'mapbox.zoom' in relayoutData and 'mapbox.center' in relayoutData:
-        current_zoom = relayoutData['mapbox.zoom']
-        current_center = relayoutData['mapbox.center']
+    if relayoutData and 'map.zoom' in relayoutData and 'map.center' in relayoutData:
+        current_zoom = relayoutData['map.zoom']
+        current_center = relayoutData['map.center']
     else:
         current_zoom = 4.8
         current_center = {
@@ -204,7 +210,7 @@ def update_gauge_hist_pie(date_range, clickData):
     Input('map-species-style-dropdown', 'value'),
     State('map-species_present', 'relayoutData')
 )
-def update_map(species_id_selected, map_style, relayoutData):
+def update_species_map(species_id_selected, map_style, relayoutData):
     if isinstance(species_id_selected, str):
         species_id_selected = int(species_id_selected)
 
@@ -212,9 +218,9 @@ def update_map(species_id_selected, map_style, relayoutData):
         lichen_df.loc[lichen_df['species_id'] == species_id_selected, 'observation_id']
     )
 
-    if relayoutData and 'mapbox.zoom' in relayoutData and 'mapbox.center' in relayoutData:
-        current_zoom = relayoutData['mapbox.zoom']
-        current_center = relayoutData['mapbox.center']
+    if relayoutData and 'map.zoom' in relayoutData and 'map.center' in relayoutData:
+        current_zoom = relayoutData['map.zoom']
+        current_center = relayoutData['map.center']
     else:
         current_zoom = 4.8
         current_center = {'lat': observation_with_selected_species_col_df['localisation_lat'].mean() + 0.5, 'lon': observation_with_selected_species_col_df['localisation_long'].mean()}
@@ -352,8 +358,8 @@ sites_layout = html.Div(
                 dmc.Card(
                     children=[
                         title_and_tooltip(
-                            title=get_translation('map_title', lang),
-                            tooltip_text=get_translation('map_tooltip', lang)
+                            title=get_translation('observation_map_title', lang),
+                            tooltip_text=get_translation('observation_map_tooltip', lang)
                         ),
                         dmc.SegmentedControl(
                             id='map-column-select',
@@ -372,7 +378,7 @@ sites_layout = html.Div(
                                     children=[
                                         dmc.Select(
                                             id='map-style-dropdown',
-                                            value='streets',  # Default value
+                                            placeholder=get_translation('map_style_selector', lang),
                                             data=[
                                                 {'label': 'Streets',
                                                  'value': 'streets'},
@@ -380,20 +386,16 @@ sites_layout = html.Div(
                                                  'value': 'open-street-map'},
                                                 {'label': 'Satellite',
                                                  'value': 'satellite'},
-                                                {'label': 'Satellite with streets',
-                                                 'value': 'satellite-streets'},
-                                                {'label': 'Dark',
-                                                 'value': 'dark'},
                                             ],
-                                            clearable=False,
+                                            clearable=True,
                                             allowDeselect=False,
                                             searchable=False,
                                             style={
                                                 'position': 'absolute',
                                                 'top': '15px',
                                                 'left': '15px',
-                                                'zIndex': '1000',
-                                                'width': '200px',
+                                                'zIndex': '1',
+                                                'width': '150px',
                                                 'opacity': '0.8'
                                             }
                                         ),
@@ -629,7 +631,7 @@ species_layout = html.Div(
                                     children=[
                                         dmc.Select(
                                             id='map-species-style-dropdown',
-                                            value='streets',  # Default value
+                                            placeholder=get_translation('map_style_selector', lang),
                                             data=[
                                                 {'label': 'Streets',
                                                  'value': 'streets'},
@@ -637,20 +639,16 @@ species_layout = html.Div(
                                                  'value': 'open-street-map'},
                                                 {'label': 'Satellite',
                                                  'value': 'satellite'},
-                                                {'label': 'Satellite with streets',
-                                                 'value': 'satellite-streets'},
-                                                {'label': 'Dark',
-                                                 'value': 'dark'},
                                             ],
-                                            clearable=False,
+                                            clearable=True,
                                             allowDeselect=False,
                                             searchable=False,
                                             style={
                                                 'position': 'absolute',
                                                 'top': '15px',
                                                 'left': '15px',
-                                                'zIndex': '1000',
-                                                'width': '200px',
+                                                'zIndex': '1',
+                                                'width': '150px',
                                                 'opacity': '0.8'
                                             }
                                         ),
