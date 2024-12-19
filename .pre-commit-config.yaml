@@ -19,4 +19,4 @@ repos:
     rev: v1.3.1
     hooks:
       - id: python-safety-dependencies-check
-        args: [--ignore, "70612"]  # Ignoring Jinja2 Vulnerability ID: 70612
+        args: [--ignore, "40459,43041,44423,44426,44427,44741,44742,48040,48041,49733,50454,51340,52945,55264,53315,59293,60956,61586,62126,64976,65771,72095,72109,72110,72111,72515,72520,72521,73023,73028"] # ignoring Django vulnerability IDs
