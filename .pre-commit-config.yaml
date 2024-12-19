@@ -19,3 +19,4 @@ repos:
     rev: v1.3.1
     hooks:
       - id: python-safety-dependencies-check
+        args: [--ignore, "40459"] # ignoring django caching vulnerability
