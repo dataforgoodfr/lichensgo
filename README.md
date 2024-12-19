@@ -15,13 +15,10 @@ Le dashboard est organisé autour de plusieurs composants :
 
 - **Visualisation des données** : Implémentée avec Plotly pour :
   - Afficher la distribution spatiale des lichens sur une carte interactive
-  - Générer des graphiques de tendances écologiques
-  - Présenter des statistiques sur la biodiversité par région
+  - Générer différents graphiques de distribution des lichens
 
 - **Géolocalisation** : Utilisation de GeoPy pour :
-  - Gérer la sélection des points d'observation
-  - Calculer les zones de concentration des espèces
-  - Valider les nouvelles observations
+  - Retrouver l'adresse de l'observation sélectionnée par l'utilisateur
 
 - **Backend** : Intégration avec Django via DjangoDash pour :
   - Gérer les sessions utilisateurs et les droits d'accès
@@ -35,7 +32,7 @@ Le dashboard est organisé autour de plusieurs composants :
 - Le backend Django est géré dans un dépôt privé séparé
 - Les données de production sont hébergées sur un serveur dédié
 - La version actuelle du repository repose sur un dump de la base de données
-Contactez mandresyandri ou benoitfrisque pour obtenir les identifiants de connexion à la base de données (.env)
+Contactez `mandresyandri` ou `benoitfrisque` pour obtenir les identifiants de connexion à la base de données (`.env`)
 
 ### Prérequis
 
@@ -129,3 +126,25 @@ lichen_ecology = df.get_lichen_ecology()
 # Aperçu des données d'écologie des lichens
 lichen_ecology.head()
 ```
+
+### Exécution du Dashboard
+
+Pour lancer le dashboard en local, suivez les étapes ci-dessous :
+
+1. Activez votre environnement virtuel :
+
+    ```bash
+    source .venv/bin/activate
+    ```
+
+2. Exécutez le script principal :
+
+    ```bash
+    # Pour le dashboard
+    python -m dashboard.plotly_app
+
+    # Pour le tableau de téléchargement des données
+    python -m dashboard_plotly_app_download
+    ```
+
+3. Ouvrez votre navigateur et accédez à `http://localhost:8050` pour consulter le dashboard.
