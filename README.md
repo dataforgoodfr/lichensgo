@@ -1,65 +1,131 @@
 # Lichens GO
 
-# Contributing
+Lichens GO est un projet visant à étudier et comprendre l'écologie des lichens à travers l'analyse et la visualisation de données. En exploitant divers ensembles de données, le projet cherche à fournir des informations sur les facteurs environnementaux affectant les espèces de lichens et leur distribution.
 
-## Installer Poetry
+Ce repo a pour objectif de créer un tableau de bord interactif permettant de visualiser et d'analyser les données écologiques des lichens. La version déployée est disponible ici : [https://saisie.lichensgo.eu/](https://saisie.lichensgo.eu/)
 
-Plusieurs [méthodes d'installation](https://python-poetry.org/docs/#installation) sont décrites dans la documentation de poetry dont:
+## Architecture technique
 
-- avec pipx
-- avec l'installateur officiel
+Le dashboard est organisé autour de plusieurs composants :
 
-Chaque méthode a ses avantages et inconvénients. Par exemple, la méthode pipx nécessite d'installer pipx au préable, l'installateur officiel utilise curl pour télécharger un script qui doit ensuite être exécuté et comporte des instructions spécifiques pour la completion des commandes poetry selon le shell utilisé (bash, zsh, etc...).
+- **Interface utilisateur** : Construite avec Dash pour permettre aux utilisateurs de :
+  - Sélectionner des zones géographiques d'intérêt
+  - Filtrer les données par période et type de lichen
+  - Interagir avec les visualisations en temps réel
 
-L'avantage de pipx est que l'installation de pipx est documentée pour linux, windows et macos. D'autre part, les outils installées avec pipx bénéficient d'un environment d'exécution isolé, ce qui est permet de fiabiliser leur fonctionnement. Finalement, l'installation de poetry, voire d'autres outils est relativement simple avec pipx.
+- **Visualisation des données** : Implémentée avec Plotly pour :
+  - Afficher la distribution spatiale des lichens sur une carte interactive
+  - Générer des graphiques de tendances écologiques
+  - Présenter des statistiques sur la biodiversité par région
 
-Cependant, libre à toi d'utiliser la méthode qui te convient le mieux ! Quelque soit la méthode choisie, il est important de ne pas installer poetry dans l'environnement virtuel qui sera créé un peu plus tard dans ce README pour les dépendances de la base de code de ce repo git.
+- **Géolocalisation** : Utilisation de GeoPy pour :
+  - Gérer la sélection des points d'observation
+  - Calculer les zones de concentration des espèces
+  - Valider les nouvelles observations
 
-### Installation de Poetry avec pipx
+- **Backend** : Intégration avec Django via DjangoDash pour :
+  - Gérer les sessions utilisateurs et les droits d'accès
+  - Stocker les préférences et les filtres des utilisateurs
+  - Assurer la communication avec la base de données
 
-Suivre les instructions pour [installer pipx](https://pipx.pypa.io/stable/#install-pipx) selon ta plateforme (linux, windows, etc...)
+## Guide de contribution
 
-Par exemple pour Ubuntu 23.04+:
+**Important** :
 
-    sudo apt update
-    sudo apt install pipx
-    pipx ensurepath
+- Le backend Django est géré dans un dépôt privé séparé
+- Les données de production sont hébergées sur un serveur dédié
+- La version actuelle du repository repose sur un dump de la base de données
+Contactez mandresyandri ou benoitfrisque pour obtenir les identifiants de connexion à la base de données (.env)
 
-[Installer Poetry avec pipx](https://python-poetry.org/docs/#installing-with-pipx):
+### Prérequis
 
-    pipx install poetry
+#### Installation de Poetry
 
-### Installation de Poetry avec l'installateur officiel
+Poetry est notre gestionnaire de dépendances. Voici les deux méthodes d'installation recommandées :
 
-L'installation avec l'installateur officiel nécessitant quelques étapes supplémentaires,
-se référer à la [documentation officielle](https://python-poetry.org/docs/#installing-with-the-official-installer).
+##### 1. Via pipx (méthode recommandée)
 
-## Utiliser un venv python
+```bash
+# Installation de pipx sous Ubuntu 23.04+
+sudo apt update
+sudo apt install pipx
+pipx ensurepath
 
-    python3 -m venv .venv
+# Installation de Poetry
+pipx install poetry
+```
 
-    source .venv/bin/activate
+##### 2. Via l'installateur officiel
 
-## Utiliser Poetry
+Consultez la [documentation officielle](https://python-poetry.org/docs/#installing-with-the-official-installer) pour les instructions détaillées.
 
-Installer les dépendances:
+### Configuration de l'environnement
 
-    poetry install
+#### 1. Création de l'environnement virtuel
 
-Ajouter une dépendance:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-    poetry add pandas
+#### 2. Gestion des dépendances avec Poetry
 
-Mettre à jour les dépendances:
+```bash
+# Installation des dépendances
+poetry install
 
-    poetry update
+# Ajout d'une dépendance
+poetry add <package>
 
-## Lancer les precommit-hook localement
+# Mise à jour des dépendances
+poetry update
+```
 
-[Installer les precommit](https://pre-commit.com/)
+### Outils de développement
 
-    pre-commit run --all-files
+#### Tests et qualité du code
 
-## Utiliser Tox pour tester votre code
+```bash
+# Exécution des pre-commit hooks
+pre-commit run --all-files
 
-    tox -vv
+# Exécution des tests avec Tox
+tox -vv
+```
+
+### Accès aux données
+
+#### Configuration de la base de données
+
+Prérequis :
+
+```bash
+poetry add sqlalchemy psycopg2-binary python-dotenv
+```
+
+#### Utilisation du module de données
+
+```python
+import my_data.datasets as df
+
+# Exemple d'utilisation
+lichen_ecology = df.get_lichen_ecology()
+```
+
+#### Jeux de données disponibles
+
+- `get_environment_data`
+- `get_lichen_data`
+- `get_lichen_species_data`
+- `get_observation_data`
+- `get_table_data`
+- `get_tree_data`
+- `get_tree_species`
+- `get_lichen_ecology`
+
+#### Exemple de sortie
+
+```python
+# Aperçu des données d'écologie des lichens
+lichen_ecology.head()
+```
