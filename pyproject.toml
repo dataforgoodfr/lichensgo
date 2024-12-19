@@ -12,7 +12,6 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Django = "3.2.5" # Constraint from the website
 dash-bootstrap-components = "^1.4.1"
 dash-core-components = "^2.0.0"
 dash-html-components = "^2.0.0"
