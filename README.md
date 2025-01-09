@@ -2,7 +2,7 @@
 
 Lichens GO est un projet visant à étudier et comprendre l'écologie des lichens à travers l'analyse et la visualisation de données. En exploitant divers ensembles de données, le projet cherche à fournir des informations sur les facteurs environnementaux affectant les espèces de lichens et leur distribution.
 
-Ce repo a pour objectif de créer un tableau de bord interactif permettant de visualiser et d'analyser les données écologiques des lichens. La version déployée est disponible ici : [https://saisie.lichensgo.eu/](https://saisie.lichensgo.eu/)
+Ce repo a pour objectif de créer un tableau de bord interactif permettant de visualiser et d'analyser les données écologiques des lichens. La version déployée est disponible ici : [https://saisie.lichensgo.eu/resultsLG](https://saisie.lichensgo.eu/resultsLG)
 
 ## Architecture technique
 
